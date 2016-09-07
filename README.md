@@ -1,6 +1,6 @@
 # ndd
 
-**ndd** is a Python/Fortran module for estimation of entropy and entropy-related quantities from discrete data. 
+**ndd** is a Python/Fortran module for estimation of entropy and entropy-related quantities from discrete data.  
 **ndd** implements the Nemenmann-Shafee-Bialek (NSB) algorithm as default entropy estimator. 
 
 # Obtaining the source
@@ -47,7 +47,18 @@ From the root directory of the project, type:
 
     make test
 
-# Basic usage 
+# Basic usage example
+
+  The ndd.entropy function will take as input an histogram (a list or a numpy array of integers representing counts) and returns a estropy estimate.
+
+  % python
+  >>> import ndd          # import the ndd module
+  >>> import numpy as np  
+  >>> k = 1000; n = 1000  # we will generate a histogram with k categories and n total counts using numpy functions
+  >>> np.random.seed(0)
+  >>> p = np.random.dirichlet([1.0]*k); h = np.random.multinomial(n,p)
+  >>> ndd.entropy(h)      # call the ndd.entropy function 
+  6.481759789935845  
 
 # Contributing
 
