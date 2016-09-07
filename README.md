@@ -49,7 +49,7 @@ From the root directory of the project, type:
 
 # Basic usage example
 
-  The ndd.entropy function will take as input an histogram (a list or a numpy array of integers representing counts) and returns a entropy estimate (in nats). 
+  The ndd.entropy function will take as input a histogram (a list or a numpy array of integers representing counts) and returns a entropy estimate (in nats). 
 
     % python
     >>> import ndd          # import the ndd module
