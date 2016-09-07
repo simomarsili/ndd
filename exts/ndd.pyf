@@ -1,0 +1,32 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module nddf ! in 
+    interface  ! in :ndd
+        subroutine plugin(hist,estimate) ! in :ndd:ndd.f90
+            integer(4) dimension(:),intent(in) :: hist
+            real(8) intent(out) :: estimate
+        end subroutine plugin
+        subroutine pseudo(hist,nc,alpha,estimate) ! in :ndd:ndd.f90
+            integer(4) dimension(:),intent(in) :: hist
+            integer(4), intent(in) :: nc
+            real(8) intent(in) :: alpha
+            real(8) intent(out) :: estimate
+        end subroutine pseudo
+        subroutine dirichlet(hist,nc,alpha,estimate) ! in :ndd:ndd.f90
+            integer(4) dimension(:),intent(in) :: hist
+            integer(4), intent(in) :: nc
+            real(8) intent(in) :: alpha
+            real(8) intent(out) :: estimate
+        end subroutine dirichlet
+        subroutine nsb(hist,nc,estimate,err_estimate) ! in :ndd:ndd.f90
+            integer(4) dimension(:),intent(in) :: hist
+            integer(4), intent(in) :: nc
+            real(8) intent(out) :: estimate
+            real(8) intent(out) :: err_estimate
+        end subroutine nsb
+    end interface 
+end python module nddf
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
