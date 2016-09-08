@@ -1,8 +1,6 @@
 ! Copyright (C) 2016, Simone Marsili 
 ! All rights reserved.
 ! License: BSD 3 clause
-! Version: 0.0.1
-! Author: Simone Marsili (simomarsili@gmail.com)
 
 module constants
   use iso_fortran_env
