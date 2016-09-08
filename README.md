@@ -6,7 +6,7 @@
 # Obtaining the source
 
 All **ndd** source code is hosted on Github. 
-You can download the latest version of the code using [this link](). 
+You can download the latest version of the code using [this link](https://github.com/simomarsili/ndd/archive/0.1.3.zip). 
 
 # Prerequisites
 
@@ -47,22 +47,36 @@ From the root directory of the project, type:
 
     make test
 
-# Basic usage example
+# Basic usage 
 
-  The ndd.entropy function will take as input an histogram (a list or a numpy array of integers representing counts) and returns a estropy estimate.
+  The ndd.entropy function takes as input a histogram (a list or a numpy array of integers representing counts) and returns a entropy estimate (in nats): 
 
-  % python
-  >>> import ndd          # import the ndd module
-  >>> import numpy as np  
-  >>> k = 1000; n = 1000  # we will generate a histogram with k categories and n total counts using numpy functions
-  >>> np.random.seed(0)
-  >>> p = np.random.dirichlet([1.0]*k); h = np.random.multinomial(n,p)
-  >>> ndd.entropy(h)      # call the ndd.entropy function 
-  6.481759789935845  
+    >>> import ndd; estimated_entropy = ndd.entropy(h)
+
+  Compared to the standard, "plugin" estimator, the NSB estimator performs well in the undersampled regime (i.e. k >> n where k is the number of possible outcomes and n the number of samples). 
+
+    % python
+    >>> import ndd              # import the ndd module
+    >>> import numpy as np; import scipy.stats
+    >>> np.random.seed(0) 
+    >>> def f(k,n,a): p = np.random.dirichlet([a]*k); h = np.random.multinomial(n,p); return p,h
+    ...
+    >>> k = int(1.e6); n = 1000 # undersampled regime: k = 1000 * n
+    >>> a=1.0; p,h = f(k,n,a)   # the parameter a controls the granularity of the distribution 
+    >>> scipy.stats.entropy(p)  # the true value for the entropy of p 
+    13.393000456964428
+    >>> ndd.entropy(h)          # the NSB estimate from h
+    13.120151656261665
+    >>> a=0.001; p,h = f(k,n,a) # same calculation for a "more granular" distribution 
+    >>> scipy.stats.entropy(p)  # the true entropy of the distribution p 
+    7.4972455126461348
+    >>> ndd.entropy(h)          # call the ndd.entropy function 
+    7.524121340953834
+  
 
 # Contributing
 
-**elss** is an OPEN Source Project so please help out by [reporting bugs](http://github.com/simomarsili/elss/issues) or [forking and opening pull](https://github.com/simomarsili/elss) requests when possible.
+**ndd** is an OPEN Source Project so please help out by [reporting bugs](http://github.com/simomarsili/ndd/issues) or [forking and opening pull](https://github.com/simomarsili/ndd) requests when possible.
 
 # LICENSE (BSD 3 clause)
 
