@@ -24,7 +24,7 @@ from __future__ import division, print_function, absolute_import
 
 __copyright__ = "Copyright (C) 2016 Simone Marsili"
 __license__   = "BSD 3 clause"
-__version__   = "0.1.4"
+__version__   = "v0.1.5"
 __author__    = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy','histogram']
 
