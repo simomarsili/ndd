@@ -303,7 +303,7 @@ subroutine plugin(hist,estimate)
   integer(int32) :: nbins
   integer(int32) :: i
   real(real64)   :: ni,ndata
-  integer(int32)              :: nmax,err
+  integer(int32)              :: mi,nmax,err
   integer(int32), allocatable :: multiplicities(:)
 
   !! this is the old 'standard' implementation.
