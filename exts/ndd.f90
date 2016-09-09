@@ -303,19 +303,47 @@ subroutine plugin(hist,estimate)
   integer(int32) :: nbins
   integer(int32) :: i
   real(real64)   :: ni,ndata
+  integer(int32)              :: nmax,err
+  integer(int32), allocatable :: multiplicities(:)
 
+  !! this is the old 'standard' implementation.
+  !! the code using multiplicities is faster
+  !  nbins = size(hist)
+  !  if (nbins == 1) then 
+  !     estimate = 0.0_real64
+  !     return
+  !  end if
+  !  ndata = sum(hist)*1.0_real64
+  !  estimate = 0.0_real64
+  !  do i = 1,nbins
+  !     ni = hist(i)*1.0_real64
+  !     if (ni > 0) estimate = estimate - ni*log(ni)
+  !  end do
+  !  estimate = estimate / ndata + log(ndata)
+
+  ! compute multiplicities 
+  ! nmax is the largest number of samples in a bin
   nbins = size(hist)
   if (nbins == 1) then 
      estimate = 0.0_real64
      return
   end if
   ndata = sum(hist)*1.0_real64
-  estimate = 0.0_real64
+  nmax = maxval(hist)
+  allocate(multiplicities(nmax),stat=err)
+  multiplicities = 0
   do i = 1,nbins
-     ni = hist(i)*1.0_real64
-     if (ni > 0) estimate = estimate - ni*log(ni)
+     ni = hist(i)
+     if (ni == 0) cycle
+     multiplicities(ni) = multiplicities(ni) + 1
+  end do
+  estimate = 0.0_real64
+  do i = 1,nmax
+     mi = multiplicities(i)
+     if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
   end do
   estimate = estimate / ndata + log(ndata)
+  deallocate(multiplicities)
 
 end subroutine plugin
 
