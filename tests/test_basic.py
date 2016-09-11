@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import absolute_import,division,print_function,unicode_literals
+from builtins import *
 import unittest
 import ndd
 import numpy as np
@@ -40,6 +41,12 @@ class TestNdd(unittest.TestCase):
                           0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0])
         result = np.float64(0.45816599887523507)
         self.assertEqual(ndd.entropy(data), result)
+
+    def test_histogram(self):
+        np.random.seed(0)
+        data = np.random.randint(1,11,1000)
+        result = [99, 96, 97, 122, 99, 105, 94, 97, 95, 96]
+        self.assertEqual(ndd.histogram(data), result)
 
 if __name__ == '__main__':
     unittest.main()

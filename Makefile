@@ -1,20 +1,21 @@
-INSTALL_PATH = /usr/local
+INSTALL_PATH=/usr/local
+PYTHON=python3.5
 
 default:
-	python setup.py install --prefix $(INSTALL_PATH)
+	$(PYTHON) setup.py install --prefix $(INSTALL_PATH)
 build:
-	python setup.py build
+	$(PYTHON) setup.py build
 install:
-	python setup.py install --prefix $(INSTALL_PATH)
+	$(PYTHON) setup.py install --prefix $(INSTALL_PATH)
 user: 
-	python setup.py install --prefix $(HOME)/.local
+	$(PYTHON) setup.py install --prefix $(HOME)/.local
 env:
-	(pip install -r requirements.txt; python setup.py install --prefix ./venv)
+	(pip install -r requirements.txt; $(PYTHON) setup.py install --prefix ./venv)
 test:
-	(cd tests; python test_basic.py)
+	(cd tests; $(PYTHON) test_basic.py)
 basic_test:
-	(cd tests; python test_basic.py)
+	(cd tests; $(PYTHON) test_basic.py)
 advanced_test:
-	(cd tests; python test_advanced.py > out; diff out OUT_1.0)
+	(cd tests; $(PYTHON) test_advanced.py > out; diff out OUT_1.0)
 clean:
 	rm -r build
