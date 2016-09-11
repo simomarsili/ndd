@@ -20,14 +20,15 @@ Hutter, M. Distribution of mutual information.
 Advances in neural information processing systems, 1:399--406 (2002).
 
 """
-from __future__ import division, print_function, absolute_import
+
+from __future__ import absolute_import,division,print_function,unicode_literals
+from builtins import *
 
 __copyright__ = "Copyright (C) 2016 Simone Marsili"
 __license__   = "BSD 3 clause"
 __version__   = "v0.1.6"
 __author__    = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy','histogram']
-
 import numpy as np
 import warnings
 import sys
