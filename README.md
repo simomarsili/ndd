@@ -3,7 +3,7 @@
 **ndd** is a Python/Fortran module for estimation of entropy and entropy-related quantities from discrete data.  
 The main goal of **ndd** is to provide a simple and minimal Python interface to the Nemenman-Shafee-Bialek (NSB) algorithm,
 a state of the art Bayesian algorithm for entropy estimation. In **ndd**, this interface is the ndd.entropy() function,
-that takes as input an array of counts over a set of possible outcomes, and returns an entropy estimate:
+that takes as input an array of counts over a set of possible outcomes, and returns an entropy estimate:  
 entropy_estimate = ndd.entropy(counts). 
 
 # Obtaining the source
