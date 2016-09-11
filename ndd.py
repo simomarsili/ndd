@@ -26,7 +26,7 @@ from builtins import *
 
 __copyright__ = "Copyright (C) 2016 Simone Marsili"
 __license__   = "BSD 3 clause"
-__version__   = "v0.1.7"
+__version__   = "v0.1.8"
 __author__    = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy','histogram']
 import numpy as np
