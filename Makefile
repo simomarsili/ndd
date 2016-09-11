@@ -1,5 +1,5 @@
 INSTALL_PATH=/usr/local
-PYTHON=python3.5
+PYTHON=python
 
 default:
 	$(PYTHON) setup.py install --prefix $(INSTALL_PATH)
