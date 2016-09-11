@@ -1,9 +1,10 @@
 # ndd
 
-**ndd** is a Python/Fortran module for estimation of entropy and entropy-related quantities from discrete data.
+**ndd** is a Python/Fortran module for estimation of entropy and entropy-related quantities from discrete data.  
 The main goal of **ndd** is to provide a simple and minimal Python interface to the Nemenman-Shafee-Bialek (NSB) algorithm,
 a state of the art Bayesian algorithm for entropy estimation. In **ndd**, this interface is the ndd.entropy() function,
-that returns an entropy estimate from an array of counts over a set of possible outcomes: entropy_estimate = ndd.entropy(counts). 
+that takes as input an array of counts over a set of possible outcomes, and returns an entropy estimate:
+entropy_estimate = ndd.entropy(counts). 
 
 # Obtaining the source
 
@@ -55,26 +56,9 @@ From the root directory of the project, type:
 
     >>> import ndd; estimated_entropy = ndd.entropy(h)
 
-  Compared to the standard, "plugin" estimator, the NSB estimator performs well in the undersampled regime (i.e. k >> n where k is the number of possible outcomes and n the number of samples). 
-
-    % python
-    >>> import ndd              # import the ndd module
-    >>> import numpy as np; import scipy.stats
-    >>> np.random.seed(0) 
-    >>> def f(k,n,a): p = np.random.dirichlet([a]*k); h = np.random.multinomial(n,p); return p,h
-    ...
-    >>> k = int(1.e6); n = 1000 # undersampled regime: k = 1000 * n
-    >>> a=1.0; p,h = f(k,n,a)   # the parameter a controls the granularity of the distribution 
-    >>> scipy.stats.entropy(p)  # the true value for the entropy of p 
-    13.393000456964428
-    >>> ndd.entropy(h)          # the NSB estimate from h
-    13.120151656261665
-    >>> a=0.001; p,h = f(k,n,a) # same calculation for a "more granular" distribution 
-    >>> scipy.stats.entropy(p)  # the true entropy of the distribution p 
-    7.4972455126461348
-    >>> ndd.entropy(h)          # call the ndd.entropy function 
-    7.524121340953834
-  
+  Compared to the standard, "plugin" estimator, the NSB estimator performs well in the undersampled regime
+  (i.e. k >> n where k is the number of possible outcomes and n the number of samples).
+  Check the [tutorial](https://github.com/simomarsili/ndd/blob/master/notebooks/ndd_tutorial.ipynb) for more info.
 
 # Contributing
 
