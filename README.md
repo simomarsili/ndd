@@ -54,7 +54,12 @@ From the root directory of the project, type:
 
   The ndd.entropy function takes as input a histogram (a list or a numpy array of integers representing counts) and returns a entropy estimate (in nats): 
 
-    >>> import ndd; estimated_entropy = ndd.entropy(h)
+    >>> counts
+    [ 7  3  5  8  9  1  3  3  1  0  2  5  2 11  4 23  5  0  8  0]
+    >>> import ndd
+    >>> estimated_entropy = ndd.entropy(counts)
+    >>> estimated_entropy
+    2.623634344902917
 
   Compared to the standard, "plugin" estimator, the NSB estimator performs well in the undersampled regime
   (i.e. k >> n where k is the number of possible outcomes and n the number of samples).
