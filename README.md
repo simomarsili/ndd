@@ -9,7 +9,7 @@ entropy_estimate = ndd.entropy(counts).
 # Obtaining the source
 
 All **ndd** source code is hosted on Github. 
-You can download the latest version of the code using [this link](https://github.com/simomarsili/ndd/archive/v0.1.8.zip). 
+You can download the latest version of the code from [this page](https://github.com/simomarsili/ndd/releases/latest). 
 
 # Prerequisites
 
