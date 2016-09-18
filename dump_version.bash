@@ -8,7 +8,7 @@ if [ -z "$NEW_VERSION" ]; then
     exit
 fi
 
-for file in VERSION ndd.py README.md; do 
+for file in VERSION ndd.py; do 
     sed "s/$VERSION/$NEW_VERSION/g" $file > tmp; 
     mv tmp $file
 done

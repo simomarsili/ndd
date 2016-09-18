@@ -293,13 +293,15 @@ contains
 
 end module nsb_mod
 
-subroutine plugin(hist,estimate)
+subroutine plugin(n,hist,estimate)
   ! plugin estimator - no prior, no regularization 
   use iso_fortran_env
   implicit none
 
-  integer(int32), intent(in) :: hist(:)
+  integer(int32), intent(in) :: n
+  integer(int32), intent(in) :: hist(n)
   real(real64),  intent(out) :: estimate
+
   integer(int32) :: nbins
   integer(int32) :: i
   real(real64)   :: ni,ndata
@@ -347,7 +349,7 @@ subroutine plugin(hist,estimate)
 
 end subroutine plugin
 
-subroutine pseudo(hist,nc,alpha,estimate)
+subroutine pseudo(n,hist,nc,alpha,estimate)
   use iso_fortran_env
   ! pseudocount estimator(s)
   ! estimate the bin frequencies using pseudocounts 
@@ -365,10 +367,12 @@ subroutine pseudo(hist,nc,alpha,estimate)
   ! 1/k : (where k is the number of classes) Schurmann-Grassberger (SG)  estimator
   implicit none
 
-  integer(int32), intent(in)  :: hist(:)
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: hist(n)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
+
   integer(int32) :: nbins,ndata
   integer(int32) :: i
   real(real64)   :: ni
@@ -389,14 +393,15 @@ subroutine pseudo(hist,nc,alpha,estimate)
 
 end subroutine pseudo
 
-subroutine dirichlet(hist,nc,alpha,estimate)
+subroutine dirichlet(n,hist,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha 
   use iso_fortran_env
   use dirichlet_mod, only: dirichlet_initialize,dirichlet_finalize
   use dirichlet_mod, only: hdir
   implicit none
 
-  integer(int32), intent(in)  :: hist(:)
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: hist(n)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
@@ -414,14 +419,15 @@ subroutine dirichlet(hist,nc,alpha,estimate)
 
 end subroutine dirichlet
 
-subroutine nsb(hist,nc,estimate,err_estimate)
+subroutine nsb(n,hist,nc,estimate,err_estimate)
   use iso_fortran_env
   use dirichlet_mod, only: dirichlet_initialize,dirichlet_finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
 
-  integer(int32), intent(in)  :: hist(:)
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: hist(n)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
