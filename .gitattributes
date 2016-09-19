@@ -1,1 +1,3 @@
 exts/* linguist-vendored
+notebooks/* linguist-vendored
+tests/* linguist-vendored
