@@ -16,6 +16,9 @@ In Advances in Neural Information Processing Systems 14:471--478 (2002).
 Nemenman, I.; Bialek, W.; Van Steveninck, RDR. Entropy and information in neural spike trains: Progress on the sampling problem. 
 Physical Review E, 69(5):056111 (2004).
 
+Archer, Evan, Park, Il Memming and Pillow, Jonathan W.. "Bayesian and Quasi-Bayesian Estimators for Mutual Information from Discrete Data." 
+Entropy 15 , no. 5 (2013): 1738--1755. 
+
 Hutter, M. Distribution of mutual information. 
 Advances in neural information processing systems, 1:399--406 (2002).
 
