@@ -51,7 +51,7 @@ for n in nlist:
 
         # pseudocounts with a = 1
         start_time = time.time()
-        xpseudo = ndd.entropy(hist,a=1.0,algorithm='pseudo') - h0
+        xpseudo = ndd.entropy(hist,alpha=1.0,algorithm='pseudo') - h0
         if verbose: 
             dt = time.time() - start_time
             timings[2] += dt
@@ -60,7 +60,7 @@ for n in nlist:
 
         # dirichlet prior with alpha = 1
         start_time = time.time()
-        xdir = ndd.entropy(hist,a=a0,algorithm='dirichlet') - h0
+        xdir = ndd.entropy(hist,alpha=a0,algorithm='dirichlet') - h0
         dt = time.time() - start_time
         if verbose: 
             timings[3] += dt
