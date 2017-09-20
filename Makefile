@@ -15,7 +15,5 @@ test:
 	(cd tests; $(PYTHON) test_basic.py)
 basic_test:
 	(cd tests; $(PYTHON) test_basic.py)
-advanced_test:
-	(cd tests; $(PYTHON) test_advanced.py > out; diff out OUT_1.0)
 clean:
 	rm -r build
