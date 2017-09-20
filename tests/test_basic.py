@@ -10,12 +10,13 @@ import ndd
 import pytest
 import numpy as np
 
-tests = [
-    (0.01, 100, 100, 0.21622160227928622),
-    (0.1, 100, 100, 2.569415088680637),
-    (1.0, 100, 100, 4.322717746281727)]
-
-@pytest.mark.parametrize('a, ns, nd, result', tests)
+@pytest.fixture()
+def cases():
+    import json
+    with open('data.json', 'r') as _jf:
+        return json.load(_jf)
+    
+@pytest.mark.parametrize('a, ns, nd, result', cases())
 def test_basic(a, ns, nd, result):
     """Basic tests."""
     np.random.seed(123)
