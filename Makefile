@@ -12,8 +12,8 @@ user:
 env:
 	(pip install -r requirements.txt; $(PYTHON) setup.py install --prefix ./venv)
 test:
-	(cd tests; $(PYTHON) test_basic.py)
+	(cd tests; pytest -v)
 basic_test:
-	(cd tests; $(PYTHON) test_basic.py)
+	(cd tests; pytest -v)
 clean:
 	rm -r build
