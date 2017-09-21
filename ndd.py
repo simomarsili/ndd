@@ -24,14 +24,22 @@ Advances in neural information processing systems, 1:399--406 (2002).
 
 """
 
-from __future__ import absolute_import,division,print_function,unicode_literals
-from builtins import *
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import (  # pylint: disable=redefined-builtin, unused-import
+    bytes, dict, int, list, object, range, str,
+    ascii, chr, hex, input, next, oct, open,
+    pow, round, super,
+    filter, map, zip)
+import time
+import logging
+from version import __version__
 
-__copyright__ = "Copyright (C) 2016 Simone Marsili"
+__copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
 __license__   = "BSD 3 clause"
-__version__   = "v0.1.9"
 __author__    = "Simone Marsili (simomarsili@gmail.com)"
-__all__ = ['entropy','histogram']
+__all__ = ['entropy', 'histogram']
+
 import numpy as np
 import warnings
 import sys
