@@ -1,5 +1,5 @@
 INSTALL_PATH=/usr/local
-PYTHON=python
+PYTHON=python3
 
 default:
 	$(PYTHON) setup.py install --prefix $(INSTALL_PATH)
@@ -12,10 +12,8 @@ user:
 env:
 	(pip install -r requirements.txt; $(PYTHON) setup.py install --prefix ./venv)
 test:
-	(cd tests; $(PYTHON) test_basic.py)
+	(cd tests; pytest -v)
 basic_test:
-	(cd tests; $(PYTHON) test_basic.py)
-advanced_test:
-	(cd tests; $(PYTHON) test_advanced.py > out; diff out OUT_1.0)
+	(cd tests; pytest -v)
 clean:
 	rm -r build

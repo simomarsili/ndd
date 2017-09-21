@@ -1,53 +1,25 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import,division,print_function,unicode_literals
-from builtins import *
-import unittest
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import (  # pylint: disable=redefined-builtin, unused-import
+    bytes, dict, int, list, object, range, str,
+    ascii, chr, hex, input, next, oct, open,
+    pow, round, super,
+    filter, map, zip)
 import ndd
+import pytest
 import numpy as np
- 
-class TestNdd(unittest.TestCase):
- 
-    def test_1_100_100(self):
-        # generate your own data for testing: 
-        # import numpy as np; a=1.0; ns=100; nd=100; al = [a]*ns; pp=np.random.dirichlet(al); np.random.multinomial(nd,pp)
-        data = np.array([1, 1, 0, 0, 4, 2, 0, 1, 1, 0, 0, 2, 1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 3,
-                         0, 0, 1, 1, 0, 3, 3, 3, 0, 1, 5, 0, 0, 0, 0, 2, 0, 0, 3, 1, 0, 0, 3,
-                         0, 1, 2, 0, 1, 1, 2, 2, 1, 2, 0, 0, 3, 0, 2, 1, 6, 2, 0, 6, 0, 1, 0,
-                         0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 2, 0, 0, 0, 1, 1, 5, 1, 0, 0, 0,
-                         0, 1, 0, 1, 2, 1, 0, 0])
-        result = np.float64(4.194084935806322)
-        self.assertEqual(ndd.entropy(data), result)
 
-    def test_01_100_100(self):
-        # generate your own data for testing: 
-        # import numpy as np; a=0.1; ns=100; nd=100; al = [a]*ns; pp=np.random.dirichlet(al); np.random.multinomial(nd,pp)
-        data = np.array([ 0,  0,  0,  0,  0,  0,  0,  0,  0,  4,  0,  0,  0,  0,  0,  2,  0,
-                          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                          3,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  5,  0,  0,  0,
-                          0,  1,  0,  0,  0,  0,  0,  0,  0,  1,  0,  2,  0, 18,  0,  0,  0,
-                          0,  0,  3,  0, 43,  0,  0,  0,  0,  0,  0,  8,  0,  2,  0,  0,  0,
-                          0,  0,  3,  0,  0,  0,  0,  0,  0,  0,  0,  3,  1,  0,  0])
-        result = np.float64(2.1324484952916856)
-        self.assertEqual(ndd.entropy(data), result)
-
-    def test_001_100_100(self):
-        # generate your own data for testing: 
-        # import numpy as np; a=0.01; ns=100; nd=100; al = [a]*ns; pp=np.random.dirichlet(al); np.random.multinomial(nd,pp)
-        data = np.array([ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 88,  0,  0,  0,  0,  0,
-                          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  9,  0,  0,  0,  0,
-                          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  3,  0,  0,  0,  0,  0,
-                          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0])
-        result = np.float64(0.45816599887523507)
-        self.assertEqual(ndd.entropy(data), result)
-
-    def test_histogram(self):
-        np.random.seed(0)
-        data = np.random.randint(1,11,1000)
-        result = [99, 96, 97, 122, 99, 105, 94, 97, 95, 96]
-        self.assertEqual(ndd.histogram(data), result)
-
-if __name__ == '__main__':
-    unittest.main()
-
+@pytest.fixture()
+def cases():
+    import json
+    with open('data.json', 'r') as _jf:
+        return json.load(_jf)
+    
+@pytest.mark.parametrize('a, ns, nd, result', cases())
+def test_basic(a, ns, nd, result):
+    """Basic tests."""
+    np.random.seed(123)
+    pp=np.random.dirichlet([a]*ns)
+    data = np.random.multinomial(nd,pp)
+    assert ndd.entropy(data) == np.float64(result)
