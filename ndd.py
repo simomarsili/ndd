@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016, Simone Marsili 
+# Copyright (C) 2016,2017 Simone Marsili 
 # All rights reserved.
 # License: BSD 3 clause
 """
 ndd
-=====
+===
 
 Estimates of entropy and entropy-related quantities from discrete data.
 
