@@ -37,7 +37,6 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     ascii, chr, hex, input, next, oct, open,
     pow, round, super,
     filter, map, zip)
-import time
 import logging
 from version import __version__
 
@@ -92,7 +91,7 @@ def _plugin(counts):
     Returns
     -------
     entropy : float
-        Rntropy estimate.
+        Entropy estimate.
 
     """
     import nddf
@@ -113,18 +112,18 @@ def _pseudo(counts, k=None, alpha=0.0):
     counts : array_like
         Histogram counts.
 
-    k : int (optional)
+    k : int, optional
         Total number of classes. must be k >= len(counts).
         Defaults to len(counts).
 
-    alpha : float
+    alpha : float, optional
         Sum alpha pseudocounts to the frequency of every bin.
         Default value is 0 (see 'plugin' estimator).
 
     Returns
     -------
     entropy : float
-        entropy estimate
+        Entropy estimate.
 
     """
     import nddf
@@ -142,18 +141,18 @@ def _dirichlet(counts, k=None, alpha=0.0):
     counts : array_like
         Histogram counts.
 
-    k : int (optional)
+    k : int, optional
         Total number of classes. must be k >= len(counts).
         Defaults to len(counts).
 
-    alpha : float
+    alpha : float, optional
         Concentration parameter of the Dirichlet prior.
         Must be >= 0.0. Defaults tp 0.0.
 
     Returns
     -------
     entropy : float
-        entropy estimate
+        Entropy estimate.
 
     """
     import nddf
@@ -177,14 +176,14 @@ def _nsb(counts, k=None):
     counts : array_like
         Histogram counts.
 
-    k : int (optional)
+    k : int, optional
         Total number of classes. must be k >= len(counts).
         Defaults to len(counts).
 
     Returns
     -------
     entropy : float
-        entropy estimate
+        Entropy estimate.
 
     """
     import nddf
@@ -193,103 +192,99 @@ def _nsb(counts, k=None):
     estimate, std = nddf.nsb(counts, k)
     return (estimate, std)
 
-def entropy(h,algorithm='nsb',alpha=None,k=None,est_error=False,verbose=0):
+def entropy(counts, k=None, alpha=0.0, algorithm='nsb', return_error=False):
     """
     Compute an estimate of the entropy for the histogram h
     
     Parameters
     ----------
-    
-    h         : list or array of ints
-                histogram counts 
+
+    counts : array_like
+        Histogram counts.
+
+    k : int, optional
+        Total number of classes. must be k >= len(counts).
+        Defaults to len(counts).
+
+    alpha : float, optional
+        Concentration parameter of the Dirichlet prior.
+        Must be >= 0.0. Defaults tp 0.0.
+
     algorithm : string, optional
-                algorithm for entropy estimation. options are: 'nsb' (default), 'pseudo', 'dirichlet', 'plugin'. 
-    alpha     : float, optional 
-                pseudocounts to add to each of the histogram counts ('pseudo' estimator) or value of the concentration parameter ('dirichlet' estimator)
-    k         : integer, optional 
-                size of the alphabet or number of possible different outcomes (default is k = number of bins in histogram h)
-    est_error : boolean, optional 
-                if True, returns the tuple (ent,err) where err is a Bayesian standard error on the estimated entropy ent (default is False)
-    verbose   : integer, optional 
-                verbosity level
-    
+        Algorithm for entropy estimation. Valid otions are:
+        'nsb' (default), 'pseudo', 'dirichlet', 'plugin'.
+
+    return_error : boolean, optional
+        If True, also return the Bayesian confidence intervals for the entropy
+        estimate, as the std deviation over the posterior for H.
+
     Returns
     -------
-    ent       : float
-                estimated entropy 
-    (err)     : float, optional
-                estimated error on entropy ent (if est_error == True in input)
+    entropy : float
+        Entropy estimate.
+
+    error : float, optional
+        Bayesian confidence interval as entropy +- error
+        (only if return_error == True).
 
     """
 
-    start_time = time.time()
+    algorithms = {
+        'nsb': _nsb,
+        'plugin': _plugin,
+        'pseudo': _pseudo,
+        'dirichlet': _dirichlet
+    }
 
-    if not k: 
-        k = len(h)
-    else: 
-        if len(h) > k: 
-            raise ValueError('Improper input: k=%s is smaller than len(h)=%s' % (k,len(h)))
+    if algorithm not in algorithms:
+        raise ValueError("Unknown algorithm %s" % algorithm)
 
-    if algorithm == 'pseudo' or algorithm == 'dirichlet': 
-        if not alpha: 
-            raise TypeError('Missing input: if algorithm = pseudo, dirichlet, alpha must be passed')
-    if alpha: 
-        if alpha <= 0.0: 
-            raise ValueError('Improper input: alpha=%s must be >= 0' % alpha)
-    if est_error and algorithm != 'nsb':
-        raise ValueError('The error on the calculated entropy can be estimated only using the default algorithm ("nsb")')
+    if return_error and algorithm != 'nsb':
+        raise ValueError("Use algorithm='nsb' in combination with"
+                         "return_error=True for Bayesian confidence interval.")
 
-    if algorithm == 'nsb'      : ent,err = _nsb(h,k)
-    if algorithm == 'plugin'   : ent = _plugin(h)
-    if algorithm == 'pseudo'   : ent = _pseudo(h,k,alpha)
-    if algorithm == 'dirichlet': ent = _dirichlet(h,k,alpha)
+    if algorithm == 'nsb':
+        estimate, error = _nsb(counts, k)
+    elif algorithm == 'plugin':
+        estimate, error = _plugin(counts)
+    elif algorithm == 'pseudo':
+        estimate, error = _pseudo(counts, k, alpha)
+    elif algorithm == 'dirichlet':
+        estimate, error = _dirichlet(counts, k, alpha)
 
-    if verbose > 0: 
-        print("(ndd.entropy) entropy estimation: %s secs" % (time.time() - start_time),file=sys.stderr)
-        sys.stderr.flush()
-
-    if est_error:
-        return (ent,err)
+    if return_error:
+        return (estimate, error)
     else:
-        return ent
+        return estimate
 
-def histogram(data,dictionary=False,verbose=0):
-    """
-    Compute an histogram from data 
-    
+def histogram(data, return_unique=False):
+    """Compute an histogram from data. Wrapper to numpy.unique.
+
     Parameters
     ----------
-    
-    data      : hashable 
-                data  
-    verbose   : integer, optional 
-                verbosity level
-    
+
+    data : array_like
+        Input data array. If n-dimensional, statistics is computed along
+        axis 0.
+
+    return_unique : bool, optional
+        If True, also return the unique elements corresponding to each bin.
+
     Returns
     -------
-    np.array  : np.int32
-                histogram
+
+    counts : ndarray
+        Bin counts.
+
+    unique : ndarray, optional
+        Unique elements corresponding to each bin in counts.
+        Only if return_elements == True
 
     """
-    import collections
-    from collections import Counter    
 
-    # rank of data must be either 1 or 2
-    rank = len(np.asarray(data).shape)
+    unique, counts = np.unique(data, axis=0, return_counts=True)
 
-    if rank == 1: 
-        hist = Counter(data)
-    elif rank == 2:
-        hist = Counter([tuple(x) for x in data])
-    else: 
-        raise Exception('ndd.histog: rank of data (%s) cant be greater than 2' % rank)
-
-    if verbose > 0: 
-        print("(ndd.histogram) histogram data: %s secs" % (time.time() - start_time),file=sys.stderr)
-        sys.stderr.flush()
-
-    if dictionary:
-        return hist
-    else: 
-        return list(hist.values())
-    
+    if return_unique:
+        return (unique, counts)
+    else:
+        return counts
