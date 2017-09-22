@@ -37,17 +37,14 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     ascii, chr, hex, input, next, oct, open,
     pow, round, super,
     filter, map, zip)
-import logging
 from version import __version__
 
 __copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
-__license__   = "BSD 3 clause"
-__author__    = "Simone Marsili (simomarsili@gmail.com)"
+__license__ = "BSD 3 clause"
+__author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy', 'histogram']
 
 import numpy as np
-import warnings
-import sys
 
 def _check_histogram(counts, k=None, alpha=0.0):
     """Check that `counts` contains valid frequency counts."""
@@ -70,34 +67,15 @@ def _check_histogram(counts, k=None, alpha=0.0):
         if k < nbins:
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
                              % (k, nbins))
-
-    try:
-        alpha = np.float64(alpha)
-    except ValueError:
-        raise
+    if alpha is None:
+        alpha = 0.0
+    else:
+        try:
+            alpha = np.float64(alpha)
+        except ValueError:
+            raise
 
     return (counts, k, alpha)
-
-def _plugin(counts):
-    """Wrapper to the plugin estimator. Compute the max. likelihood estimate
-    p_{ML} from the histogram counts, and then compute the entropy from p_{ML}
-    as H(p_{ML}).
-
-    Parameters
-    ----------
-    counts : array_like
-        Histogram counts.
-
-    Returns
-    -------
-    entropy : float
-        Entropy estimate.
-
-    """
-    import nddf
-
-    counts, _, _ = _check_histogram(counts)
-    return nddf.plugin(counts)
 
 def _pseudo(counts, k=None, alpha=0.0):
     """Wrapper to the pseudo-count estimator. Compute an estimate <p> of the
@@ -118,7 +96,7 @@ def _pseudo(counts, k=None, alpha=0.0):
 
     alpha : float, optional
         Sum alpha pseudocounts to the frequency of every bin.
-        Default value is 0 (see 'plugin' estimator).
+        Defaults to 0.0 (no pseudocounts, ML estimator).
 
     Returns
     -------
@@ -129,40 +107,20 @@ def _pseudo(counts, k=None, alpha=0.0):
     import nddf
 
     counts, k, alpha = _check_histogram(counts, k, alpha)
-    return nddf.pseudo(counts, k, alpha)
+    if alpha < 1e-6:
+        # well take this as zero
+        return nddf.plugin(counts)
+    else:
+        return nddf.pseudo(counts, k, alpha)
 
-def _dirichlet(counts, k=None, alpha=0.0):
-    """ Wrapper to the Dirichlet estimator. Average over the posterior
-    distribution for the entropy H(p), using a symmetric Dirichlet prior for
+def _dirichlet(counts, k=None, alpha=None):
+    """ If alpha is not None:
+    average over the posterior distribution for the entropy H(p),
+    using a symmetric Dirichlet prior for
     the distribution p with concentration parameter `alpha`.
 
-    Parameters
-    ----------
-    counts : array_like
-        Histogram counts.
-
-    k : int, optional
-        Total number of classes. must be k >= len(counts).
-        Defaults to len(counts).
-
-    alpha : float, optional
-        Concentration parameter of the Dirichlet prior.
-        Must be >= 0.0. Defaults tp 0.0.
-
-    Returns
-    -------
-    entropy : float
-        Entropy estimate.
-
-    """
-    import nddf
-
-    counts, k, alpha = _check_histogram(counts, k, alpha)
-    return nddf.dirichlet(h,k,alpha)
-
-def _nsb(counts, k=None):
-    """Wrapper to the Nemenman-Shafee-Bialek (NSB) estimator.
-    The entropy estimate results from an average over a distribution of
+    If alpha is None, use the Nemenman-Shafee-Bialek (NSB) estimator.
+    The entropy is estimated as an average over a distribution of
     Dirichlet estimators, parametrized by the concentration parameter alpha.
     The prior for alpha is chosen such that the resulting prior for the entropy
     is flat. In practice, the NSB estimator is a parameter-free, fully Bayesian
@@ -180,19 +138,33 @@ def _nsb(counts, k=None):
         Total number of classes. must be k >= len(counts).
         Defaults to len(counts).
 
+    alpha : float, optional
+        Concentration parameter of the Dirichlet prior.
+        Must be >= 0.0. If None, defaults to the NSB estimator.
+
     Returns
     -------
     entropy : float
         Entropy estimate.
 
+    error : float, optional
+        Bayesian confidence interval as entropy +- error
+
     """
     import nddf
 
-    counts, k, _ = _check_histogram(counts, k)
-    estimate, std = nddf.nsb(counts, k)
-    return (estimate, std)
+    if alpha is None:
+        # NSB
+        counts, k, alpha = _check_histogram(counts, k, alpha)
+        estimate, error = nddf.nsb(counts, k)
+    else:
+        # fixed alpha
+        counts, k, alpha = _check_histogram(counts, k, alpha)
+        estimate = nddf.dirichlet(counts, k, alpha)
+        error = 0.0 #TODO: compute variance over the posterior at fixed alpha
+    return (estimate, error)
 
-def entropy(counts, k=None, alpha=0.0, algorithm='nsb', return_error=False):
+def entropy(counts, k=None, alpha=None, algorithm='dirichlet', return_error=False):
     """
     Compute an estimate of the entropy for the histogram h
     
@@ -208,11 +180,11 @@ def entropy(counts, k=None, alpha=0.0, algorithm='nsb', return_error=False):
 
     alpha : float, optional
         Concentration parameter of the Dirichlet prior.
-        Must be >= 0.0. Defaults tp 0.0.
+        Must be >= 0.0. Defaults tp None.
 
     algorithm : string, optional
         Algorithm for entropy estimation. Valid otions are:
-        'nsb' (default), 'pseudo', 'dirichlet', 'plugin'.
+        'dirichlet' (default), 'pseudo'.
 
     return_error : boolean, optional
         If True, also return the Bayesian confidence intervals for the entropy
@@ -230,8 +202,6 @@ def entropy(counts, k=None, alpha=0.0, algorithm='nsb', return_error=False):
     """
 
     algorithms = {
-        'nsb': _nsb,
-        'plugin': _plugin,
         'pseudo': _pseudo,
         'dirichlet': _dirichlet
     }
@@ -239,16 +209,12 @@ def entropy(counts, k=None, alpha=0.0, algorithm='nsb', return_error=False):
     if algorithm not in algorithms:
         raise ValueError("Unknown algorithm %s" % algorithm)
 
-    if return_error and algorithm != 'nsb':
-        raise ValueError("Use algorithm='nsb' in combination with"
+    if return_error and algorithm != 'dirichlet':
+        raise ValueError("Use algorithm='dirichlet' in combination with"
                          "return_error=True for Bayesian confidence interval.")
 
-    if algorithm == 'nsb':
-        estimate, error = _nsb(counts, k)
-    elif algorithm == 'plugin':
-        estimate, error = _plugin(counts)
-    elif algorithm == 'pseudo':
-        estimate, error = _pseudo(counts, k, alpha)
+    if algorithm == 'pseudo':
+        estimate = _pseudo(counts, k, alpha)
     elif algorithm == 'dirichlet':
         estimate, error = _dirichlet(counts, k, alpha)
 
