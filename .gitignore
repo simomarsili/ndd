@@ -10,3 +10,5 @@ tests/*
 exts/*
 !exts/*.f90
 !exts/*.pyf
+build/*
+dist/*
