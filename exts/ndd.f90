@@ -377,6 +377,12 @@ subroutine pseudo(n,hist,nc,alpha,estimate)
   integer(int32) :: i
   real(real64)   :: ni
 
+  if (alpha < 1.0e-10_real64) then
+     ! if alpha == 0.0 (no pseudocounts)
+     call plugin(n, hist, estimate)
+     return
+  end if
+
   nbins = size(hist)
   if (nbins == 1) then 
      estimate = 0.0_real64
@@ -388,6 +394,11 @@ subroutine pseudo(n,hist,nc,alpha,estimate)
      ni = hist(i) + alpha
      estimate = estimate - ni*log(ni)
   end do
+  ! correct for the (nc - nbins) bins with frequency alpha
+  if (nc < nbins) then
+     write(0,*) "nddf.pseudo: nclasses cant be < than nbins in the histogram"
+     stop
+  end if
   if (nc > nbins) estimate = estimate - (nc - nbins)*alpha*log(alpha)
   estimate = estimate / (ndata + nc*alpha) + log(ndata + nc*alpha)
 
