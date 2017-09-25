@@ -2,14 +2,23 @@
 from os import path
 import codecs
 import re
-from setuptools import find_packages # pylint: disable=unused-import
+#from setuptools import setup
+import pip
+
+setup_requires = ['numpy']
+install_requires=['future', 'pytest', 'scipy']
+# install numpy via pip
+pip.main(['install'] + setup_requires)
+setup_requires = []
+
+
 from numpy.distutils.core import setup
 from numpy.distutils.core import Extension
 
 # get the long description from the README file
-HERE = path.abspath(path.dirname(__file__))
-with codecs.open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
-    LONG_DESCRIPTION = f.read()
+here = path.abspath(path.dirname(__file__))
+with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 # get version number(s)
 VERSIONFILE = "version.py"
@@ -33,19 +42,15 @@ setup(
     name='ndd',
     version=VERSION,
     description="Estimates of entropy and entropy-related quantities from discrete data",
-    long_description=LONG_DESCRIPTION,
+    long_description=long_description,
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/pypa/sampleproject',
     #packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     py_modules        = ['ndd'],
     ext_modules       = [nddf],
-    install_requires=[
-        'future',
-        'pytest',
-        'numpy',
-        'scipy',
-    ],
+    setup_requires = setup_requires,
+    install_requires = install_requires,
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
@@ -70,8 +75,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
 )

@@ -3,19 +3,38 @@
 # All rights reserved.
 # License: BSD 3 clause
 """
-ndd
-Estimates of entropy from discrete data.
-===
+entropy from discrete data.
 
-This module is a Python interface to the Nemenman-Schafee-Bialek (NSB) entropy
-estimator[nemenman2002entropy, nemenman2004entropy], a parameter-free, fully
-Bayesian algorithm that doesn't rely on case-dependent parameters. Entropy is
-estimated by averaging over a mixture of Dirichlet estimators
-[wolpert1995estimating] with an uninformative hyper-prior for the concentration
-parameter.
+The **ndd** module is a simple and minimal Python interface to the
+Nemenman-Schafee-Bialek (NSB) algorithm, a parameter-free, fully Bayesian
+algorithm for entropy estimation from discrete data.
 
-Some basic refs:
+### Basic usage 
 
+The `ndd.entropy` function takes as input an histogram vecor of counts
+(a list/array-like of integers) and returns a entropy estimate computed as a
+posterior mean (in nats): 
+
+```python
+>>> counts
+[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
+>>> import ndd
+>>> entropy_estimate = ndd.entropy(counts)
+>>> entropy_estimate
+2.623634344902917
+```
+
+The uncertainty in the entropy estimate can be quantified by the posterior
+standard deviation:
+```python
+>>> entropy_estimate, dispersion = ndd.entropy(counts, return_error=True)
+```
+
+### References
+
+Some refs:
+
+```
 @article{wolpert1995estimating,
   title={Estimating functions of probability distributions from a finite set of samples},
   author={Wolpert, David H and Wolf, David R},
@@ -56,6 +75,13 @@ Some basic refs:
   year={2013},
   publisher={Multidisciplinary Digital Publishing Institute}
 }
+```
+
+and interesting links:
+
+- [Sebastian Nowozin on Bayesian estimators](http://www.nowozin.net/sebastian/blog/estimating-discrete-entropy-part-3.html)
+
+- [Il Memming Park on discrete entropy estimators](https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/)
 
 """
 
@@ -109,12 +135,15 @@ def _check_histogram(counts, k=None, alpha=0.0):
 def entropy(counts, k=None, a=None, return_error=False, dist=False):
     """
     Compute an estimate of the entropy from histogram counts.
-    If `a` is passed, compute a Bayesian estimate of entropy using a single
-    Dirichlet prior with concentration parameter equal to `a`. If `a` is None,
-    average over a mixture of Dirichlet estimators wiht an uninformative
-    hyper-prior for `a` (NSB algorithm).
+    If `a` is passed, compute a Bayesian estimate of the entropy using a single
+    Dirichlet prior with concentration parameter `a` (fixed alpha estimator).
+    If `a` is None, average over a mixture of Dirichlet estimators weighted by
+    an uninformative hyper-prior (NSB estimator).
     Finally, if `dist` == True, first estimate the underlying distribution over
-    states/classes and then plug this estimate into the entropy definition.
+    states/classes and then plug this estimate into the entropy definition
+    (maximum likelihood estimator). If `a` is passed in combination with
+    `dist=True`, the true distribution is approximated by adding `a`
+    pseudocounts to the empirical bin frequencies (`pseudocount` estimator).
 
     Parameters
     ----------
