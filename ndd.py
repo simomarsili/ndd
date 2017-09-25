@@ -1,244 +1,209 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016, Simone Marsili 
+# Copyright (C) 2016,2017 Simone Marsili
 # All rights reserved.
 # License: BSD 3 clause
 """
 ndd
-=====
+Estimates of entropy from discrete data.
+===
 
-Estimates of entropy and entropy-related quantities from discrete data.
+This module is a Python interface to the Nemenman-Schafee-Bialek (NSB) entropy
+estimator[nemenman2002entropy, nemenman2004entropy], a parameter-free, fully
+Bayesian algorithm that doesn't rely on case-dependent parameters. Entropy is
+estimated by averaging over a mixture of Dirichlet estimators
+[wolpert1995estimating] with an uninformative hyper-prior for the concentration
+parameter.
 
-Some refs:
+Some basic refs:
 
-Nemenman, I.; Shafee, F. Bialek, W. Entropy and inference, revisited. 
-In Advances in Neural Information Processing Systems 14:471--478 (2002). 
+@article{wolpert1995estimating,
+  title={Estimating functions of probability distributions from a finite set of samples},
+  author={Wolpert, David H and Wolf, David R},
+  journal={Physical Review E},
+  volume={52},
+  number={6},
+  pages={6841},
+  year={1995},
+  publisher={APS}
+}
 
-Nemenman, I.; Bialek, W.; Van Steveninck, RDR. Entropy and information in neural spike trains: Progress on the sampling problem. 
-Physical Review E, 69(5):056111 (2004).
+@inproceedings{nemenman2002entropy,
+  title={Entropy and inference, revisited},
+  author={Nemenman, Ilya and Shafee, Fariel and Bialek, William},
+  booktitle={Advances in neural information processing systems},
+  pages={471--478},
+  year={2002}
+}
 
-Archer, Evan, Park, Il Memming and Pillow, Jonathan W.. "Bayesian and Quasi-Bayesian Estimators for Mutual Information from Discrete Data." 
-Entropy 15 , no. 5 (2013): 1738--1755. 
+@article{nemenman2004entropy,
+  title={Entropy and information in neural spike trains: Progress on the sampling problem},
+  author={Nemenman, Ilya and Bialek, William and van Steveninck, Rob de Ruyter},
+  journal={Physical Review E},
+  volume={69},
+  number={5},
+  pages={056111},
+  year={2004},
+  publisher={APS}
+}
 
-Hutter, M. Distribution of mutual information. 
-Advances in neural information processing systems, 1:399--406 (2002).
+@article{archer2013bayesian,
+  title={Bayesian and quasi-Bayesian estimators for mutual information from discrete data},
+  author={Archer, Evan and Park, Il Memming and Pillow, Jonathan W},
+  journal={Entropy},
+  volume={15},
+  number={5},
+  pages={1738--1755},
+  year={2013},
+  publisher={Multidisciplinary Digital Publishing Institute}
+}
 
 """
 
-from __future__ import absolute_import,division,print_function,unicode_literals
-from builtins import *
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from builtins import (  # pylint: disable=redefined-builtin, unused-import
+    bytes, dict, int, list, object, range, str,
+    ascii, chr, hex, input, next, oct, open,
+    pow, round, super,
+    filter, map, zip)
+from version import __version__
 
-__copyright__ = "Copyright (C) 2016 Simone Marsili"
-__license__   = "BSD 3 clause"
-__version__   = "v0.1.9"
-__author__    = "Simone Marsili (simomarsili@gmail.com)"
-__all__ = ['entropy','histogram']
+__copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
+__license__ = "BSD 3 clause"
+__author__ = "Simone Marsili (simomarsili@gmail.com)"
+__all__ = ['entropy', 'histogram']
+
 import numpy as np
-import warnings
-import sys
-import time
 
-def _plugin(h):
-    """
-    Wrapper to the plugin estimator. 
-    Compute an estimate P of the true probability distribution directly from the histogram counts, 
-    and then compute the entropy from P. 
-    
-    Parameters
-    ----------
-    h   : list or array of ints
-          histogram counts
+def _check_histogram(counts, k=None, alpha=0.0):
+    """Check that `counts` contains valid frequency counts."""
 
-    Returns
-    -------
-    val : float
-          entropy estimate
-    """
-    import nddf
-    h = np.array(h,dtype=np.int32)
-    return nddf.plugin(h)
+    try:
+        counts = np.array(counts, dtype=np.int32)
+    except ValueError:
+        raise
+    if np.any(counts < 0):
+        raise ValueError("A bin cant have a frequency < 0")
 
-def _pseudo(h,k=None,alpha=0.0):
-    """
-    Wrapper to the pseudo-count estimator. 
-    Compute an estimate P of the true probability distribution by adding alpha pseudocounts to the original counts, 
-    and then compute the entropy from P. 
-    
-    Parameters
-    ----------
-    h     : list or array of ints
-            histogram counts 
-    k     : int (optional)
-            number of categories (bins). If None, k will be guessed from the number of elements in histogram h
-    alpha : float
-            pseudocounts that will be added to the frequency of every possible category. Default value is 0 i.e. no pseudocounts. 
-
-    Returns
-    -------
-    val   : float
-            entropy estimate
-    """
-    import nddf
-    h = np.array(h,dtype=np.int32)
-    if k is None: k = len(h)
-    k = np.int32(k)
-    alpha = np.float64(alpha)
-    return nddf.pseudo(h,k,alpha)
-
-def _dirichlet(h,k=None,alpha=0.0):
-    """
-    Wrapper to the Dirichlet estimator. 
-    The estimated entropy is the mean entropy of the ensemble of Dirichlet posterior distributions, 
-    resulting from a (symmetric) Dirichlet prior having alpha as concentration parameter. 
-    Notice that the probability distribution obtained adding alpha pseudo-counts to each category (pseudo-count estimator)
-    corresponds to the average Dirichlet posterior distribution (using alpha as concentration parameter), 
-    i.e. the maximum-likelihood estimate of the true distribution using a Dirichlet prior. 
-    
-    Parameters
-    ----------
-    h     : list or array of ints
-            histogram counts 
-    k     : int (optional)
-            number of categories (bins). If None, k will be guessed from the number of elements in histogram h
-    alpha : float
-            pseudocounts that will be added to the frequency of every possible category. Default value is 0 i.e. no pseudocounts. 
-
-    Returns
-    -------
-    val   : float
-            entropy estimate
-    """
-    import nddf
-    h = np.array(h,dtype=np.int32)
-    if k is None: k = len(h)
-    k = np.int32(k)
-    alpha = np.float64(alpha)
-    return nddf.dirichlet(h,k,alpha)
-
-def _nsb(h,k=None):
-    """
-    Wrapper to the Nemenman-Shafee-Bialek (NSB) estimator. 
-    The estimated entropy is an average over an infinite series of Dirichlet estimators. 
-    The corresponding distribution of the concentration parameter alpha is chosen is such a way that the resulting prior is uninformative on the entropy. 
-    From a practical point of view, the NSB estimator is a parameter-free, fully Bayesian estimator 
-    that doesnt require the user to guess an (inevitably data-dependent) reasonable number of pseudo-counts or optimal value for the concentration parameter. 
-    Moreover, Bayesian confidence intervals can be obtained from the variance of the entropy over the Dirichlet priors. 
-    
-    Parameters
-    ----------
-    h     : list or array of ints
-            histogram counts 
-    k     : int (optional)
-            number of categories (bins). If None, k will be guessed from the number of elements in histogram h
-
-    Returns
-    -------
-    val   : float
-            entropy estimate
-    """
-    import nddf
-    h = np.array(h,dtype=np.int32)
-    if k is None: k = len(h)
-    k = np.int32(k)
-    estimate,std = nddf.nsb(h,k)
-    return (estimate,std)
-
-def entropy(h,algorithm='nsb',alpha=None,k=None,est_error=False,verbose=0):
-    """
-    Compute an estimate of the entropy for the histogram h
-    
-    Parameters
-    ----------
-    
-    h         : list or array of ints
-                histogram counts 
-    algorithm : string, optional
-                algorithm for entropy estimation. options are: 'nsb' (default), 'pseudo', 'dirichlet', 'plugin'. 
-    alpha     : float, optional 
-                pseudocounts to add to each of the histogram counts ('pseudo' estimator) or value of the concentration parameter ('dirichlet' estimator)
-    k         : integer, optional 
-                size of the alphabet or number of possible different outcomes (default is k = number of bins in histogram h)
-    est_error : boolean, optional 
-                if True, returns the tuple (ent,err) where err is a Bayesian standard error on the estimated entropy ent (default is False)
-    verbose   : integer, optional 
-                verbosity level
-    
-    Returns
-    -------
-    ent       : float
-                estimated entropy 
-    (err)     : float, optional
-                estimated error on entropy ent (if est_error == True in input)
-
-    """
-
-    start_time = time.time()
-
-    if not k: 
-        k = len(h)
-    else: 
-        if len(h) > k: 
-            raise ValueError('Improper input: k=%s is smaller than len(h)=%s' % (k,len(h)))
-
-    if algorithm == 'pseudo' or algorithm == 'dirichlet': 
-        if not alpha: 
-            raise TypeError('Missing input: if algorithm = pseudo, dirichlet, alpha must be passed')
-    if alpha: 
-        if alpha <= 0.0: 
-            raise ValueError('Improper input: alpha=%s must be >= 0' % alpha)
-    if est_error and algorithm != 'nsb':
-        raise ValueError('The error on the calculated entropy can be estimated only using the default algorithm ("nsb")')
-
-    if algorithm == 'nsb'      : ent,err = _nsb(h,k)
-    if algorithm == 'plugin'   : ent = _plugin(h)
-    if algorithm == 'pseudo'   : ent = _pseudo(h,k,alpha)
-    if algorithm == 'dirichlet': ent = _dirichlet(h,k,alpha)
-
-    if verbose > 0: 
-        print("(ndd.entropy) entropy estimation: %s secs" % (time.time() - start_time),file=sys.stderr)
-        sys.stderr.flush()
-
-    if est_error:
-        return (ent,err)
+    nbins = np.int32(len(counts))
+    if k is None:
+        k = nbins
     else:
-        return ent
+        try:
+            k = np.int32(k)
+        except ValueError:
+            raise
+        if k < nbins:
+            raise ValueError("k (%s) is smaller than the number of bins (%s)"
+                             % (k, nbins))
+    if alpha is None:
+        alpha = 0.0
+    else:
+        try:
+            alpha = np.float64(alpha)
+        except ValueError:
+            raise
 
-def histogram(data,dictionary=False,verbose=0):
+    return (counts, k, alpha)
+
+def entropy(counts, k=None, a=None, return_error=False, dist=False):
     """
-    Compute an histogram from data 
-    
+    Compute an estimate of the entropy from histogram counts.
+    If `a` is passed, compute a Bayesian estimate of entropy using a single
+    Dirichlet prior with concentration parameter equal to `a`. If `a` is None,
+    average over a mixture of Dirichlet estimators wiht an uninformative
+    hyper-prior for `a` (NSB algorithm).
+    Finally, if `dist` == True, first estimate the underlying distribution over
+    states/classes and then plug this estimate into the entropy definition.
+
     Parameters
     ----------
-    
-    data      : hashable 
-                data  
-    verbose   : integer, optional 
-                verbosity level
-    
+
+    counts : array_like
+        Histogram counts.
+
+    k : int, optional
+        Total number of classes. must be k >= len(counts).
+        Defaults to len(counts).
+
+    a : float, optional
+        Concentration parameter of the Dirichlet prior.
+        Must be >= 0.0. If no value is passed, use a mixture of Dirichlet
+        priors (Nemenman-Schafee-Bialek algorithm).
+
+    return_error : boolean, optional
+        If True, also return the Bayesian confidence intervals for the entropy
+        estimate, as the std deviation over the posterior for H.
+
+    dist : boolean, optional
+        If True, the true underlying distribution is estimated from counts,
+        and plugged in the entropy definition ("plugin" estimator).
+        Use `a` as the concentration parameter for the Dirichlet prior
+        ("pseudocount" estimator).
+        If `a` is None, use the empirical distribution ("ML" estimatator).
+
     Returns
     -------
-    np.array  : np.int32
-                histogram
+    entropy : float
+        Entropy estimate.
+
+    error : float, optional
+        If return_error == True, return a Bayesian confidence interval.
+        When dist == True, return None.
 
     """
-    import collections
-    from collections import Counter    
+    import nddf
 
-    # rank of data must be either 1 or 2
-    rank = len(np.asarray(data).shape)
+    counts, k, alpha = _check_histogram(counts, k, a)
+    error = None
+    if dist:
+        if alpha < 1e-6:
+            # we'll take this as zero
+            return nddf.plugin(counts)
+        else:
+            return nddf.pseudo(counts, k, alpha)
+    else:
+        if a is None:
+            # NSB
+            estimate, error = nddf.nsb(counts, k)
+        else:
+            # fixed alpha
+            estimate = nddf.dirichlet(counts, k, alpha)
+            #TODO: compute variance over the posterior at fixed alpha
 
-    if rank == 1: 
-        hist = Counter(data)
-    elif rank == 2:
-        hist = Counter([tuple(x) for x in data])
-    else: 
-        raise Exception('ndd.histog: rank of data (%s) cant be greater than 2' % rank)
+    if return_error:
+        return (estimate, error)
+    else:
+        return estimate
 
-    if verbose > 0: 
-        print("(ndd.histogram) histogram data: %s secs" % (time.time() - start_time),file=sys.stderr)
-        sys.stderr.flush()
+def histogram(data, return_unique=False):
+    """Compute an histogram from data. Wrapper to numpy.unique.
 
-    if dictionary:
-        return hist
-    else: 
-        return list(hist.values())
-    
+    Parameters
+    ----------
+
+    data : array_like
+        Input data array. If n-dimensional, statistics is computed along
+        axis 0.
+
+    return_unique : bool, optional
+        If True, also return the unique elements corresponding to each bin.
+
+    Returns
+    -------
+
+    counts : ndarray
+        Bin counts.
+
+    unique : ndarray, optional
+        Unique elements corresponding to each bin in counts.
+        Only if return_elements == True
+
+    """
+
+    unique, counts = np.unique(data, axis=0, return_counts=True)
+
+    if return_unique:
+        return (unique, counts)
+    else:
+        return counts

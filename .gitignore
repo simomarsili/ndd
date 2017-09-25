@@ -1,0 +1,14 @@
+*~
+*#
+*.pyc
+.cache
+TODO
+tests/*
+!tests/data.json
+!tests/test_basic.py
+!tests/make_test_ref.py
+exts/*
+!exts/*.f90
+!exts/*.pyf
+build/*
+dist/*
