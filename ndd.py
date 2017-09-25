@@ -164,10 +164,10 @@ def _dirichlet(counts, k=None, alpha=None):
         error = 0.0 #TODO: compute variance over the posterior at fixed alpha
     return (estimate, error)
 
-def entropy(counts, k=None, alpha=None, algorithm='dirichlet', return_error=False):
+def entropy(counts, k=None, a=None, return_error=False, dist=False):
     """
     Compute an estimate of the entropy for the histogram h
-    
+
     Parameters
     ----------
 
@@ -178,17 +178,20 @@ def entropy(counts, k=None, alpha=None, algorithm='dirichlet', return_error=Fals
         Total number of classes. must be k >= len(counts).
         Defaults to len(counts).
 
-    alpha : float, optional
+    a : float, optional
         Concentration parameter of the Dirichlet prior.
-        Must be >= 0.0. Defaults tp None.
-
-    algorithm : string, optional
-        Algorithm for entropy estimation. Valid otions are:
-        'dirichlet' (default), 'pseudo'.
+        Must be >= 0.0. If no value is passed, use a mixture of Dirichlet
+        prior (Nemenman-Schafee-Bialek algorithm).
 
     return_error : boolean, optional
         If True, also return the Bayesian confidence intervals for the entropy
         estimate, as the std deviation over the posterior for H.
+
+    dist : boolean, optional
+        If True, the true underlying distribution is estimated from counts,
+        and used in the entropy definition ("plugin" estimator).
+        Use `a` is as concentration parameter for the Dirichlet prior.
+        If `a` is None, use the empirical distribution (ML estimate).
 
     Returns
     -------
@@ -196,27 +199,28 @@ def entropy(counts, k=None, alpha=None, algorithm='dirichlet', return_error=Fals
         Entropy estimate.
 
     error : float, optional
-        Bayesian confidence interval as entropy +- error
-        (only if return_error == True).
+        If return_error == True, return a Bayesian confidence interval.
+        When dist == True, return None.
 
     """
+    import nddf
 
-    algorithms = {
-        'pseudo': _pseudo,
-        'dirichlet': _dirichlet
-    }
-
-    if algorithm not in algorithms:
-        raise ValueError("Unknown algorithm %s" % algorithm)
-
-    if return_error and algorithm != 'dirichlet':
-        raise ValueError("Use algorithm='dirichlet' in combination with"
-                         "return_error=True for Bayesian confidence interval.")
-
-    if algorithm == 'pseudo':
-        estimate = _pseudo(counts, k, alpha)
-    elif algorithm == 'dirichlet':
-        estimate, error = _dirichlet(counts, k, alpha)
+    counts, k, alpha = _check_histogram(counts, k, a)
+    error = None
+    if dist:
+        if alpha < 1e-6:
+            # we'll take this as zero
+            return nddf.plugin(counts)
+        else:
+            return nddf.pseudo(counts, k, alpha)
+    else:
+        if a is None:
+            # NSB
+            estimate, error = nddf.nsb(counts, k)
+        else:
+            # fixed alpha
+            estimate = nddf.dirichlet(counts, k, alpha)
+            #TODO: compute variance over the posterior at fixed alpha
 
     if return_error:
         return (estimate, error)
