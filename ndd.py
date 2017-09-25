@@ -55,6 +55,14 @@ Some basic refs:
   publisher={Multidisciplinary Digital Publishing Institute}
 }
 
+and interesting links on the web:
+
+Sebastian Nowozin on Bayesian estimators:
+http://www.nowozin.net/sebastian/blog/estimating-discrete-entropy-part-3.html
+
+Il Memming Park on discrete entropy estimators:
+https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/
+
 """
 
 from __future__ import (absolute_import, division,
