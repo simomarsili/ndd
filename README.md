@@ -17,7 +17,9 @@ The `ndd.entropy` function takes as input an histogram vecor of counts (a list/a
 
 The uncertainty in the entropy estimate can be quantified by the posterior standard deviation:
 ```python
->>> entropy_estimate, dispersion = ndd.entropy(counts, return_error=True)
+>>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
+>>> std
+0.048675500725595504
 ```
 
 ### Where to get it
