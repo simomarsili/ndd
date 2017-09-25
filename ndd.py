@@ -3,13 +3,13 @@
 # All rights reserved.
 # License: BSD 3 clause
 """
-## ndd - entropy from discrete data.
+entropy from discrete data.
 
 The **ndd** module is a simple and minimal Python interface to the
 Nemenman-Schafee-Bialek (NSB) algorithm, a parameter-free, fully Bayesian
 algorithm for entropy estimation from discrete data.
 
-## Basic usage 
+### Basic usage 
 
 The `ndd.entropy` function takes as input an histogram vecor of counts
 (a list/array-like of integers) and returns a entropy estimate computed as a
