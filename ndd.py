@@ -4,9 +4,15 @@
 # License: BSD 3 clause
 """
 ndd
+Estimates of entropy from discrete data.
 ===
 
-Estimates of entropy and entropy-related quantities from discrete data.
+This module is a Python interface to the Nemenman-Schafee-Bialek (NSB) entropy
+estimator[nemenman2002entropy, nemenman2004entropy], a parameter-free, fully
+Bayesian algorithm that doesn't rely on case-dependent parameters. Entropy is
+estimated by averaging over a mixture of Dirichlet estimators
+[wolpert1995estimating] with an uninformative hyper-prior for the concentration
+parameter.
 
 Some basic refs:
 
@@ -100,96 +106,15 @@ def _check_histogram(counts, k=None, alpha=0.0):
 
     return (counts, k, alpha)
 
-def _pseudo(counts, k=None, alpha=0.0):
-    """Wrapper to the pseudo-count estimator. Compute an estimate <p> of the
-    true probability distribution by adding `alpha` pseudocounts to each bin
-    and compute the entropy from <p>, H(<p>). The procedure has a Bayesian
-    interpretation: <p> corresponds to the average distribution over the
-    posterior resulting from a symmetric Dirichlet prior with concentration
-    parameter `alpha`.
-
-    Parameters
-    ----------
-    counts : array_like
-        Histogram counts.
-
-    k : int, optional
-        Total number of classes. must be k >= len(counts).
-        Defaults to len(counts).
-
-    alpha : float, optional
-        Sum alpha pseudocounts to the frequency of every bin.
-        Defaults to 0.0 (no pseudocounts, ML estimator).
-
-    Returns
-    -------
-    entropy : float
-        Entropy estimate.
-
-    """
-    import nddf
-
-    counts, k, alpha = _check_histogram(counts, k, alpha)
-    if alpha < 1e-6:
-        # well take this as zero
-        return nddf.plugin(counts)
-    else:
-        return nddf.pseudo(counts, k, alpha)
-
-def _dirichlet(counts, k=None, alpha=None):
-    """ If alpha is not None:
-    average over the posterior distribution for the entropy H(p),
-    using a symmetric Dirichlet prior for
-    the distribution p with concentration parameter `alpha`.
-
-    If alpha is None, use the Nemenman-Shafee-Bialek (NSB) estimator.
-    The entropy is estimated as an average over a distribution of
-    Dirichlet estimators, parametrized by the concentration parameter alpha.
-    The prior for alpha is chosen such that the resulting prior for the entropy
-    is flat. In practice, the NSB estimator is a parameter-free, fully Bayesian
-    estimator that doesnt require the user to guess
-    (unavoidably case-dependent) values for pseudocounts or concetration
-    parameter. Bayesian confidence intervals can be obtained from the variance
-    of the entropy over the distribution of Dirichlet priors.
-
-    Parameters
-    ----------
-    counts : array_like
-        Histogram counts.
-
-    k : int, optional
-        Total number of classes. must be k >= len(counts).
-        Defaults to len(counts).
-
-    alpha : float, optional
-        Concentration parameter of the Dirichlet prior.
-        Must be >= 0.0. If None, defaults to the NSB estimator.
-
-    Returns
-    -------
-    entropy : float
-        Entropy estimate.
-
-    error : float, optional
-        Bayesian confidence interval as entropy +- error
-
-    """
-    import nddf
-
-    if alpha is None:
-        # NSB
-        counts, k, alpha = _check_histogram(counts, k, alpha)
-        estimate, error = nddf.nsb(counts, k)
-    else:
-        # fixed alpha
-        counts, k, alpha = _check_histogram(counts, k, alpha)
-        estimate = nddf.dirichlet(counts, k, alpha)
-        error = 0.0 #TODO: compute variance over the posterior at fixed alpha
-    return (estimate, error)
-
 def entropy(counts, k=None, a=None, return_error=False, dist=False):
     """
-    Compute an estimate of the entropy for the histogram h
+    Compute an estimate of the entropy from histogram counts.
+    If `a` is passed, compute a Bayesian estimate of entropy using a single
+    Dirichlet prior with concentration parameter equal to `a`. If `a` is None,
+    average over a mixture of Dirichlet estimators wiht an uninformative
+    hyper-prior for `a` (NSB algorithm).
+    Finally, if `dist` == True, first estimate the underlying distribution over
+    states/classes and then plug this estimate into the entropy definition.
 
     Parameters
     ----------
@@ -204,7 +129,7 @@ def entropy(counts, k=None, a=None, return_error=False, dist=False):
     a : float, optional
         Concentration parameter of the Dirichlet prior.
         Must be >= 0.0. If no value is passed, use a mixture of Dirichlet
-        prior (Nemenman-Schafee-Bialek algorithm).
+        priors (Nemenman-Schafee-Bialek algorithm).
 
     return_error : boolean, optional
         If True, also return the Bayesian confidence intervals for the entropy
@@ -212,9 +137,10 @@ def entropy(counts, k=None, a=None, return_error=False, dist=False):
 
     dist : boolean, optional
         If True, the true underlying distribution is estimated from counts,
-        and used in the entropy definition ("plugin" estimator).
-        Use `a` is as concentration parameter for the Dirichlet prior.
-        If `a` is None, use the empirical distribution (ML estimate).
+        and plugged in the entropy definition ("plugin" estimator).
+        Use `a` as the concentration parameter for the Dirichlet prior
+        ("pseudocount" estimator).
+        If `a` is None, use the empirical distribution ("ML" estimatator).
 
     Returns
     -------
