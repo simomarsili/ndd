@@ -8,25 +8,48 @@ ndd
 
 Estimates of entropy and entropy-related quantities from discrete data.
 
-Some refs:
+Some basic refs:
 
-Nemenman, I.; Shafee, F. Bialek, W.
-Entropy and inference, revisited.
-In Advances in Neural Information Processing Systems 14:471--478 (2002).
+@article{wolpert1995estimating,
+  title={Estimating functions of probability distributions from a finite set of samples},
+  author={Wolpert, David H and Wolf, David R},
+  journal={Physical Review E},
+  volume={52},
+  number={6},
+  pages={6841},
+  year={1995},
+  publisher={APS}
+}
 
-Nemenman, I.; Bialek, W.; Van Steveninck, RDR.
-Entropy and information in neural spike trains: Progress on the sampling
-problem.
-Physical Review E, 69(5):056111 (2004).
+@inproceedings{nemenman2002entropy,
+  title={Entropy and inference, revisited},
+  author={Nemenman, Ilya and Shafee, Fariel and Bialek, William},
+  booktitle={Advances in neural information processing systems},
+  pages={471--478},
+  year={2002}
+}
 
-Archer, Evan, Park, Il Memming and Pillow, Jonathan W.
-Bayesian and Quasi-Bayesian Estimators for Mutual Information from Discrete
-Data.
-Entropy 15 , no. 5 (2013): 1738--1755.
+@article{nemenman2004entropy,
+  title={Entropy and information in neural spike trains: Progress on the sampling problem},
+  author={Nemenman, Ilya and Bialek, William and van Steveninck, Rob de Ruyter},
+  journal={Physical Review E},
+  volume={69},
+  number={5},
+  pages={056111},
+  year={2004},
+  publisher={APS}
+}
 
-Hutter, M.
-Distribution of mutual information.
-Advances in neural information processing systems, 1:399--406 (2002).
+@article{archer2013bayesian,
+  title={Bayesian and quasi-Bayesian estimators for mutual information from discrete data},
+  author={Archer, Evan and Park, Il Memming and Pillow, Jonathan W},
+  journal={Entropy},
+  volume={15},
+  number={5},
+  pages={1738--1755},
+  year={2013},
+  publisher={Multidisciplinary Digital Publishing Institute}
+}
 
 """
 
