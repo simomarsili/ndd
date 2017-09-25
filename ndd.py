@@ -143,7 +143,7 @@ def entropy(counts, k=None, a=None, return_error=False, dist=False):
     states/classes and then plug this estimate into the entropy definition
     (maximum likelihood estimator). If `a` is passed in combination with
     `dist=True`, the true distribution is approximated by adding `a`
-    pseudocunts to the empirical bin frequencies (`pseudocount` estimator).
+    pseudocounts to the empirical bin frequencies (`pseudocount` estimator).
 
     Parameters
     ----------
