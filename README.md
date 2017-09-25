@@ -1,77 +1,108 @@
-# ndd
+## ndd - entropy from discrete data.
 
-**ndd** is a Python/Fortran module for estimation of entropy and entropy-related quantities from discrete data.  
-The main goal of **ndd** is to provide a simple and minimal Python interface to the Nemenman-Shafee-Bialek (NSB) algorithm,
-a state of the art Bayesian algorithm for entropy estimation. In **ndd**, this interface is the ndd.entropy() function,
-that takes as input an array of counts over a set of possible outcomes, and returns an entropy estimate:  
-entropy_estimate = ndd.entropy(counts). 
+The **ndd** module is a simple and minimal Python interface to the Nemenman-Schafee-Bialek (NSB) algorithm, a parameter-free, fully Bayesian algorithm for entropy estimation from discrete data.
 
-# Obtaining the source
+## Basic usage 
 
-All **ndd** source code is hosted on Github. 
-You can download the latest version of the code from [this page](https://github.com/simomarsili/ndd/releases/latest). 
+The `ndd.entropy` function takes as input an histogram vecor of counts (a list/array-like of integers) and returns a entropy estimate computed as a posterior mean (in nats): 
 
-# Prerequisites
+```python
+>>> counts
+[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
+>>> import ndd
+>>> entropy_estimate = ndd.entropy(counts)
+>>> entropy_estimate
+2.623634344902917
+```
 
-In order to compile **ndd**, you will need to have a **Fortran compiler** installed on your machine.   
-If you are using Debian or a Debian derivative such as Ubuntu, you can install the gfortran compiler using the following command:
+The uncertainty in the entropy estimate can be quantified by the posterior standard deviation:
+```python
+>>> entropy_estimate, dispersion = ndd.entropy(counts, return_error=True)
+```
 
-    sudo apt-get install gfortran
+### Where to get it
+The source code is hosted on [Github](https://github.com/simomarsili/ndd). 
+To install the package from sources, clone the repository using git and run the `setup.py` script:
+```bash
+$ git clone https://github.com/simomarsili/ndd.git
+$ cd ndd
+$ python setup.py install
+```
+(or `python setup.py install --user` to install in `~/.local`).
 
-The compiling and linking of source files is handled by **Gnu Make**. 
-If you are using Debian or a Debian derivative such as Ubuntu, you should find 4.1 already installed. 
+Alternatively, use `pip`:
 
-Finally, you will need to install the **numpy** library: 
-   
-    sudo apt-get install python-numpy
+```bash
+$ pip install -r requirements --user
+$ pip install . --user
+```
 
-that will provide also **f2py** (the Fortran to Python interface generator) - or install the full [SciPy stack](https://www.scipy.org/install.html).
+In order to compile **ndd**, you will also need a **Fortran compiler** installed on your machine. If you are using Debian or a Debian derivative such as Ubuntu, you can install the gfortran compiler using the following command:
 
-# Install 
+```bash
+$ sudo apt-get install gfortran
+```
 
-To install **ndd**, enter the root directory:
-     
-    cd ndd
+### References
 
-and type make:
+Some refs:
 
-    make
+```
+@article{wolpert1995estimating,
+  title={Estimating functions of probability distributions from a finite set of samples},
+  author={Wolpert, David H and Wolf, David R},
+  journal={Physical Review E},
+  volume={52},
+  number={6},
+  pages={6841},
+  year={1995},
+  publisher={APS}
+}
 
-This will build and install the ndd module in /usr/local . 
-The install path can be specified on the make command line as an absolute path, e.g. : 
+@inproceedings{nemenman2002entropy,
+  title={Entropy and inference, revisited},
+  author={Nemenman, Ilya and Shafee, Fariel and Bialek, William},
+  booktitle={Advances in neural information processing systems},
+  pages={471--478},
+  year={2002}
+}
 
-    make INSTALL_PATH=~/.local
+@article{nemenman2004entropy,
+  title={Entropy and information in neural spike trains: Progress on the sampling problem},
+  author={Nemenman, Ilya and Bialek, William and van Steveninck, Rob de Ruyter},
+  journal={Physical Review E},
+  volume={69},
+  number={5},
+  pages={056111},
+  year={2004},
+  publisher={APS}
+}
 
-will install the module in the .local dir in your home. 
+@article{archer2013bayesian,
+  title={Bayesian and quasi-Bayesian estimators for mutual information from discrete data},
+  author={Archer, Evan and Park, Il Memming and Pillow, Jonathan W},
+  journal={Entropy},
+  volume={15},
+  number={5},
+  pages={1738--1755},
+  year={2013},
+  publisher={Multidisciplinary Digital Publishing Institute}
+}
+```
 
-# Testing
+and interesting links:
 
-From the root directory of the project, type: 
+- [Sebastian Nowozin on Bayesian estimators](http://www.nowozin.net/sebastian/blog/estimating-discrete-entropy-part-3.html)
 
-    make test
+- [Il Memming Park on discrete entropy estimators](https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/)
 
-# Basic usage 
+### Contributing
 
-  The ndd.entropy function takes as input a histogram (a list or a numpy array of integers representing counts) and returns a entropy estimate (in nats): 
+**ndd** is an OPEN Source Project so please help out by [reporting bugs](https://github.com/simomarsili/ndd) or forking and opening pull requests when possible.
 
-    >>> counts
-    [ 7  3  5  8  9  1  3  3  1  0  2  5  2 11  4 23  5  0  8  0]
-    >>> import ndd
-    >>> estimated_entropy = ndd.entropy(counts)
-    >>> estimated_entropy
-    2.623634344902917
+### License
 
-  Compared to the standard, "plugin" estimator, the NSB estimator performs well in the undersampled regime
-  (i.e. k >> n where k is the number of possible outcomes and n the number of samples).
-  Check the [tutorial](https://github.com/simomarsili/ndd/blob/master/notebooks/ndd_tutorial.ipynb) for more info.
-
-# Contributing
-
-**ndd** is an OPEN Source Project so please help out by [reporting bugs](http://github.com/simomarsili/ndd/issues) or [forking and opening pull](https://github.com/simomarsili/ndd) requests when possible.
-
-# LICENSE (BSD 3 clause)
-
-Copyright (c) 2016, Simone Marsili.   
+Copyright (c) 2016,2017, Simone Marsili.  
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
