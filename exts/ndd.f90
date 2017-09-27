@@ -15,25 +15,25 @@ module dirichlet_mod
   implicit none
 
   integer(int32)              :: alphabet_size
-  integer(int32)              :: ndata
-  integer(int32)              :: nmulti
-  integer(int32), allocatable :: multi_x(:)
+  integer(int32)              :: n_data
+  integer(int32)              :: n_multi
+  integer(int32), allocatable :: multi_z(:)
   integer(int32), allocatable :: multi(:)
 
 contains
 
-  subroutine compute_multiplicities(counts, nc)
-
+  subroutine compute_multiplicities(counts, nc_)
+    ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
-    integer(int32), intent(in) :: nc
+    integer(int32), intent(in) :: nc_
     integer(int32)              :: nbins
-    integer(int32)              :: i,k,ni
+    integer(int32)              :: i_,k_,ni_
     integer(int32)              :: err
     integer(int32)              :: nmax
     integer(int32), allocatable :: multi0(:)
 
-    alphabet_size = nc 
-    ndata = sum(counts)
+    alphabet_size = nc_
+    n_data = sum(counts)
 
     ! compute multiplicities 
     ! nmax is the largest number of samples in a bin
@@ -42,22 +42,22 @@ contains
     allocate(multi0(nmax+1),stat=err)
     multi0 = 0
     multi0(1) = alphabet_size - nbins
-    do i = 1,nbins
-       ni = counts(i)
-       multi0(ni+1) = multi0(ni+1) + 1
+    do i_ = 1,nbins
+       ni_ = counts(i_)
+       multi0(ni_ + 1) = multi0(ni_ + 1) + 1
     end do
 
-     ! working arrays on bins visited at leat once 
-    nmulti = count(multi0 > 0) 
-    allocate(multi_x(nmulti),stat=err)
-    allocate(multi(nmulti),stat=err)
+    ! further compress data into 'sparse' multiplicities
+    n_multi = count(multi0 > 0) 
+    allocate(multi_z(n_multi),stat=err)
+    allocate(multi(n_multi),stat=err)
 
-    k = 0
-    do i = 1,nmax+1
-       if (multi0(i) > 0) then 
-          k = k + 1
-          multi_x(k) = i
-          multi(k) = multi0(i)
+    k_ = 0
+    do i_ = 1, nmax + 1
+       if (multi0(i_) > 0) then 
+          k_ = k_ + 1
+          multi_z(k_) = i_
+          multi(k_) = multi0(i_)
        end if
     end do
     deallocate(multi0)
@@ -66,7 +66,7 @@ contains
 
   subroutine dirichlet_finalize()
 
-    deallocate(multi_x,multi)
+    deallocate(multi_z,multi)
 
   end subroutine dirichlet_finalize
 
@@ -77,12 +77,12 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(nmulti)
+    real(real64)   :: a(n_multi)
 
-    log_fpxa = log_gamma(ndata + one) + log_gamma(alpha * alphabet_size) & 
-         - alphabet_size * log_gamma(alpha) - log_gamma(ndata + alpha * alphabet_size)
-    do i = 1,nmulti 
-       a(i) = multi(i) * (log_gamma(multi_x(i) - one + alpha) - log_gamma(multi_x(i) * one))
+    log_fpxa = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
+         - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
+    do i = 1,n_multi 
+       a(i) = multi(i) * (log_gamma(multi_z(i) - one + alpha) - log_gamma(multi_z(i) * one))
     end do
     log_fpxa = log_fpxa + sum(a)
     
@@ -96,15 +96,15 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(nmulti)
+    real(real64)   :: a(n_multi)
 
     hdir = 0.0_real64
-    do i = 1,nmulti 
-       a(i) = - multi(i) * (multi_x(i) - one + alpha) * digamma(multi_x(i) + alpha) 
+    do i = 1,n_multi 
+       a(i) = - multi(i) * (multi_z(i) - one + alpha) * digamma(multi_z(i) + alpha) 
     end do
     hdir = sum(a)
-    hdir = hdir / (ndata + alpha * alphabet_size)
-    hdir = hdir + digamma(ndata + alpha * alphabet_size + 1.0_real64)
+    hdir = hdir / (n_data + alpha * alphabet_size)
+    hdir = hdir + digamma(n_data + alpha * alphabet_size + 1.0_real64)
 
   end function hdir
 
@@ -304,7 +304,7 @@ subroutine plugin(n,counts,estimate)
 
   integer(int32) :: nbins
   integer(int32) :: i
-  real(real64)   :: ni,ndata
+  real(real64)   :: ni,n_data
   integer(int32)              :: mi,nmax,err
   integer(int32), allocatable :: multi0(:)
 
@@ -315,13 +315,13 @@ subroutine plugin(n,counts,estimate)
   !     estimate = 0.0_real64
   !     return
   !  end if
-  !  ndata = sum(counts)*1.0_real64
+  !  n_data = sum(counts)*1.0_real64
   !  estimate = 0.0_real64
   !  do i = 1,nbins
   !     ni = counts(i)*1.0_real64
   !     if (ni > 0) estimate = estimate - ni*log(ni)
   !  end do
-  !  estimate = estimate / ndata + log(ndata)
+  !  estimate = estimate / n_data + log(n_data)
 
   ! compute multiplicities 
   ! nmax is the largest number of samples in a bin
@@ -330,7 +330,7 @@ subroutine plugin(n,counts,estimate)
      estimate = 0.0_real64
      return
   end if
-  ndata = sum(counts)*1.0_real64
+  n_data = sum(counts)*1.0_real64
   nmax = maxval(counts)
   allocate(multi0(nmax),stat=err)
   multi0 = 0
@@ -344,7 +344,7 @@ subroutine plugin(n,counts,estimate)
      mi = multi0(i)
      if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
   end do
-  estimate = estimate / ndata + log(ndata)
+  estimate = estimate / n_data + log(n_data)
   deallocate(multi0)
 
 end subroutine plugin
@@ -373,7 +373,7 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
 
-  integer(int32) :: nbins,ndata
+  integer(int32) :: nbins,n_data
   integer(int32) :: i
   real(real64)   :: ni
 
@@ -388,7 +388,7 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
      estimate = 0.0_real64
      return
   end if
-  ndata = sum(counts)
+  n_data = sum(counts)
   estimate = 0.0_real64
   do i = 1,nbins
      ni = counts(i) + alpha
@@ -400,7 +400,7 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
      stop
   end if
   if (nc > nbins) estimate = estimate - (nc - nbins)*alpha*log(alpha)
-  estimate = estimate / (ndata + nc*alpha) + log(ndata + nc*alpha)
+  estimate = estimate / (n_data + nc*alpha) + log(n_data + nc*alpha)
 
 end subroutine pseudo
 
