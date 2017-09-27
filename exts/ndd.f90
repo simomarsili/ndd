@@ -27,9 +27,12 @@ contains
     ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
     integer(int32), intent(in) :: nc_
+    
     alphabet_size = nc_
     n_data = sum(counts)
+    
     call compute_multiplicities(counts)
+    
   end subroutine initialize_dirichlet
 
   subroutine compute_multiplicities(counts)
@@ -46,7 +49,9 @@ contains
     nbins = size(counts)
     nmax = maxval(counts)
     allocate(multi0(nmax+1),stat=err)
+    ! multi0(n+1) is the number of states with frequency n
     multi0 = 0
+    ! take into account the alphabet_size - nbins states with zero frequency
     multi0(1) = alphabet_size - nbins
     do i_ = 1,nbins
        ni_ = counts(i_)
@@ -70,9 +75,9 @@ contains
   end subroutine compute_multiplicities
 
   subroutine dirichlet_finalize()
-
+    
     deallocate(multi_z,multi)
-
+    
   end subroutine dirichlet_finalize
 
   pure real(real64) function log_fpxa(alpha) 
@@ -81,13 +86,13 @@ contains
     use constants
     
     real(real64), intent(in) :: alpha
-    integer(int32) :: i
+    integer(int32) :: i_
     real(real64)   :: a(n_multi)
 
     log_fpxa = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
-    do i = 1,n_multi 
-       a(i) = multi(i) * (log_gamma(multi_z(i) - one + alpha) - log_gamma(multi_z(i) * one))
+    do i_ = 1, n_multi 
+       a(i_) = multi(i_) * (log_gamma(multi_z(i_) - one + alpha) - log_gamma(multi_z(i_) * one))
     end do
     log_fpxa = log_fpxa + sum(a)
     
