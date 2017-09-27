@@ -124,8 +124,8 @@ module nsb_mod
   use iso_fortran_env
   implicit none
 
-  real(real64) :: alpha1 = -20.0_real64
-  real(real64) :: alpha2 =  10.0_real64
+  real(real64) :: alpha1
+  real(real64) :: alpha2
   real(real64) :: amax
   real(real64) :: log_fpxa_amax
   real(real64) :: fpa_amax
