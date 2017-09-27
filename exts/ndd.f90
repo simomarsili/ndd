@@ -16,9 +16,9 @@ module dirichlet_mod
 
   integer(int32)              :: alphabet_size
   integer(int32)              :: ndata
-  integer(int32)              :: ngtz
-  integer(int32), allocatable :: fgtz(:)
-  integer(int32), allocatable :: multi_gtz(:)
+  integer(int32)              :: nmulti
+  integer(int32), allocatable :: multi_x(:)
+  integer(int32), allocatable :: multi(:)
 
 contains
 
@@ -48,16 +48,16 @@ contains
     end do
 
      ! working arrays on bins visited at leat once 
-    ngtz = count(multiplicities > 0) 
-    allocate(fgtz(ngtz),stat=err)
-    allocate(multi_gtz(ngtz),stat=err)
+    nmulti = count(multiplicities > 0) 
+    allocate(multi_x(nmulti),stat=err)
+    allocate(multi(nmulti),stat=err)
 
     k = 0
     do i = 1,nmax+1
        if (multiplicities(i) > 0) then 
           k = k + 1
-          fgtz(k) = i
-          multi_gtz(k) = multiplicities(i)
+          multi_x(k) = i
+          multi(k) = multiplicities(i)
        end if
     end do
     deallocate(multiplicities)
@@ -66,7 +66,7 @@ contains
 
   subroutine dirichlet_finalize()
 
-    deallocate(fgtz,multi_gtz)
+    deallocate(multi_x,multi)
 
   end subroutine dirichlet_finalize
 
@@ -77,12 +77,12 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(ngtz)
+    real(real64)   :: a(nmulti)
 
     log_fpxa = log_gamma(ndata + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(ndata + alpha * alphabet_size)
-    do i = 1,ngtz 
-       a(i) = multi_gtz(i) * (log_gamma(fgtz(i) - one + alpha) - log_gamma(fgtz(i) * one))
+    do i = 1,nmulti 
+       a(i) = multi(i) * (log_gamma(multi_x(i) - one + alpha) - log_gamma(multi_x(i) * one))
     end do
     log_fpxa = log_fpxa + sum(a)
     
@@ -96,11 +96,11 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(ngtz)
+    real(real64)   :: a(nmulti)
 
     hdir = 0.0_real64
-    do i = 1,ngtz 
-       a(i) = - multi_gtz(i) * (fgtz(i) - one + alpha) * digamma(fgtz(i) + alpha) 
+    do i = 1,nmulti 
+       a(i) = - multi(i) * (multi_x(i) - one + alpha) * digamma(multi_x(i) + alpha) 
     end do
     hdir = sum(a)
     hdir = hdir / (ndata + alpha * alphabet_size)
