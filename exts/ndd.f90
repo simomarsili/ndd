@@ -17,14 +17,14 @@ module dirichlet_mod
   integer(int32)              :: alphabet_size
   integer(int32)              :: ndata
   integer(int32)              :: nfrq
-  integer(int32), allocatable :: sparse_multip_frq(:)
-  integer(int32), allocatable :: sparse_multip(:)
 
 contains
 
-  subroutine compute_multiplicities(counts, alphabet_size)
+  subroutine compute_multiplicities(counts, alphabet_size, sparse_multip_frq, sparse_multip)
     integer(int32), intent(in) :: counts(:)
     integer(int32), intent(in) :: alphabet_size
+    integer(int32), intent(out) :: sparse_multip_frq(:)
+    integer(int32), intent(out) :: sparse_multip(:)
 
     integer(int32)              :: nbins
     integer(int32)              :: i_,k_,ni_
@@ -62,12 +62,6 @@ contains
     deallocate(multip)
     
   end subroutine compute_multiplicities
-
-  subroutine dirichlet_finalize()
-
-    deallocate(sparse_multip_frq,sparse_multip)
-
-  end subroutine dirichlet_finalize
 
   pure real(real64) function log_fpxa(alpha) 
     ! log(p(x|a)) (log of) marginal probability of data given alpha
@@ -406,7 +400,7 @@ end subroutine pseudo
 subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha 
   use iso_fortran_env
-  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
+  use dirichlet_mod, only: compute_multiplicities
   use dirichlet_mod, only: hdir
   implicit none
 
@@ -415,23 +409,25 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
+  integer(int32), allocatable :: sparse_multip_frq(:)
+  integer(int32), allocatable :: sparse_multip(:)
 
   if (size(counts) == 1) then 
      estimate = 0.0_real64
      return
   end if
 
-  call compute_multiplicities(counts, nc)
+  call compute_multiplicities(counts, nc, sparse_multip_frq, sparse_multip)
 
   estimate = hdir(alpha)
 
-  call dirichlet_finalize()
+  deallocate(sparse_multip_frq,sparse_multip)
 
 end subroutine dirichlet
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
+  use dirichlet_mod, only: compute_multiplicities
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -441,6 +437,8 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
+  integer(int32), allocatable :: sparse_multip_frq(:)
+  integer(int32), allocatable :: sparse_multip(:)
 
   if (size(counts) == 1) then 
      estimate = 0.0_real64
@@ -448,13 +446,13 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
      return
   end if
 
-  call compute_multiplicities(counts, nc)
+  call compute_multiplicities(counts, nc, sparse_multip_frq, sparse_multip)
 
   call compute_integration_range()
 
   call hnsb(estimate,err_estimate)
 
-  call dirichlet_finalize()
+  deallocate(sparse_multip_frq,sparse_multip)
 
 end subroutine nsb
 
