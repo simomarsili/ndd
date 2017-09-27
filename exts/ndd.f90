@@ -201,10 +201,9 @@ contains
     ! recompute fxs
     fxs = exp(lfwa(xs))
 
+    ! re-compute a numerically stable integration range
     alpha1 = log(minval(xs, fxs > small_number))
     alpha2 = log(maxval(xs, fxs > small_number))
-
-    ! recompute the maximum
     dx = (alpha2 - alpha1) / (nx * 1.0_real64)
     do i = 1,nx
        xs(i) = alpha1 + (i - 0.5_real64) * dx
@@ -212,8 +211,7 @@ contains
     xs = exp(xs)
     
     fxs = lfwa(xs)
-    i = maxloc(fxs,1,fxs < largest)
-    amax = xs(i)
+    amax = xs(maxloc(fxs,1,fxs < largest))
     log_fpxa_amax = log_fpxa(amax)
     fpa_amax = fpa(amax)
     
