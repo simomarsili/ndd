@@ -185,9 +185,9 @@ contains
     fpa_amax = fpa(amax) ! propto p(a)
 
     ! set intervals equally spaced on log scale
-    dx = (alpha2 - alpha1) / real(nx -1.0_real64)
+    dx = (alpha2 - alpha1) / (nx * 1.0_real64)
     do i = 1,nx
-       xs(i) = alpha1 + (i - 1) * dx
+       xs(i) = alpha1 + (i - 0.5_real64) * dx
     end do
     xs = exp(xs)
     
@@ -203,19 +203,6 @@ contains
 
     alpha1 = log(minval(xs, fxs > small_number))
     alpha2 = log(maxval(xs, fxs > small_number))
-
-!    ! recompute integration range
-!    a1 = alpha2
-!    a2 = alpha1
-!    do i = 1,nx
-!       x = log(xs(i))
-!       f = fxs(i)
-!       if (x > alpha1 .and. x < a1 .and. f > small_number) a1 = log(xs(i-1))
-!       if (x > a2 .and. x < alpha2 .and. f > small_number) a2 = log(xs(i+1))
-!    end do
-!   
-!    alpha1 = a1
-!    alpha2 = a2 
 
     ! recompute the maximum
     dx = (alpha2 - alpha1) / (nx * 1.0_real64)
