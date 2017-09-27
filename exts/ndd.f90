@@ -22,10 +22,10 @@ module dirichlet_mod
 
 contains
 
-  subroutine compute_multiplicities(nc,counts)
+  subroutine compute_multiplicities(counts, nc)
 
-    integer(int32), intent(in) :: nc
     integer(int32), intent(in) :: counts(:)
+    integer(int32), intent(in) :: nc
     integer(int32)              :: nbins
     integer(int32)              :: i,k,ni
     integer(int32)              :: err
@@ -422,7 +422,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
      return
   end if
 
-  call compute_multiplicities(nc,counts)
+  call compute_multiplicities(counts, nc)
 
   estimate = hdir(alpha)
 
@@ -449,7 +449,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
      return
   end if
 
-  call compute_multiplicities(nc,counts)
+  call compute_multiplicities(counts, nc)
 
   call compute_integration_range()
 
