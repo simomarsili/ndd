@@ -81,8 +81,8 @@ contains
   end subroutine dirichlet_finalize
 
   pure real(real64) function log_fpxa(alpha) 
-    ! log(p(x|a)) (log of) marginal probability of data given alpha
-    ! computed from histogram multiplicities 
+    ! log(p(n|a)) (log of) marginal probability of data given alpha
+    ! computed from histogram multiplicities. Dirichlet-multinomial.
     use constants
     
     real(real64), intent(in) :: alpha
@@ -99,8 +99,8 @@ contains
   end function log_fpxa
 
   real(real64) function hdir(alpha)
-    ! posterior mean entropy given the data and alpha
-    ! computed from histogram multiplicities 
+    ! posterior average of the entropy given the data and alpha
+    ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
     use constants
     
@@ -110,11 +110,11 @@ contains
 
     hdir = 0.0_real64
     do i = 1,n_multi 
-       a(i) = - multi(i) * (multi_z(i) + alpha) * digamma(multi_z(i) + one + alpha) 
+       a(i) = multi(i) * (multi_z(i) + alpha) * digamma(multi_z(i) + alpha + one) 
     end do
-    hdir = sum(a)
+    hdir = - sum(a)
     hdir = hdir / (n_data + alpha * alphabet_size)
-    hdir = hdir + digamma(n_data + alpha * alphabet_size + 1.0_real64)
+    hdir = hdir + digamma(n_data + alpha * alphabet_size + one)
 
   end function hdir
 
@@ -133,7 +133,7 @@ module nsb_mod
 contains
 
   elemental real(real64) function fpa(a) 
-    ! p(alpha) prior for alpha in NSB estimator
+    ! prop. to p(alpha) - the prior for alpha in NSB estimator
     use constants
     use gamma_funcs, only: trigamma
     use dirichlet_mod, only: alphabet_size
@@ -150,6 +150,7 @@ contains
 
     real(real64), intent(in) :: alpha
 
+    ! p(alpha | n) propto p(alpha) * p(n | alpha)
     fwa = fpa(alpha) * exp(log_fpxa(alpha) - log_fpxa_amax) / fpa_amax
 
   end function fwa
@@ -178,18 +179,20 @@ contains
     alpha1 = -20.0_real64
     alpha2 = 10.0_real64
 
+    ! initialize amax
     amax = 1.0_real64
-    log_fpxa_amax = log_fpxa(amax)
-    fpa_amax = fpa(amax)
+    log_fpxa_amax = log_fpxa(amax) ! log p(n|a_max)
+    fpa_amax = fpa(amax) ! propto p(a)
 
-    ! find maximum
-    dx = (alpha2 - alpha1) / (nx - 1.0_real64)
+    ! set intervals equally spaced on log scale
+    dx = (alpha2 - alpha1) / real(nx -1.0_real64)
     do i = 1,nx
        xs(i) = alpha1 + (i - 1) * dx
     end do
     xs = exp(xs)
     
     fxs = lfwa(xs)
+    ! find amax such that the weight in the integral - fwa(alpha) - is maximal
     i = maxloc(fxs,1,fxs < largest)
     amax = xs(i)
     log_fpxa_amax = log_fpxa(amax)
@@ -198,18 +201,21 @@ contains
     ! recompute fxs
     fxs = exp(lfwa(xs))
 
-    ! recompute integration range
-    a1 = alpha2
-    a2 = alpha1
-    do i = 1,nx
-       x = log(xs(i))
-       f = fxs(i)
-       if (x > alpha1 .and. x < a1 .and. f > small_number) a1 = log(xs(i-1))
-       if (x > a2 .and. x < alpha2 .and. f > small_number) a2 = log(xs(i+1))
-    end do
-    
-    alpha1 = a1
-    alpha2 = a2 
+    alpha1 = log(minval(xs, fxs > small_number))
+    alpha2 = log(maxval(xs, fxs > small_number))
+
+!    ! recompute integration range
+!    a1 = alpha2
+!    a2 = alpha1
+!    do i = 1,nx
+!       x = log(xs(i))
+!       f = fxs(i)
+!       if (x > alpha1 .and. x < a1 .and. f > small_number) a1 = log(xs(i-1))
+!       if (x > a2 .and. x < alpha2 .and. f > small_number) a2 = log(xs(i+1))
+!    end do
+!   
+!    alpha1 = a1
+!    alpha2 = a2 
 
     ! recompute the maximum
     dx = (alpha2 - alpha1) / (nx * 1.0_real64)
