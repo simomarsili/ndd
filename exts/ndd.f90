@@ -30,7 +30,7 @@ contains
     integer(int32)              :: i,k,ni
     integer(int32)              :: err
     integer(int32)              :: nmax
-    integer(int32), allocatable :: multiplicities(:)
+    integer(int32), allocatable :: multi0(:)
 
     alphabet_size = nc 
     ndata = sum(counts)
@@ -39,28 +39,28 @@ contains
     ! nmax is the largest number of samples in a bin
     nbins = size(counts)
     nmax = maxval(counts)
-    allocate(multiplicities(nmax+1),stat=err)
-    multiplicities = 0
-    multiplicities(1) = alphabet_size - nbins
+    allocate(multi0(nmax+1),stat=err)
+    multi0 = 0
+    multi0(1) = alphabet_size - nbins
     do i = 1,nbins
        ni = counts(i)
-       multiplicities(ni+1) = multiplicities(ni+1) + 1
+       multi0(ni+1) = multi0(ni+1) + 1
     end do
 
      ! working arrays on bins visited at leat once 
-    nmulti = count(multiplicities > 0) 
+    nmulti = count(multi0 > 0) 
     allocate(multi_x(nmulti),stat=err)
     allocate(multi(nmulti),stat=err)
 
     k = 0
     do i = 1,nmax+1
-       if (multiplicities(i) > 0) then 
+       if (multi0(i) > 0) then 
           k = k + 1
           multi_x(k) = i
-          multi(k) = multiplicities(i)
+          multi(k) = multi0(i)
        end if
     end do
-    deallocate(multiplicities)
+    deallocate(multi0)
     
   end subroutine compute_multiplicities
 
@@ -306,7 +306,7 @@ subroutine plugin(n,counts,estimate)
   integer(int32) :: i
   real(real64)   :: ni,ndata
   integer(int32)              :: mi,nmax,err
-  integer(int32), allocatable :: multiplicities(:)
+  integer(int32), allocatable :: multi0(:)
 
   !! this is the old 'standard' implementation.
   !! the code using multiplicities is faster
@@ -332,20 +332,20 @@ subroutine plugin(n,counts,estimate)
   end if
   ndata = sum(counts)*1.0_real64
   nmax = maxval(counts)
-  allocate(multiplicities(nmax),stat=err)
-  multiplicities = 0
+  allocate(multi0(nmax),stat=err)
+  multi0 = 0
   do i = 1,nbins
      ni = counts(i)
      if (ni == 0) cycle
-     multiplicities(ni) = multiplicities(ni) + 1
+     multi0(ni) = multi0(ni) + 1
   end do
   estimate = 0.0_real64
   do i = 1,nmax
-     mi = multiplicities(i)
+     mi = multi0(i)
      if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
   end do
   estimate = estimate / ndata + log(ndata)
-  deallocate(multiplicities)
+  deallocate(multi0)
 
 end subroutine plugin
 
