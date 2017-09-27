@@ -22,18 +22,24 @@ module dirichlet_mod
 
 contains
 
-  subroutine compute_multiplicities(counts, nc_)
+  subroutine initialize_dirichlet(counts, nc_)
+    ! set alphabet_size, n_data
     ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
     integer(int32), intent(in) :: nc_
+    alphabet_size = nc_
+    n_data = sum(counts)
+    call compute_multiplicities(counts)
+  end subroutine initialize_dirichlet
+
+  subroutine compute_multiplicities(counts)
+    ! set n_multi, multi_z, multi
+    integer(int32), intent(in) :: counts(:)
     integer(int32)              :: nbins
     integer(int32)              :: i_,k_,ni_
     integer(int32)              :: err
     integer(int32)              :: nmax
     integer(int32), allocatable :: multi0(:)
-
-    alphabet_size = nc_
-    n_data = sum(counts)
 
     ! compute multiplicities 
     ! nmax is the largest number of samples in a bin
@@ -51,7 +57,6 @@ contains
     n_multi = count(multi0 > 0) 
     allocate(multi_z(n_multi),stat=err)
     allocate(multi(n_multi),stat=err)
-
     k_ = 0
     do i_ = 1, nmax + 1
        if (multi0(i_) > 0) then 
@@ -407,7 +412,7 @@ end subroutine pseudo
 subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha 
   use iso_fortran_env
-  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
   use dirichlet_mod, only: hdir
   implicit none
 
@@ -422,6 +427,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
      return
   end if
 
+  call initialize_dirichlet(counts, nc)
   call compute_multiplicities(counts, nc)
 
   estimate = hdir(alpha)
@@ -432,7 +438,7 @@ end subroutine dirichlet
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -449,6 +455,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
      return
   end if
 
+  call initialize_dirichlet(counts, nc)
   call compute_multiplicities(counts, nc)
 
   call compute_integration_range()
