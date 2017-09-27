@@ -66,7 +66,7 @@ contains
     do i_ = 1, nmax + 1
        if (multi0(i_) > 0) then 
           k_ = k_ + 1
-          multi_z(k_) = i_
+          multi_z(k_) = i_ - 1
           multi(k_) = multi0(i_)
        end if
     end do
@@ -92,7 +92,7 @@ contains
     log_fpxa = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
     do i_ = 1, n_multi 
-       a(i_) = multi(i_) * (log_gamma(multi_z(i_) - one + alpha) - log_gamma(multi_z(i_) * one))
+       a(i_) = multi(i_) * (log_gamma(multi_z(i_) + alpha) - log_gamma(multi_z(i_) + one))
     end do
     log_fpxa = log_fpxa + sum(a)
     
@@ -110,7 +110,7 @@ contains
 
     hdir = 0.0_real64
     do i = 1,n_multi 
-       a(i) = - multi(i) * (multi_z(i) - one + alpha) * digamma(multi_z(i) + alpha) 
+       a(i) = - multi(i) * (multi_z(i) + alpha) * digamma(multi_z(i) + one + alpha) 
     end do
     hdir = sum(a)
     hdir = hdir / (n_data + alpha * alphabet_size)
@@ -433,7 +433,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   end if
 
   call initialize_dirichlet(counts, nc)
-  call compute_multiplicities(counts, nc)
+  call compute_multiplicities(counts)
 
   estimate = hdir(alpha)
 
@@ -461,7 +461,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   end if
 
   call initialize_dirichlet(counts, nc)
-  call compute_multiplicities(counts, nc)
+  call compute_multiplicities(counts)
 
   call compute_integration_range()
 
