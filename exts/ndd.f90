@@ -22,10 +22,10 @@ module dirichlet_mod
 
 contains
 
-  subroutine dirichlet_initialize(nc,hist)
+  subroutine compute_multiplicities(nc,counts)
 
     integer(int32), intent(in) :: nc
-    integer(int32), intent(in) :: hist(:)
+    integer(int32), intent(in) :: counts(:)
     integer(int32)              :: nbins
     integer(int32)              :: i,k,ni
     integer(int32)              :: err
@@ -33,17 +33,17 @@ contains
     integer(int32), allocatable :: multiplicities(:)
 
     alphabet_size = nc 
-    ndata = sum(hist)
+    ndata = sum(counts)
 
     ! compute multiplicities 
     ! nmax is the largest number of samples in a bin
-    nbins = size(hist)
-    nmax = maxval(hist)
+    nbins = size(counts)
+    nmax = maxval(counts)
     allocate(multiplicities(nmax+1),stat=err)
     multiplicities = 0
     multiplicities(1) = alphabet_size - nbins
     do i = 1,nbins
-       ni = hist(i)
+       ni = counts(i)
        multiplicities(ni+1) = multiplicities(ni+1) + 1
     end do
 
@@ -62,7 +62,7 @@ contains
     end do
     deallocate(multiplicities)
     
-  end subroutine dirichlet_initialize
+  end subroutine compute_multiplicities
 
   subroutine dirichlet_finalize()
 
@@ -293,13 +293,13 @@ contains
 
 end module nsb_mod
 
-subroutine plugin(n,hist,estimate)
+subroutine plugin(n,counts,estimate)
   ! plugin estimator - no prior, no regularization 
   use iso_fortran_env
   implicit none
 
   integer(int32), intent(in) :: n
-  integer(int32), intent(in) :: hist(n)
+  integer(int32), intent(in) :: counts(n)
   real(real64),  intent(out) :: estimate
 
   integer(int32) :: nbins
@@ -310,32 +310,32 @@ subroutine plugin(n,hist,estimate)
 
   !! this is the old 'standard' implementation.
   !! the code using multiplicities is faster
-  !  nbins = size(hist)
+  !  nbins = size(counts)
   !  if (nbins == 1) then 
   !     estimate = 0.0_real64
   !     return
   !  end if
-  !  ndata = sum(hist)*1.0_real64
+  !  ndata = sum(counts)*1.0_real64
   !  estimate = 0.0_real64
   !  do i = 1,nbins
-  !     ni = hist(i)*1.0_real64
+  !     ni = counts(i)*1.0_real64
   !     if (ni > 0) estimate = estimate - ni*log(ni)
   !  end do
   !  estimate = estimate / ndata + log(ndata)
 
   ! compute multiplicities 
   ! nmax is the largest number of samples in a bin
-  nbins = size(hist)
+  nbins = size(counts)
   if (nbins == 1) then 
      estimate = 0.0_real64
      return
   end if
-  ndata = sum(hist)*1.0_real64
-  nmax = maxval(hist)
+  ndata = sum(counts)*1.0_real64
+  nmax = maxval(counts)
   allocate(multiplicities(nmax),stat=err)
   multiplicities = 0
   do i = 1,nbins
-     ni = hist(i)
+     ni = counts(i)
      if (ni == 0) cycle
      multiplicities(ni) = multiplicities(ni) + 1
   end do
@@ -349,7 +349,7 @@ subroutine plugin(n,hist,estimate)
 
 end subroutine plugin
 
-subroutine pseudo(n,hist,nc,alpha,estimate)
+subroutine pseudo(n,counts,nc,alpha,estimate)
   use iso_fortran_env
   ! pseudocount estimator(s)
   ! estimate the bin frequencies using pseudocounts 
@@ -368,7 +368,7 @@ subroutine pseudo(n,hist,nc,alpha,estimate)
   implicit none
 
   integer(int32), intent(in)  :: n
-  integer(int32), intent(in)  :: hist(n)
+  integer(int32), intent(in)  :: counts(n)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
@@ -379,19 +379,19 @@ subroutine pseudo(n,hist,nc,alpha,estimate)
 
   if (alpha < 1.0e-10_real64) then
      ! if alpha == 0.0 (no pseudocounts)
-     call plugin(n, hist, estimate)
+     call plugin(n, counts, estimate)
      return
   end if
 
-  nbins = size(hist)
+  nbins = size(counts)
   if (nbins == 1) then 
      estimate = 0.0_real64
      return
   end if
-  ndata = sum(hist)
+  ndata = sum(counts)
   estimate = 0.0_real64
   do i = 1,nbins
-     ni = hist(i) + alpha
+     ni = counts(i) + alpha
      estimate = estimate - ni*log(ni)
   end do
   ! correct for the (nc - nbins) bins with frequency alpha
@@ -404,25 +404,25 @@ subroutine pseudo(n,hist,nc,alpha,estimate)
 
 end subroutine pseudo
 
-subroutine dirichlet(n,hist,nc,alpha,estimate)
+subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha 
   use iso_fortran_env
-  use dirichlet_mod, only: dirichlet_initialize,dirichlet_finalize
+  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
   use dirichlet_mod, only: hdir
   implicit none
 
   integer(int32), intent(in)  :: n
-  integer(int32), intent(in)  :: hist(n)
+  integer(int32), intent(in)  :: counts(n)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
 
-  if (size(hist) == 1) then 
+  if (size(counts) == 1) then 
      estimate = 0.0_real64
      return
   end if
 
-  call dirichlet_initialize(nc,hist)
+  call compute_multiplicities(nc,counts)
 
   estimate = hdir(alpha)
 
@@ -430,26 +430,26 @@ subroutine dirichlet(n,hist,nc,alpha,estimate)
 
 end subroutine dirichlet
 
-subroutine nsb(n,hist,nc,estimate,err_estimate)
+subroutine nsb(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: dirichlet_initialize,dirichlet_finalize
+  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
 
   integer(int32), intent(in)  :: n
-  integer(int32), intent(in)  :: hist(n)
+  integer(int32), intent(in)  :: counts(n)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
 
-  if (size(hist) == 1) then 
+  if (size(counts) == 1) then 
      estimate = 0.0_real64
      err_estimate = 0.0_real64
      return
   end if
 
-  call dirichlet_initialize(nc,hist)
+  call compute_multiplicities(nc,counts)
 
   call compute_integration_range()
 
