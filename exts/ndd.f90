@@ -16,52 +16,59 @@ module dirichlet_mod
 
   integer(int32)              :: alphabet_size
   integer(int32)              :: ndata
-  integer(int32)              :: nfrq
+  integer(int32)              :: ngtz
+  integer(int32), allocatable :: fgtz(:)
+  integer(int32), allocatable :: multi_gtz(:)
 
 contains
 
-  subroutine compute_multiplicities(counts, alphabet_size, sparse_multip_frq, sparse_multip)
+  subroutine compute_multiplicities(nc,counts)
+
+    integer(int32), intent(in) :: nc
     integer(int32), intent(in) :: counts(:)
-    integer(int32), intent(in) :: alphabet_size
-    integer(int32), intent(out) :: sparse_multip_frq(:)
-    integer(int32), intent(out) :: sparse_multip(:)
-
     integer(int32)              :: nbins
-    integer(int32)              :: i_,k_,ni_
+    integer(int32)              :: i,k,ni
     integer(int32)              :: err
-    integer(int32), allocatable :: multip(:)
+    integer(int32)              :: nmax
+    integer(int32), allocatable :: multiplicities(:)
 
-    nbins = size(counts)  ! len of histogram
-    ndata = sum(counts)   ! total number of samples
+    alphabet_size = nc 
+    ndata = sum(counts)
 
-    ! Compute multiplicities.
-    ! multip(n+1) is the number of bins with frequency n.
-    allocate(multip(maxval(counts)+1),stat=err)
-    multip = 0
-    ! The number of bins with frequency zero is initialized to the difference
-    ! between the total number of states and the len of the histogram passed as input
-    multip(1) = alphabet_size - nbins
-    do i_ = 1,nbins
-       ni_ = counts(i_)
-       multip(ni_+1) = multip(ni_+1) + 1
+    ! compute multiplicities 
+    ! nmax is the largest number of samples in a bin
+    nbins = size(counts)
+    nmax = maxval(counts)
+    allocate(multiplicities(nmax+1),stat=err)
+    multiplicities = 0
+    multiplicities(1) = alphabet_size - nbins
+    do i = 1,nbins
+       ni = counts(i)
+       multiplicities(ni+1) = multiplicities(ni+1) + 1
     end do
 
-    ! Further compress counts to multiplicities entries greater than 0.
-    nfrq = count(multip > 0) 
-    allocate(sparse_multip_frq(nfrq),stat=err)
-    allocate(sparse_multip(nfrq),stat=err)
+     ! working arrays on bins visited at leat once 
+    ngtz = count(multiplicities > 0) 
+    allocate(fgtz(ngtz),stat=err)
+    allocate(multi_gtz(ngtz),stat=err)
 
-    k_ = 0
-    do i_ = 1,nmax+1
-       if (multip(i) > 0) then 
-          k_ = k_ + 1
-          sparse_multip_frq(k_) = i_
-          sparse_multip(k_) = multip(i_)
+    k = 0
+    do i = 1,nmax+1
+       if (multiplicities(i) > 0) then 
+          k = k + 1
+          fgtz(k) = i
+          multi_gtz(k) = multiplicities(i)
        end if
     end do
-    deallocate(multip)
+    deallocate(multiplicities)
     
   end subroutine compute_multiplicities
+
+  subroutine dirichlet_finalize()
+
+    deallocate(fgtz,multi_gtz)
+
+  end subroutine dirichlet_finalize
 
   pure real(real64) function log_fpxa(alpha) 
     ! log(p(x|a)) (log of) marginal probability of data given alpha
@@ -70,12 +77,12 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(nfrq)
+    real(real64)   :: a(ngtz)
 
     log_fpxa = log_gamma(ndata + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(ndata + alpha * alphabet_size)
-    do i = 1,nfrq 
-       a(i) = sparse_multip(i) * (log_gamma(sparse_multip_frq(i) - one + alpha) - log_gamma(sparse_multip_frq(i) * one))
+    do i = 1,ngtz 
+       a(i) = multi_gtz(i) * (log_gamma(fgtz(i) - one + alpha) - log_gamma(fgtz(i) * one))
     end do
     log_fpxa = log_fpxa + sum(a)
     
@@ -89,11 +96,11 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(nfrq)
+    real(real64)   :: a(ngtz)
 
     hdir = 0.0_real64
-    do i = 1,nfrq 
-       a(i) = - sparse_multip(i) * (sparse_multip_frq(i) - one + alpha) * digamma(sparse_multip_frq(i) + alpha) 
+    do i = 1,ngtz 
+       a(i) = - multi_gtz(i) * (fgtz(i) - one + alpha) * digamma(fgtz(i) + alpha) 
     end do
     hdir = sum(a)
     hdir = hdir / (ndata + alpha * alphabet_size)
@@ -299,7 +306,7 @@ subroutine plugin(n,counts,estimate)
   integer(int32) :: i
   real(real64)   :: ni,ndata
   integer(int32)              :: mi,nmax,err
-  integer(int32), allocatable :: multip(:)
+  integer(int32), allocatable :: multiplicities(:)
 
   !! this is the old 'standard' implementation.
   !! the code using multiplicities is faster
@@ -325,20 +332,20 @@ subroutine plugin(n,counts,estimate)
   end if
   ndata = sum(counts)*1.0_real64
   nmax = maxval(counts)
-  allocate(multip(nmax),stat=err)
-  multip = 0
+  allocate(multiplicities(nmax),stat=err)
+  multiplicities = 0
   do i = 1,nbins
      ni = counts(i)
      if (ni == 0) cycle
-     multip(ni) = multip(ni) + 1
+     multiplicities(ni) = multiplicities(ni) + 1
   end do
   estimate = 0.0_real64
   do i = 1,nmax
-     mi = multip(i)
+     mi = multiplicities(i)
      if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
   end do
   estimate = estimate / ndata + log(ndata)
-  deallocate(multip)
+  deallocate(multiplicities)
 
 end subroutine plugin
 
@@ -400,7 +407,7 @@ end subroutine pseudo
 subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha 
   use iso_fortran_env
-  use dirichlet_mod, only: compute_multiplicities
+  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
   use dirichlet_mod, only: hdir
   implicit none
 
@@ -409,25 +416,23 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
-  integer(int32), allocatable :: sparse_multip_frq(:)
-  integer(int32), allocatable :: sparse_multip(:)
 
   if (size(counts) == 1) then 
      estimate = 0.0_real64
      return
   end if
 
-  call compute_multiplicities(counts, nc, sparse_multip_frq, sparse_multip)
+  call compute_multiplicities(nc,counts)
 
   estimate = hdir(alpha)
 
-  deallocate(sparse_multip_frq,sparse_multip)
+  call dirichlet_finalize()
 
 end subroutine dirichlet
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: compute_multiplicities
+  use dirichlet_mod, only: compute_multiplicities,dirichlet_finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -437,8 +442,6 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   integer(int32), intent(in)  :: nc
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
-  integer(int32), allocatable :: sparse_multip_frq(:)
-  integer(int32), allocatable :: sparse_multip(:)
 
   if (size(counts) == 1) then 
      estimate = 0.0_real64
@@ -446,13 +449,13 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
      return
   end if
 
-  call compute_multiplicities(counts, nc, sparse_multip_frq, sparse_multip)
+  call compute_multiplicities(nc,counts)
 
   call compute_integration_range()
 
   call hnsb(estimate,err_estimate)
 
-  deallocate(sparse_multip_frq,sparse_multip)
+  call dirichlet_finalize()
 
 end subroutine nsb
 
