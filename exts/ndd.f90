@@ -16,57 +16,56 @@ module dirichlet_mod
 
   integer(int32)              :: alphabet_size
   integer(int32)              :: ndata
-  integer(int32)              :: ngtz
-  integer(int32), allocatable :: fgtz(:)
-  integer(int32), allocatable :: multi_gtz(:)
+  integer(int32)              :: nfrq
+  integer(int32), allocatable :: sparse_multip_frq(:)
+  integer(int32), allocatable :: sparse_multip(:)
 
 contains
 
-  subroutine compute_multiplicities(nc,counts)
-
-    integer(int32), intent(in) :: nc
+  subroutine compute_multiplicities(counts, alphabet_size)
     integer(int32), intent(in) :: counts(:)
+    integer(int32), intent(in) :: alphabet_size
+
     integer(int32)              :: nbins
-    integer(int32)              :: i,k,ni
+    integer(int32)              :: i_,k_,ni_
     integer(int32)              :: err
-    integer(int32)              :: nmax
-    integer(int32), allocatable :: multiplicities(:)
+    integer(int32), allocatable :: multip(:)
 
-    alphabet_size = nc 
-    ndata = sum(counts)
+    nbins = size(counts)  ! len of histogram
+    ndata = sum(counts)   ! total number of samples
 
-    ! compute multiplicities 
-    ! nmax is the largest number of samples in a bin
-    nbins = size(counts)
-    nmax = maxval(counts)
-    allocate(multiplicities(nmax+1),stat=err)
-    multiplicities = 0
-    multiplicities(1) = alphabet_size - nbins
-    do i = 1,nbins
-       ni = counts(i)
-       multiplicities(ni+1) = multiplicities(ni+1) + 1
+    ! Compute multiplicities.
+    ! multip(n+1) is the number of bins with frequency n.
+    allocate(multip(maxval(counts)+1),stat=err)
+    multip = 0
+    ! The number of bins with frequency zero is initialized to the difference
+    ! between the total number of states and the len of the histogram passed as input
+    multip(1) = alphabet_size - nbins
+    do i_ = 1,nbins
+       ni_ = counts(i_)
+       multip(ni_+1) = multip(ni_+1) + 1
     end do
 
-     ! working arrays on bins visited at leat once 
-    ngtz = count(multiplicities > 0) 
-    allocate(fgtz(ngtz),stat=err)
-    allocate(multi_gtz(ngtz),stat=err)
+    ! Further compress counts to multiplicities entries greater than 0.
+    nfrq = count(multip > 0) 
+    allocate(sparse_multip_frq(nfrq),stat=err)
+    allocate(sparse_multip(nfrq),stat=err)
 
-    k = 0
-    do i = 1,nmax+1
-       if (multiplicities(i) > 0) then 
-          k = k + 1
-          fgtz(k) = i
-          multi_gtz(k) = multiplicities(i)
+    k_ = 0
+    do i_ = 1,nmax+1
+       if (multip(i) > 0) then 
+          k_ = k_ + 1
+          sparse_multip_frq(k_) = i_
+          sparse_multip(k_) = multip(i_)
        end if
     end do
-    deallocate(multiplicities)
+    deallocate(multip)
     
   end subroutine compute_multiplicities
 
   subroutine dirichlet_finalize()
 
-    deallocate(fgtz,multi_gtz)
+    deallocate(sparse_multip_frq,sparse_multip)
 
   end subroutine dirichlet_finalize
 
@@ -77,12 +76,12 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(ngtz)
+    real(real64)   :: a(nfrq)
 
     log_fpxa = log_gamma(ndata + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(ndata + alpha * alphabet_size)
-    do i = 1,ngtz 
-       a(i) = multi_gtz(i) * (log_gamma(fgtz(i) - one + alpha) - log_gamma(fgtz(i) * one))
+    do i = 1,nfrq 
+       a(i) = sparse_multip(i) * (log_gamma(sparse_multip_frq(i) - one + alpha) - log_gamma(sparse_multip_frq(i) * one))
     end do
     log_fpxa = log_fpxa + sum(a)
     
@@ -96,11 +95,11 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i
-    real(real64)   :: a(ngtz)
+    real(real64)   :: a(nfrq)
 
     hdir = 0.0_real64
-    do i = 1,ngtz 
-       a(i) = - multi_gtz(i) * (fgtz(i) - one + alpha) * digamma(fgtz(i) + alpha) 
+    do i = 1,nfrq 
+       a(i) = - sparse_multip(i) * (sparse_multip_frq(i) - one + alpha) * digamma(sparse_multip_frq(i) + alpha) 
     end do
     hdir = sum(a)
     hdir = hdir / (ndata + alpha * alphabet_size)
@@ -306,7 +305,7 @@ subroutine plugin(n,counts,estimate)
   integer(int32) :: i
   real(real64)   :: ni,ndata
   integer(int32)              :: mi,nmax,err
-  integer(int32), allocatable :: multiplicities(:)
+  integer(int32), allocatable :: multip(:)
 
   !! this is the old 'standard' implementation.
   !! the code using multiplicities is faster
@@ -332,20 +331,20 @@ subroutine plugin(n,counts,estimate)
   end if
   ndata = sum(counts)*1.0_real64
   nmax = maxval(counts)
-  allocate(multiplicities(nmax),stat=err)
-  multiplicities = 0
+  allocate(multip(nmax),stat=err)
+  multip = 0
   do i = 1,nbins
      ni = counts(i)
      if (ni == 0) cycle
-     multiplicities(ni) = multiplicities(ni) + 1
+     multip(ni) = multip(ni) + 1
   end do
   estimate = 0.0_real64
   do i = 1,nmax
-     mi = multiplicities(i)
+     mi = multip(i)
      if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
   end do
   estimate = estimate / ndata + log(ndata)
-  deallocate(multiplicities)
+  deallocate(multip)
 
 end subroutine plugin
 
@@ -422,7 +421,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
      return
   end if
 
-  call compute_multiplicities(nc,counts)
+  call compute_multiplicities(counts, nc)
 
   estimate = hdir(alpha)
 
@@ -449,7 +448,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
      return
   end if
 
-  call compute_multiplicities(nc,counts)
+  call compute_multiplicities(counts, nc)
 
   call compute_integration_range()
 
