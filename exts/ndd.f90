@@ -127,8 +127,7 @@ module nsb_mod
   real(real64) :: log_alpha1
   real(real64) :: log_alpha2
   real(real64) :: amax
-  real(real64) :: log_fpxa_amax
-  real(real64) :: log_fpa_amax
+  real(real64) :: log_fwa_amax
 
 contains
 
@@ -150,7 +149,7 @@ contains
 
     real(real64), intent(in) :: alpha
 
-    log_fwa = (log_fpa(alpha) - log_fpa_amax) + (log_fpxa(alpha) - log_fpxa_amax)
+    log_fwa = log_fpa(alpha) + log_fpxa(alpha)
 
   end function log_fwa
 
@@ -170,8 +169,7 @@ contains
 
     ! initialize amax
     amax = 1.0_real64
-    log_fpxa_amax = log_fpxa(amax) ! log p(n|a_max)
-    log_fpa_amax = log_fpa(amax) ! propto p(a)
+    log_fwa_amax = log_fwa(amax) ! log p(n|a_max)
 
     ! set intervals equally spaced on log scale
     dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
@@ -184,11 +182,10 @@ contains
     ! find amax such that the weight in the integral - fwa(alpha) - is maximal
     i = maxloc(fxs,1,fxs < largest)
     amax = xs(i)
-    log_fpxa_amax = log_fpxa(amax)
-    log_fpa_amax = log_fpa(amax)
+    log_fwa_amax = log_fwa(amax)
 
     ! recompute fxs
-    fxs = exp(log_fwa(xs))
+    fxs = exp(log_fwa(xs) - log_fwa_amax)
 
     ! re-compute a reasonable integration range
     log_alpha1 = log(minval(xs, fxs > small_number))
@@ -201,8 +198,7 @@ contains
     
     fxs = log_fwa(xs)
     amax = xs(maxloc(fxs,1,fxs < largest))
-    log_fpxa_amax = log_fpxa(amax)
-    log_fpa_amax = log_fpa(amax)
+    log_fwa_amax = log_fwa(amax)
     
   end subroutine compute_integration_range
 
@@ -214,7 +210,7 @@ contains
     real(real64) :: a
 
     a = exp(x)
-    m_func = exp(log_fwa(a)) * hdir(a) * a
+    m_func = exp(log_fwa(a) - log_fwa_amax) * hdir(a) * a
     
   end function m_func
 
@@ -226,7 +222,7 @@ contains
     real(real64) :: a
 
     a = exp(x)
-    m2_func = exp(log_fwa(a)) * hdir(a)**2 * a
+    m2_func = exp(log_fwa(a) - log_fwa_amax) * hdir(a)**2 * a
     
   end function m2_func
 
@@ -237,7 +233,7 @@ contains
     real(real64) :: a
 
     a = exp(x)
-    nrm_func = exp(log_fwa(a))  * a
+    nrm_func = exp(log_fwa(a) - log_fwa_amax)  * a
     
   end function nrm_func
 
