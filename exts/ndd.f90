@@ -144,17 +144,6 @@ contains
     
   end function fpa
 
-  elemental real(real64) function fwa(alpha)
-    ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
-    use dirichlet_mod, only: log_fpxa
-
-    real(real64), intent(in) :: alpha
-
-    ! p(alpha | n) propto p(alpha) * p(n | alpha)
-    fwa = fpa(alpha) * exp(log_fpxa(alpha) - log_fpxa_amax) / fpa_amax
-
-  end function fwa
-
   elemental real(real64) function lfwa(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
     use dirichlet_mod, only: log_fpxa
@@ -192,7 +181,6 @@ contains
     xs = exp(xs)
     
     fxs = lfwa(xs)
-    !fxs = fwa(xs)
     ! find amax such that the weight in the integral - fwa(alpha) - is maximal
     i = maxloc(fxs,1,fxs < largest)
     amax = xs(i)
@@ -212,7 +200,6 @@ contains
     xs = exp(xs)
     
     fxs = lfwa(xs)
-    !fxs = fwa(xs)
     amax = xs(maxloc(fxs,1,fxs < largest))
     log_fpxa_amax = log_fpxa(amax)
     fpa_amax = fpa(amax)
