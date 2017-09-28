@@ -311,23 +311,6 @@ subroutine plugin(n,counts,estimate)
   integer(int32)              :: mi,nmax,err
   integer(int32), allocatable :: multi0(:)
 
-  !! this is the old 'standard' implementation.
-  !! the code using multiplicities is faster
-  !  nbins = size(counts)
-  !  if (nbins == 1) then 
-  !     estimate = 0.0_real64
-  !     return
-  !  end if
-  !  n_data = sum(counts)*1.0_real64
-  !  estimate = 0.0_real64
-  !  do i = 1,nbins
-  !     ni = counts(i)*1.0_real64
-  !     if (ni > 0) estimate = estimate - ni*log(ni)
-  !  end do
-  !  estimate = estimate / n_data + log(n_data)
-
-  ! compute multiplicities 
-  ! nmax is the largest number of samples in a bin
   nbins = size(counts)
   if (nbins == 1) then 
      estimate = 0.0_real64
