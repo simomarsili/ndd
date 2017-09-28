@@ -124,15 +124,15 @@ module nsb_mod
   use iso_fortran_env
   implicit none
 
-  real(real64) :: alpha1
-  real(real64) :: alpha2
+  real(real64) :: log_alpha1
+  real(real64) :: log_alpha2
   real(real64) :: amax
   real(real64) :: log_fpxa_amax
-  real(real64) :: fpa_amax
+  real(real64) :: log_fpa_amax
 
 contains
 
-  elemental real(real64) function fpa(a) 
+  elemental real(real64) function log_fpa(a) 
     ! prop. to p(alpha) - the prior for alpha in NSB estimator
     use constants
     use gamma_funcs, only: trigamma
@@ -140,9 +140,9 @@ contains
     
     real(real64), intent(in) :: a
     
-    fpa = alphabet_size * trigamma(alphabet_size*a + one) - trigamma(a + one)
+    log_fpa = log(alphabet_size * trigamma(alphabet_size*a + one) - trigamma(a + one))
     
-  end function fpa
+  end function log_fpa
 
   elemental real(real64) function log_fwa(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
@@ -150,7 +150,7 @@ contains
 
     real(real64), intent(in) :: alpha
 
-    log_fwa = log(fpa(alpha)) - log(fpa_amax) + log_fpxa(alpha) - log_fpxa_amax
+    log_fwa = log_fpa(alpha) - log_fpa_amax + log_fpxa(alpha) - log_fpxa_amax
 
   end function log_fwa
 
@@ -165,18 +165,18 @@ contains
     
     largest = huge(dx)
     small_number = 1.0e-30_real64
-    alpha1 = -20.0_real64
-    alpha2 = 10.0_real64
+    log_alpha1 = -20.0_real64
+    log_alpha2 = 10.0_real64
 
     ! initialize amax
     amax = 1.0_real64
     log_fpxa_amax = log_fpxa(amax) ! log p(n|a_max)
-    fpa_amax = fpa(amax) ! propto p(a)
+    log_fpa_amax = log_fpa(amax) ! propto p(a)
 
     ! set intervals equally spaced on log scale
-    dx = (alpha2 - alpha1) / (nx * 1.0_real64)
+    dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
     do i = 1,nx
-       xs(i) = alpha1 + (i - 0.5_real64) * dx
+       xs(i) = log_alpha1 + (i - 0.5_real64) * dx
     end do
     xs = exp(xs)
     
@@ -185,24 +185,24 @@ contains
     i = maxloc(fxs,1,fxs < largest)
     amax = xs(i)
     log_fpxa_amax = log_fpxa(amax)
-    fpa_amax = fpa(amax)
+    log_fpa_amax = log_fpa(amax)
 
     ! recompute fxs
     fxs = exp(log_fwa(xs))
 
     ! re-compute a reasonable integration range
-    alpha1 = log(minval(xs, fxs > small_number))
-    alpha2 = log(maxval(xs, fxs > small_number))
-    dx = (alpha2 - alpha1) / (nx * 1.0_real64)
+    log_alpha1 = log(minval(xs, fxs > small_number))
+    log_alpha2 = log(maxval(xs, fxs > small_number))
+    dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
     do i = 1,nx
-       xs(i) = alpha1 + (i - 0.5_real64) * dx
+       xs(i) = log_alpha1 + (i - 0.5_real64) * dx
     end do
     xs = exp(xs)
     
     fxs = log_fwa(xs)
     amax = xs(maxloc(fxs,1,fxs < largest))
     log_fpxa_amax = log_fpxa(amax)
-    fpa_amax = fpa(amax)
+    log_fpa_amax = log_fpa(amax)
     
   end subroutine compute_integration_range
 
@@ -246,12 +246,12 @@ contains
     real(real64), intent(out) :: estimate,err_estimate
     real(real64)              :: rslt,nrm
 
-    nrm = quad(nrm_func,alpha1,alpha2)
+    nrm = quad(nrm_func,log_alpha1,log_alpha2)
 
-    estimate = quad(m_func,alpha1,alpha2)
+    estimate = quad(m_func,log_alpha1,log_alpha2)
     estimate = estimate / nrm
     
-    err_estimate = quad(m2_func,alpha1,alpha2)
+    err_estimate = quad(m2_func,log_alpha1,log_alpha2)
     err_estimate = err_estimate / nrm
     err_estimate = sqrt(err_estimate - estimate**2)    
 
