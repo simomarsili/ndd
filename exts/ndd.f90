@@ -94,7 +94,7 @@ contains
     do i_ = 1, n_multi 
        a(i_) = multi(i_) * (log_gamma(multi_z(i_) + alpha) - log_gamma(multi_z(i_) + one))
     end do
-    log_fpxa = log_fpxa + sum(a)
+    log_fpxa = log_fpxa + sum(a) - log_fpxa_amax
     
   end function log_fpxa
 
@@ -140,7 +140,7 @@ contains
     
     real(real64), intent(in) :: a
     
-    log_fpa = log(alphabet_size * trigamma(alphabet_size*a + one) - trigamma(a + one))
+    log_fpa = log(alphabet_size * trigamma(alphabet_size*a + one) - trigamma(a + one)) - log_fpa_amax
     
   end function log_fpa
 
@@ -150,7 +150,7 @@ contains
 
     real(real64), intent(in) :: alpha
 
-    log_fwa = log_fpa(alpha) - log_fpa_amax + log_fpxa(alpha) - log_fpxa_amax
+    log_fwa = log_fpa(alpha) + log_fpxa(alpha)
 
   end function log_fwa
 
