@@ -11,6 +11,8 @@ import pytest
 import numpy
 from numpy import random as random
 
+EPS = 0.0001
+
 def random_counts(n=None, k=None, a=None):
     random.seed(123)
     pp = random.dirichlet([a]*k)
@@ -26,22 +28,22 @@ def cases():
 def test_NSB(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
-    assert ndd.entropy(counts, **kwargs) == numpy.float64(result)
+    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
 
 @pytest.mark.parametrize('setting, kwargs, result', cases()['Dirichlet'])
 def test_Dirichlet(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
-    assert ndd.entropy(counts, **kwargs) == numpy.float64(result)
+    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
 
 @pytest.mark.parametrize('setting, kwargs, result', cases()['ML'])
 def test_ML(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
-    assert ndd.entropy(counts, **kwargs) == numpy.float64(result)
+    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
 
 @pytest.mark.parametrize('setting, kwargs, result', cases()['pseudo'])
 def test_pseudo(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
-    assert ndd.entropy(counts, **kwargs) == numpy.float64(result)
+    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
