@@ -144,15 +144,15 @@ contains
     
   end function fpa
 
-  elemental real(real64) function lfwa(alpha)
+  elemental real(real64) function log_fwa(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
     use dirichlet_mod, only: log_fpxa
 
     real(real64), intent(in) :: alpha
 
-    lfwa = log(fpa(alpha)) - log(fpa_amax) + log_fpxa(alpha) - log_fpxa_amax
+    log_fwa = log(fpa(alpha)) - log(fpa_amax) + log_fpxa(alpha) - log_fpxa_amax
 
-  end function lfwa
+  end function log_fwa
 
   subroutine compute_integration_range()
     use dirichlet_mod, only: log_fpxa
@@ -180,7 +180,7 @@ contains
     end do
     xs = exp(xs)
     
-    fxs = lfwa(xs)
+    fxs = log_fwa(xs)
     ! find amax such that the weight in the integral - fwa(alpha) - is maximal
     i = maxloc(fxs,1,fxs < largest)
     amax = xs(i)
@@ -188,7 +188,7 @@ contains
     fpa_amax = fpa(amax)
 
     ! recompute fxs
-    fxs = exp(lfwa(xs))
+    fxs = exp(log_fwa(xs))
 
     ! re-compute a reasonable integration range
     alpha1 = log(minval(xs, fxs > small_number))
@@ -199,7 +199,7 @@ contains
     end do
     xs = exp(xs)
     
-    fxs = lfwa(xs)
+    fxs = log_fwa(xs)
     amax = xs(maxloc(fxs,1,fxs < largest))
     log_fpxa_amax = log_fpxa(amax)
     fpa_amax = fpa(amax)
@@ -214,7 +214,7 @@ contains
     real(real64) :: a
 
     a = exp(x)
-    m_func = exp(lfwa(a)) * hdir(a) * a
+    m_func = exp(log_fwa(a)) * hdir(a) * a
     
   end function m_func
 
@@ -226,7 +226,7 @@ contains
     real(real64) :: a
 
     a = exp(x)
-    m2_func = exp(lfwa(a)) * hdir(a)**2 * a
+    m2_func = exp(log_fwa(a)) * hdir(a)**2 * a
     
   end function m2_func
 
@@ -237,7 +237,7 @@ contains
     real(real64) :: a
 
     a = exp(x)
-    nrm_func = exp(lfwa(a))  * a
+    nrm_func = exp(log_fwa(a))  * a
     
   end function nrm_func
 
