@@ -353,10 +353,10 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
   end if
 
   nbins = size(counts)
-  if (nbins == 1) then 
-     estimate = 0.0_real64
-     return
-  end if
+!  if (nbins == 1) then 
+!     estimate = 0.0_real64
+!     return
+!  end if
   n_data = sum(counts)
   estimate = 0.0_real64
   do i = 1,nbins
@@ -386,10 +386,10 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
 
-  if (size(counts) == 1) then 
-     estimate = 0.0_real64
-     return
-  end if
+!  if (size(counts) == 1) then 
+!     estimate = 0.0_real64
+!     return
+!  end if
 
   call initialize_dirichlet(counts, nc)
   call compute_multiplicities(counts)
@@ -413,11 +413,11 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
 
-  if (size(counts) == 1) then 
-     estimate = 0.0_real64
-     err_estimate = 0.0_real64
-     return
-  end if
+!  if (size(counts) == 1) then 
+!     estimate = 0.0_real64
+!     err_estimate = 0.0_real64
+!     return
+!  end if
 
   call initialize_dirichlet(counts, nc)
   call compute_multiplicities(counts)
