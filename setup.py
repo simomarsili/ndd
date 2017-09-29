@@ -88,6 +88,7 @@ setup(
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
+    keywords='entropy estimation Bayes discrete_data',
     py_modules=['ndd'],
     ext_modules=[nddf],
     setup_requires=setup_requires,
