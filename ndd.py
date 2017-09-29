@@ -27,7 +27,9 @@ posterior mean (in nats):
 The uncertainty in the entropy estimate can be quantified by the posterior
 standard deviation:
 ```python
->>> entropy_estimate, dispersion = ndd.entropy(counts, return_error=True)
+>>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
+>>> std
+0.048675500725595504
 ```
 
 ### References
@@ -132,7 +134,7 @@ def _check_histogram(counts, k=None, alpha=0.0):
 
     return (counts, k, alpha)
 
-def entropy(counts, k=None, a=None, return_error=False, dist=False):
+def entropy(counts, k=None, a=None, return_std=False, dist=False):
     """
     Compute an estimate of the entropy from histogram counts.
     If `a` is passed, compute a Bayesian estimate of the entropy using a single
@@ -160,9 +162,8 @@ def entropy(counts, k=None, a=None, return_error=False, dist=False):
         Must be >= 0.0. If no value is passed, use a mixture of Dirichlet
         priors (Nemenman-Schafee-Bialek algorithm).
 
-    return_error : boolean, optional
-        If True, also return the Bayesian confidence intervals for the entropy
-        estimate, as the std deviation over the posterior for H.
+    return_std : boolean, optional
+        If True, also return the standard deviation over the posterior for H.
 
     dist : boolean, optional
         If True, the true underlying distribution is estimated from counts,
@@ -176,15 +177,15 @@ def entropy(counts, k=None, a=None, return_error=False, dist=False):
     entropy : float
         Entropy estimate.
 
-    error : float, optional
-        If return_error == True, return a Bayesian confidence interval.
-        When dist == True, return None.
+    std : float, optional
+        If return_std == True, return the standard deviation over the posterior
+        for H. When dist == True, return None.
 
     """
     import nddf
 
     counts, k, alpha = _check_histogram(counts, k, a)
-    error = None
+    std = None
     if dist:
         if alpha < 1e-6:
             # we'll take this as zero
@@ -194,14 +195,14 @@ def entropy(counts, k=None, a=None, return_error=False, dist=False):
     else:
         if a is None:
             # NSB
-            estimate, error = nddf.nsb(counts, k)
+            estimate, std = nddf.nsb(counts, k)
         else:
             # fixed alpha
             estimate = nddf.dirichlet(counts, k, alpha)
             #TODO: compute variance over the posterior at fixed alpha
 
-    if return_error:
-        return (estimate, error)
+    if return_std:
+        return (estimate, std)
     else:
         return estimate
 

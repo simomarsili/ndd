@@ -1,34 +1,76 @@
 # -*- coding: utf-8 -*-
-from os import path
-import codecs
-import re
-#from setuptools import setup
-import pip
+from __future__ import print_function
+import sys
+from pkg_resources import parse_version
 
+dist = sys.argv[1]
+numpy_min_version = '1.8'
+version_file = 'version.py'
 setup_requires = ['numpy']
 install_requires=['future', 'pytest', 'scipy']
-# install numpy via pip
-pip.main(['install'] + setup_requires)
-setup_requires = []
 
+def get_numpy_status():
+    """
+    Returns a dictionary containing a boolean specifying whether NumPy
+    is up-to-date, along with the version string (empty string if
+    not installed).
+    From pymc: https://raw.githubusercontent.com/pymc-devs/pymc/master/setup.py
+    """
+    numpy_status = {}
+    try:
+        import numpy
+        numpy_version = numpy.__version__
+        numpy_status['up_to_date'] = parse_version(
+            numpy_version) >= parse_version(numpy_min_version)
+        numpy_status['version'] = numpy_version
+    except ImportError:
+        numpy_status['up_to_date'] = False
+        numpy_status['version'] = ""
+    return numpy_status
 
+def get_ndd_version(vfile):
+    """ Retrieve ndd version number."""
+    import re
+    version_string = open(vfile, "rt").read()
+    vre = r"^__version__ = ['\"]([^'\"]*)['\"]"
+    vmo = re.search(vre, version_string, re.M)
+    if vmo:
+        return vmo.group(1)
+    else:
+        raise RuntimeError("Unable to find version string in %s." % (vfile,))
+
+def get_long_description():
+    """Get the long description from the README file."""
+    from os import path
+    import codecs
+    here = path.abspath(path.dirname(__file__))
+    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as f:
+        return f.read()
+
+# check numpy first
+numpy_status = get_numpy_status()
+numpy_req_str = "ndd requires NumPy >= %s" % numpy_min_version
+if numpy_status['up_to_date'] is False:
+    if numpy_status['version']:
+        raise ImportError(
+            "Your installation of NumPy %s is out-of-date.\n%s"
+            % (numpy_status['version'], numpy_req_str))
+    else:
+        raise ImportError(
+            "NumPy is not installed.\n%s"
+            % numpy_req_str)
+
+#install numpy via pip
+#import pip
+#pip.main(['install'] + setup_requires)
+#setup_requires = []
 from numpy.distutils.core import setup
 from numpy.distutils.core import Extension
 
-# get the long description from the README file
-here = path.abspath(path.dirname(__file__))
-with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+# ndd version
+ndd_version = get_ndd_version(version_file)
 
-# get version number(s)
-VERSIONFILE = "version.py"
-version_string = open(VERSIONFILE, "rt").read()
-VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
-mo = re.search(VSRE, version_string, re.M)
-if mo:
-    VERSION = mo.group(1)
-else:
-    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
+long_description = get_long_description()
 
 nddf = Extension(
     name = 'nddf',
@@ -40,25 +82,17 @@ nddf = Extension(
 
 setup(
     name='ndd',
-    version=VERSION,
-    description="Estimates of entropy and entropy-related quantities from discrete data",
+    version=ndd_version,
+    description="Entropy from discrete data",
     long_description=long_description,
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
-    url='https://github.com/pypa/sampleproject',
-    #packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    py_modules        = ['ndd'],
-    ext_modules       = [nddf],
-    setup_requires = setup_requires,
-    install_requires = install_requires,
-    # List additional groups of dependencies here (e.g. development
-    # dependencies). You can install these using the following syntax,
-    # for example:
-    # $ pip install -e .[dev,test]
-    #extras_require={
-    #    'dev': ['check-manifest'],
-    #    'test': ['coverage'],
-    #},
+    url='https://github.com/simomarsili/ndd',
+    keywords='entropy estimation Bayes discrete_data',
+    py_modules=['ndd'],
+    ext_modules=[nddf],
+    setup_requires=setup_requires,
+    install_requires=install_requires,
     extras_require={
         'test': ['pytest'],
         'docs': ['mkdocs']},
