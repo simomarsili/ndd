@@ -5,7 +5,7 @@ The **ndd** module is a minimal Python interface to the Nemenman-Schafee-Bialek
 
 ## Basic usage 
 
-The `ndd.entropy` function takes as input an vector of counts,
+The `ndd.entropy` function takes as input a vector of counts,
 representing the observed frequencies for a set of classes or states,
 and returns an entropy estimate (in nats): 
 
