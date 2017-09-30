@@ -223,10 +223,6 @@ contains
     end do
     xs = exp(xs)
     
-    fxs = log_weight(xs)
-    amax = xs(maxloc(fxs,1,fxs < largest))
-    lw_max = log_weight(amax)
-    
   end subroutine compute_integration_range
 
   real(real64) function m_func(x)
