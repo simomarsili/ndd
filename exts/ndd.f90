@@ -185,17 +185,16 @@ contains
     use dirichlet_mod, only: log_pna
     
     integer(int32),parameter :: nx = 100
-    real(real64)             :: dx,largest,small_number
+    real(real64)             :: dx,largest
     real(real64)             :: xs(nx),fxs(nx)
     real(real64)             :: a1,a2,f,x
     integer(int32)           :: i
     
     largest = huge(dx)
-    small_number = 1.0e-30_real64
-    log_alpha1 = -20.0_real64
-    log_alpha2 = 10.0_real64
-
-    ! initialize amax
+    
+    ! initialize amax and integration range
+    log_alpha1 = log(1.e-8_real64)
+    log_alpha2 = log(1.e4_real64)
     amax = 1.0_real64
     lw_max = log_weight(amax) ! log p(n|a_max)
 
@@ -216,8 +215,8 @@ contains
     fxs = exp(log_weight(xs) - lw_max)
 
     ! re-compute a reasonable integration range
-    log_alpha1 = log(minval(xs, fxs > small_number))
-    log_alpha2 = log(maxval(xs, fxs > small_number))
+    log_alpha1 = log(minval(xs, fxs > 0.0_real64))
+    log_alpha2 = log(maxval(xs, fxs > 0.0_real64))
     dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
     do i = 1,nx
        xs(i) = log_alpha1 + (i - 0.5_real64) * dx
