@@ -87,14 +87,14 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
-    real(real64)   :: a(n_multi)
+    real(real64)   :: wrk(n_multi)
 
     log_pna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
     do i_ = 1, n_multi 
-       a(i_) = multi(i_) * (log_gamma(multi_z(i_) + alpha) - log_gamma(multi_z(i_) + one))
+       wrk(i_) = multi(i_) * (log_gamma(multi_z(i_) + alpha) - log_gamma(multi_z(i_) + one))
     end do
-    log_pna = log_pna + sum(a)
+    log_pna = log_pna + sum(wrk)
     
   end function log_pna
 
@@ -105,14 +105,14 @@ contains
     use constants
     
     real(real64), intent(in) :: alpha
-    integer(int32) :: i
-    real(real64)   :: a(n_multi)
+    integer(int32) :: i_
+    real(real64)   :: wrk(n_multi)
 
     h_bayes = 0.0_real64
-    do i = 1,n_multi 
-       a(i) = multi(i) * (multi_z(i) + alpha) * digamma(multi_z(i) + alpha + one) 
+    do i_ = 1,n_multi 
+       wrk(i_) = multi(i_) * (multi_z(i_) + alpha) * digamma(multi_z(i_) + alpha + one) 
     end do
-    h_bayes = - sum(a)
+    h_bayes = - sum(wrk)
     h_bayes = h_bayes / (n_data + alpha * alphabet_size)
     h_bayes = h_bayes + digamma(n_data + alpha * alphabet_size + one)
 
@@ -128,33 +128,33 @@ contains
     real(real64), intent(out) :: hb, lw
     real(real64) :: lpna
     integer(int32) :: mi, mzi
-    integer(int32) :: i
-    real(real64)   :: a(n_multi),b(n_multi)
+    integer(int32) :: i_
+    real(real64)   :: wrka(n_multi),wrkb(n_multi)
 
     lpna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
-    do i = 1,n_multi
-       mzi = multi_z(i)
-       mi = multi(i)
-       a(i) = mi * (mzi + alpha) * digamma(mzi + alpha + one)
-       b(i) = mi * (log_gamma(mzi + alpha) - log_gamma(mzi + one))
+    do i_ = 1,n_multi
+       mzi = multi_z(i_)
+       mi = multi(i_)
+       wrka(i_) = mi * (mzi + alpha) * digamma(mzi + alpha + one)
+       wrkb(i_) = mi * (log_gamma(mzi + alpha) - log_gamma(mzi + one))
     end do
-    hb = - sum(a)
+    hb = - sum(wrka)
     hb = hb / (n_data + alpha * alphabet_size)
     hb = hb + digamma(n_data + alpha * alphabet_size + one)
-    lpna = lpna + sum(b)
+    lpna = lpna + sum(wrkb)
     lw = log_fpa(alpha) + lpna
 
   end subroutine integrand
 
-  elemental real(real64) function log_fpa(a) 
+  elemental real(real64) function log_fpa(alpha) 
     ! prop. to p(alpha) - the prior for alpha in NSB estimator
     use constants
     use gamma_funcs, only: trigamma
     
-    real(real64), intent(in) :: a
+    real(real64), intent(in) :: alpha
     
-    log_fpa = log(alphabet_size * trigamma(alphabet_size*a + one) - trigamma(a + one))
+    log_fpa = log(alphabet_size * trigamma(alphabet_size * alpha + one) - trigamma(alpha + one))
     
   end function log_fpa
 
