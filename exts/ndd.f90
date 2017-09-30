@@ -294,27 +294,39 @@ subroutine plugin(n,counts,estimate)
   integer(int32)              :: mi,nmax,err
   integer(int32), allocatable :: multi0(:)
 
+  ! standard implementation
   nbins = size(counts)
   if (nbins == 1) then 
      estimate = 0.0_real64
      return
   end if
   n_data = sum(counts)*1.0_real64
-  nmax = maxval(counts)
-  allocate(multi0(nmax),stat=err)
-  multi0 = 0
-  do i = 1,nbins
-     ni = counts(i)
-     if (ni == 0) cycle
-     multi0(ni) = multi0(ni) + 1
-  end do
-  estimate = 0.0_real64
-  do i = 1,nmax
-     mi = multi0(i)
-     if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
-  end do
+  estimate = - sum(counts * log(counts*1.0_real64), counts>0)
   estimate = estimate / n_data + log(n_data)
-  deallocate(multi0)
+  return 
+
+  ! using multiplicities 
+!  nbins = size(counts)
+!  if (nbins == 1) then 
+!     estimate = 0.0_real64
+!     return
+!  end if
+!  n_data = sum(counts)*1.0_real64
+!  nmax = maxval(counts)
+!  allocate(multi0(nmax),stat=err)
+!  multi0 = 0
+!  do i = 1,nbins
+!     ni = counts(i)
+!     if (ni == 0) cycle
+!     multi0(ni) = multi0(ni) + 1
+!  end do
+!  estimate = 0.0_real64
+!  do i = 1,nmax
+!     mi = multi0(i)
+!     if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
+!  end do
+!  estimate = estimate / n_data + log(n_data)
+!  deallocate(multi0)
 
 end subroutine plugin
 
