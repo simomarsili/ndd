@@ -108,7 +108,6 @@ def _check_histogram(counts, k=None, alpha=0.0):
 
     try:
         counts = np.array(counts, dtype=np.int32)
-        counts = counts[counts > 0]
     except ValueError:
         raise
     if np.any(counts < 0):
