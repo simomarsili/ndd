@@ -80,7 +80,7 @@ contains
     
   end subroutine dirichlet_finalize
 
-  pure real(real64) function log_fpxa(alpha) 
+  pure real(real64) function log_pna(alpha) 
     ! log(p(n|a)) (log of) marginal probability of data given alpha
     ! computed from histogram multiplicities. Dirichlet-multinomial.
     use constants
@@ -89,16 +89,16 @@ contains
     integer(int32) :: i_
     real(real64)   :: a(n_multi)
 
-    log_fpxa = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
+    log_pna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
     do i_ = 1, n_multi 
        a(i_) = multi(i_) * (log_gamma(multi_z(i_) + alpha) - log_gamma(multi_z(i_) + one))
     end do
-    log_fpxa = log_fpxa + sum(a)
+    log_pna = log_pna + sum(a)
     
-  end function log_fpxa
+  end function log_pna
 
-  real(real64) function hdir(alpha)
+  real(real64) function h_bayes(alpha)
     ! posterior average of the entropy given the data and alpha
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
@@ -108,15 +108,55 @@ contains
     integer(int32) :: i
     real(real64)   :: a(n_multi)
 
-    hdir = 0.0_real64
+    h_bayes = 0.0_real64
     do i = 1,n_multi 
        a(i) = multi(i) * (multi_z(i) + alpha) * digamma(multi_z(i) + alpha + one) 
     end do
-    hdir = - sum(a)
-    hdir = hdir / (n_data + alpha * alphabet_size)
-    hdir = hdir + digamma(n_data + alpha * alphabet_size + one)
+    h_bayes = - sum(a)
+    h_bayes = h_bayes / (n_data + alpha * alphabet_size)
+    h_bayes = h_bayes + digamma(n_data + alpha * alphabet_size + one)
 
-  end function hdir
+  end function h_bayes
+
+  subroutine integrand(alpha, hb, lw)
+    ! posterior average of the entropy given the data and alpha
+    ! computed from histogram multiplicities
+    use gamma_funcs, only: digamma
+    use constants
+    
+    real(real64), intent(in) :: alpha
+    real(real64), intent(out) :: hb, lw
+    real(real64) :: lpna
+    integer(int32) :: mi, mzi
+    integer(int32) :: i
+    real(real64)   :: a(n_multi),b(n_multi)
+
+    lpna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
+         - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
+    do i = 1,n_multi
+       mzi = multi_z(i)
+       mi = multi(i)
+       a(i) = mi * (mzi + alpha) * digamma(mzi + alpha + one)
+       b(i) = mi * (log_gamma(mzi + alpha) - log_gamma(mzi + one))
+    end do
+    hb = - sum(a)
+    hb = hb / (n_data + alpha * alphabet_size)
+    hb = hb + digamma(n_data + alpha * alphabet_size + one)
+    lpna = lpna + sum(b)
+    lw = log_fpa(alpha) + lpna
+
+  end subroutine integrand
+
+  elemental real(real64) function log_fpa(a) 
+    ! prop. to p(alpha) - the prior for alpha in NSB estimator
+    use constants
+    use gamma_funcs, only: trigamma
+    
+    real(real64), intent(in) :: a
+    
+    log_fpa = log(alphabet_size * trigamma(alphabet_size*a + one) - trigamma(a + one))
+    
+  end function log_fpa
 
 end module dirichlet_mod
 
@@ -127,34 +167,22 @@ module nsb_mod
   real(real64) :: log_alpha1
   real(real64) :: log_alpha2
   real(real64) :: amax
-  real(real64) :: log_fwa_amax
+  real(real64) :: lw_max
 
 contains
 
-  elemental real(real64) function log_fpa(a) 
-    ! prop. to p(alpha) - the prior for alpha in NSB estimator
-    use constants
-    use gamma_funcs, only: trigamma
-    use dirichlet_mod, only: alphabet_size
-    
-    real(real64), intent(in) :: a
-    
-    log_fpa = log(alphabet_size * trigamma(alphabet_size*a + one) - trigamma(a + one))
-    
-  end function log_fpa
-
-  elemental real(real64) function log_fwa(alpha)
+  elemental real(real64) function log_weight(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
-    use dirichlet_mod, only: log_fpxa
+    use dirichlet_mod, only: log_pna, log_fpa
 
     real(real64), intent(in) :: alpha
+    
+    log_weight = log_fpa(alpha) + log_pna(alpha)
 
-    log_fwa = log_fpa(alpha) + log_fpxa(alpha)
-
-  end function log_fwa
+  end function log_weight
 
   subroutine compute_integration_range()
-    use dirichlet_mod, only: log_fpxa
+    use dirichlet_mod, only: log_pna
     
     integer(int32),parameter :: nx = 100
     real(real64)             :: dx,largest,small_number
@@ -169,7 +197,7 @@ contains
 
     ! initialize amax
     amax = 1.0_real64
-    log_fwa_amax = log_fwa(amax) ! log p(n|a_max)
+    lw_max = log_weight(amax) ! log p(n|a_max)
 
     ! set intervals equally spaced on log scale
     dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
@@ -178,14 +206,14 @@ contains
     end do
     xs = exp(xs)
     
-    fxs = log_fwa(xs)
+    fxs = log_weight(xs)
     ! find amax such that the weight in the integral - fwa(alpha) - is maximal
     i = maxloc(fxs,1,fxs < largest)
     amax = xs(i)
-    log_fwa_amax = log_fwa(amax)
+    lw_max = log_weight(amax)
 
     ! recompute fxs
-    fxs = exp(log_fwa(xs) - log_fwa_amax)
+    fxs = exp(log_weight(xs) - lw_max)
 
     ! re-compute a reasonable integration range
     log_alpha1 = log(minval(xs, fxs > small_number))
@@ -196,44 +224,43 @@ contains
     end do
     xs = exp(xs)
     
-    fxs = log_fwa(xs)
+    fxs = log_weight(xs)
     amax = xs(maxloc(fxs,1,fxs < largest))
-    log_fwa_amax = log_fwa(amax)
+    lw_max = log_weight(amax)
     
   end subroutine compute_integration_range
 
   real(real64) function m_func(x)
-    ! integrating after change of variable x = log(alpha) in the integral(s)
-    use dirichlet_mod, only: hdir
+    use dirichlet_mod, only: h_bayes, integrand
 
     real(real64), intent(in) :: x
-    real(real64) :: a
+    real(real64) :: a, h_c,lw
 
     a = exp(x)
-    m_func = exp(log_fwa(a) - log_fwa_amax) * hdir(a) * a
+    call integrand(a, h_c, lw)
+    m_func = exp(lw - lw_max) * h_c * a
     
   end function m_func
 
   real(real64) function m2_func(x)
-    ! integrating after change of variable x = log(alpha) in the integral(s)
-    use dirichlet_mod, only: hdir
+    use dirichlet_mod, only: h_bayes, integrand
 
     real(real64), intent(in) :: x
-    real(real64) :: a
+    real(real64) :: a, h_c,lw
 
     a = exp(x)
-    m2_func = exp(log_fwa(a) - log_fwa_amax) * hdir(a)**2 * a
+    call integrand(a, h_c, lw)
+    m2_func = exp(lw - lw_max) * h_c**2 * a
     
   end function m2_func
 
   real(real64) function nrm_func(x)
-    ! integrating after change of variable x = log(alpha) in the integral(s)
 
     real(real64), intent(in) :: x
     real(real64) :: a
 
     a = exp(x)
-    nrm_func = exp(log_fwa(a) - log_fwa_amax)  * a
+    nrm_func = exp(log_weight(a) - lw_max)  * a
     
   end function nrm_func
 
@@ -389,7 +416,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha 
   use iso_fortran_env
   use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
-  use dirichlet_mod, only: hdir
+  use dirichlet_mod, only: h_bayes
   implicit none
 
   integer(int32), intent(in)  :: n
@@ -406,7 +433,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   call initialize_dirichlet(counts, nc)
   call compute_multiplicities(counts)
 
-  estimate = hdir(alpha)
+  estimate = h_bayes(alpha)
 
   call dirichlet_finalize()
 
