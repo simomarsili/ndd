@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### [Changed]
+- numerical integration is stable over large ranges of conditions (large k and/or large n)
 
 ## [0.3] - 2017-09-29
 ### [Added]
