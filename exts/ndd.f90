@@ -196,36 +196,60 @@ contains
     real(real64)             :: dx,largest
     real(real64)             :: xs(nx),fxs(nx)
     real(real64)             :: a1,a2,f,x
-    integer(int32)           :: i
-    
+    integer(int32)           :: i, counter, nbins
+
     largest = huge(dx)
     
     ! initialize amax and integration range
     log_alpha1 = log(1.e-8_real64)
     log_alpha2 = log(1.e4_real64)
     amax = 1.0_real64
-    lw_max = log_weight(amax) ! log p(n|a_max)
+    lw_max = log_weight(amax)
+    
+    counter = 0
+    do
+       counter = counter + 1
+       
+       ! set intervals equally spaced on log scale
+       dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
+       do i = 1,nx
+          xs(i) = log_alpha1 + (i - 0.5_real64) * dx
+       end do
+       xs = exp(xs)
 
-    ! set intervals equally spaced on log scale
+       fxs = log_weight(xs)
+       ! find amax such that the alpha weight is maximal
+       i = maxloc(fxs, 1, fxs < largest)
+       amax = xs(i)
+       lw_max = log_weight(amax)
+
+       ! check the bins with weights > 0
+       fxs = exp(fxs - lw_max)
+       nbins = count(fxs > 0.0)
+       if (nbins > 1) exit
+       if (nbins == 1) then
+          log_alpha1 = log(amax) - dx
+          log_alpha2 = log(amax) + dx
+       end if
+    end do
+
+    ! re-compute a reasonable integration range
+    fxs = exp(log_weight(xs) - lw_max)
+    log_alpha1 = log(minval(xs, fxs > 0.0_real64)) - dx
+    log_alpha2 = log(maxval(xs, fxs > 0.0_real64)) + dx
+    
     dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
     do i = 1,nx
        xs(i) = log_alpha1 + (i - 0.5_real64) * dx
     end do
     xs = exp(xs)
-
+    
     fxs = log_weight(xs)
-    ! find amax such that the weight in the integral - fwa(alpha) - is maximal
-    i = maxloc(fxs,1,fxs < largest)
+    ! find amax such that the alpha weight is maximal
+    i = maxloc(fxs, 1, fxs < largest)
     amax = xs(i)
     lw_max = log_weight(amax)
 
-    ! recompute fxs
-    fxs = exp(log_weight(xs) - lw_max)
-
-    ! re-compute a reasonable integration range
-    log_alpha1 = log(minval(xs, fxs > 0.0_real64))
-    log_alpha2 = log(maxval(xs, fxs > 0.0_real64))
-    
   end subroutine compute_integration_range
 
   real(real64) function m_func(x)
@@ -259,7 +283,7 @@ contains
 
     alpha = exp(x)
     nrm_func = exp(log_weight(alpha) - lw_max)  * alpha
-    
+
   end function nrm_func
 
   subroutine hnsb(estimate,err_estimate) 
