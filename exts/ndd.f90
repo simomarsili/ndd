@@ -22,13 +22,13 @@ module dirichlet_mod
 
 contains
 
-  subroutine initialize_dirichlet(counts, nc_)
+  subroutine initialize_dirichlet(counts, nc)
     ! set alphabet_size, n_data
     ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
-    integer(int32), intent(in) :: nc_
+    integer(int32), intent(in) :: nc
     
-    alphabet_size = nc_
+    alphabet_size = nc
     n_data = sum(counts)
     
     call compute_multiplicities(counts)
@@ -118,34 +118,42 @@ contains
 
   end function h_bayes
 
-  subroutine integrand(alpha, hb, lw)
+  elemental real(real64) function integrand(alpha, lw_max, order)
     ! posterior average of the entropy given the data and alpha
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
     use constants
     
-    real(real64), intent(in) :: alpha
-    real(real64), intent(out) :: hb, lw
+    real(real64), intent(in) :: alpha, lw_max
+    integer(int32), intent(in) :: order
+    real(real64) :: hb, lw
     real(real64) :: lpna
     integer(int32) :: mi, mzi
     integer(int32) :: i_
     real(real64)   :: wrka(n_multi),wrkb(n_multi)
 
-    lpna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
-         - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
+    lpna = log_gamma(n_data + one) &
+         + log_gamma(alpha * alphabet_size) & 
+         - alphabet_size * log_gamma(alpha) &
+         - log_gamma(n_data + alpha * alphabet_size)
+
     do i_ = 1,n_multi
        mzi = multi_z(i_)
        mi = multi(i_)
        wrka(i_) = mi * (mzi + alpha) * digamma(mzi + alpha + one)
        wrkb(i_) = mi * (log_gamma(mzi + alpha) - log_gamma(mzi + one))
     end do
+
+    lpna = lpna + sum(wrkb)
+    lw = log_fpa(alpha) + lpna - lw_max
+    
     hb = - sum(wrka)
     hb = hb / (n_data + alpha * alphabet_size)
     hb = hb + digamma(n_data + alpha * alphabet_size + one)
-    lpna = lpna + sum(wrkb)
-    lw = log_fpa(alpha) + lpna
+    
+    integrand = exp(lw) * hb**order
 
-  end subroutine integrand
+  end function integrand
 
   elemental real(real64) function log_fpa(alpha) 
     ! prop. to p(alpha) - the prior for alpha in NSB estimator
@@ -204,7 +212,7 @@ contains
        xs(i) = log_alpha1 + (i - 0.5_real64) * dx
     end do
     xs = exp(xs)
-    
+
     fxs = log_weight(xs)
     ! find amax such that the weight in the integral - fwa(alpha) - is maximal
     i = maxloc(fxs,1,fxs < largest)
@@ -217,45 +225,40 @@ contains
     ! re-compute a reasonable integration range
     log_alpha1 = log(minval(xs, fxs > 0.0_real64))
     log_alpha2 = log(maxval(xs, fxs > 0.0_real64))
-    dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
-    do i = 1,nx
-       xs(i) = log_alpha1 + (i - 0.5_real64) * dx
-    end do
-    xs = exp(xs)
     
   end subroutine compute_integration_range
 
   real(real64) function m_func(x)
+    ! integrate over x = log(alpha)
     use dirichlet_mod, only: h_bayes, integrand
 
     real(real64), intent(in) :: x
-    real(real64) :: a, h_c,lw
+    real(real64) :: alpha
 
-    a = exp(x)
-    call integrand(a, h_c, lw)
-    m_func = exp(lw - lw_max) * h_c * a
+    alpha = exp(x)
+    m_func = integrand(alpha, lw_max, 1) * alpha
     
   end function m_func
 
   real(real64) function m2_func(x)
+    ! integrate over x = log(alpha)
     use dirichlet_mod, only: h_bayes, integrand
 
     real(real64), intent(in) :: x
-    real(real64) :: a, h_c,lw
+    real(real64) :: alpha
 
-    a = exp(x)
-    call integrand(a, h_c, lw)
-    m2_func = exp(lw - lw_max) * h_c**2 * a
+    alpha = exp(x)
+    m2_func = integrand(alpha, lw_max, 2) * alpha
     
   end function m2_func
 
   real(real64) function nrm_func(x)
-
+    ! integrate over x = log(alpha)
     real(real64), intent(in) :: x
-    real(real64) :: a
+    real(real64) :: alpha
 
-    a = exp(x)
-    nrm_func = exp(log_weight(a) - lw_max)  * a
+    alpha = exp(x)
+    nrm_func = exp(log_weight(alpha) - lw_max)  * alpha
     
   end function nrm_func
 
@@ -315,40 +318,43 @@ subroutine plugin(n,counts,estimate)
   real(real64)   :: ni,n_data
   integer(int32)              :: mi,nmax,err
   integer(int32), allocatable :: multi0(:)
+  logical :: multi = .false.
 
-  ! standard implementation
-  nbins = size(counts)
-  if (nbins == 1) then 
+  if (multi) then
+     ! using multiplicities 
+     nbins = size(counts)
+     if (nbins == 1) then 
+        estimate = 0.0_real64
+        return
+     end if
+     n_data = sum(counts)*1.0_real64
+     nmax = maxval(counts)
+     allocate(multi0(nmax),stat=err)
+     multi0 = 0
+     do i = 1,nbins
+        ni = counts(i)
+        if (ni == 0) cycle
+        multi0(ni) = multi0(ni) + 1
+     end do
      estimate = 0.0_real64
-     return
+     do i = 1,nmax
+        mi = multi0(i)
+        if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
+     end do
+     estimate = estimate / n_data + log(n_data)
+     deallocate(multi0)
+  else
+     ! standard implementation
+     nbins = size(counts)
+     if (nbins == 1) then 
+        estimate = 0.0_real64
+        return
+     end if
+     n_data = sum(counts)*1.0_real64
+     estimate = - sum(counts * log(counts*1.0_real64), counts>0)
+     estimate = estimate / n_data + log(n_data)
   end if
-  n_data = sum(counts)*1.0_real64
-  estimate = - sum(counts * log(counts*1.0_real64), counts>0)
-  estimate = estimate / n_data + log(n_data)
-  return 
 
-  ! using multiplicities 
-!  nbins = size(counts)
-!  if (nbins == 1) then 
-!     estimate = 0.0_real64
-!     return
-!  end if
-!  n_data = sum(counts)*1.0_real64
-!  nmax = maxval(counts)
-!  allocate(multi0(nmax),stat=err)
-!  multi0 = 0
-!  do i = 1,nbins
-!     ni = counts(i)
-!     if (ni == 0) cycle
-!     multi0(ni) = multi0(ni) + 1
-!  end do
-!  estimate = 0.0_real64
-!  do i = 1,nmax
-!     mi = multi0(i)
-!     if (mi > 0) estimate = estimate - mi*i*log(i*1.0_real64)
-!  end do
-!  estimate = estimate / n_data + log(n_data)
-!  deallocate(multi0)
 
 end subroutine plugin
 
@@ -454,6 +460,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 !  end if
 
   call initialize_dirichlet(counts, nc)
+
   call compute_multiplicities(counts)
 
   call compute_integration_range()
