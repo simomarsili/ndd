@@ -3,6 +3,11 @@
 ## [Unreleased]
 ### [Changed]
 - numerical integration is stable over large ranges of conditions (large k and/or large n)
+- raise an error if estimate is NaN
+- statndard implementation for ML estimator
+
+### [Removed]
+- preliminary notebooks
 
 ## [0.3] - 2017-09-29
 ### [Added]
