@@ -189,9 +189,9 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
     if dist:
         if alpha < 1e-6:
             # we'll take this as zero
-            return nddf.plugin(counts)
+            estimate = nddf.plugin(counts)
         else:
-            return nddf.pseudo(counts, k, alpha)
+            estimate = nddf.pseudo(counts, k, alpha)
     else:
         if a is None:
             # NSB
@@ -200,6 +200,9 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
             # fixed alpha
             estimate = nddf.dirichlet(counts, k, alpha)
             #TODO: compute variance over the posterior at fixed alpha
+
+    if estimate is np.nan:
+        raise FloatingPointError("Estimate is NaN")
 
     if return_std:
         return (estimate, std)
