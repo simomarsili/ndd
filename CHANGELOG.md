@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+
+## [0.4] - 2017-10-03
 ### [Changed]
 - numerical integration is stable over large ranges of conditions (large k and/or large n)
 - raise an error if estimate is NaN
