@@ -1,6 +1,6 @@
 include LICENSE
 include README.md
-include version.py
+include version.json
 
 # Include the data files
 #recursive-include data *

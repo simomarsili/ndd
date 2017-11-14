@@ -5,7 +5,7 @@ from pkg_resources import parse_version
 
 dist = sys.argv[1]
 numpy_min_version = '1.8'
-version_file = 'version.py'
+version_file = 'version.json'
 setup_requires = ['numpy']
 install_requires=['future', 'pytest', 'scipy']
 
@@ -30,14 +30,14 @@ def get_numpy_status():
 
 def get_ndd_version(vfile):
     """ Retrieve ndd version number."""
-    import re
-    version_string = open(vfile, "rt").read()
-    vre = r"^__version__ = ['\"]([^'\"]*)['\"]"
-    vmo = re.search(vre, version_string, re.M)
-    if vmo:
-        return vmo.group(1)
-    else:
-        raise RuntimeError("Unable to find version string in %s." % (vfile,))
+    import json
+    with open(vfile, 'r') as f:
+        version_data = json.load(f)
+    try:
+        return version_data['number']
+    except KeyError:
+        # no version number in version.json
+        raise KeyError("check version file: no version number")
 
 def get_long_description():
     """Get the long description from the README file."""
