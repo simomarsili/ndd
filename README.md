@@ -35,7 +35,7 @@ $ python setup.py install
 ```
 (add `--user` to install in `~/.local`) or use `pip`:
 ```bash
-$ pip install -r requirements --user
+$ pip install -r requirements.txt --user
 $ pip install . --user
 ```
 

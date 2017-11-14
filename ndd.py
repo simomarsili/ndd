@@ -94,7 +94,6 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     ascii, chr, hex, input, next, oct, open,
     pow, round, super,
     filter, map, zip)
-from version import __version__
 
 __copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
 __license__ = "BSD 3 clause"
