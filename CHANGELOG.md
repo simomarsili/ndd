@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+
+## [0.4.1] - 2017-11-14
 ### Added
 - version.json
 
