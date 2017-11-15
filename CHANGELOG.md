@@ -1,6 +1,9 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- project interface is now a Python package
+- binary extension are installed in the package dir
 
 ## [0.4.1] - 2017-11-14
 ### Added
