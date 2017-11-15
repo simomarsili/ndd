@@ -41,49 +41,49 @@ def get_long_description():
     from os import path
     import codecs
     here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as f:
-        return f.read()
+    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as _rf:
+        return _rf.read()
 
 # check numpy first
-numpy_status = get_numpy_status()
-numpy_req_str = "ndd requires NumPy >= %s" % NUMPY_MIN_VERSION
-if numpy_status['up_to_date'] is False:
-    if numpy_status['version']:
+NUMPY_STATUS = get_numpy_status()
+NUMPY_REQ_STR = "ndd requires NumPy >= %s" % NUMPY_MIN_VERSION
+if NUMPY_STATUS['up_to_date'] is False:
+    if NUMPY_STATUS['version']:
         raise ImportError(
             "Your installation of NumPy %s is out-of-date.\n%s"
-            % (numpy_status['version'], numpy_req_str))
+            % (NUMPY_STATUS['version'], NUMPY_REQ_STR))
     else:
         raise ImportError(
             "NumPy is not installed.\n%s"
-            % numpy_req_str)
+            % NUMPY_REQ_STR)
 
-from numpy.distutils.core import setup
-from numpy.distutils.core import Extension
+from numpy.distutils.core import setup # pylint: disable=wrong-import-position
+from numpy.distutils.core import Extension # pylint: disable=wrong-import-position
 
-# ndd version
-ndd_version = get_version(VERSION_FILE)
+VERSION = get_version(VERSION_FILE)
+LONG_DESCRIPTION = get_long_description()
 
-long_description = get_long_description()
-
-nddf = Extension(
-    name = 'nddf',
-    sources = ['exts/ndd.pyf','exts/gamma.f90','exts/quad.f90',
-               'exts/ndd.f90'],
+NDDF = Extension(
+    name='nddf',
+    sources=['exts/ndd.pyf',
+             'exts/gamma.f90',
+             'exts/quad.f90',
+             'exts/ndd.f90'],
     #extra_f90_compile_args = ["-fopenmp"],
     #extra_link_args = ["-lgomp"],
 )
 
 setup(
     name='ndd',
-    version=ndd_version,
+    version=VERSION,
     description="Entropy from discrete data",
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
     py_modules=['ndd'],
-    ext_modules=[nddf],
+    ext_modules=[NDDF],
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={
