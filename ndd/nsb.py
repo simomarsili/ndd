@@ -96,7 +96,7 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
         for H. When dist == True, return None.
 
     """
-    import nddf
+    from ndd import nddf
 
     counts, k, alpha = _check_histogram(counts, k, a)
     std = None

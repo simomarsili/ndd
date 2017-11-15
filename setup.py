@@ -66,7 +66,7 @@ VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
 
 NDDF = Extension(
-    name='nddf',
+    name='ndd.nddf',
     sources=['ndd/exts/ndd.pyf',
              'ndd/exts/gamma.f90',
              'ndd/exts/quad.f90',
