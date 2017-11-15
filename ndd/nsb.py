@@ -96,23 +96,23 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
         for H. When dist == True, return None.
 
     """
-    from ndd import nddf
+    from ndd import _nsb
 
     counts, k, alpha = _check_histogram(counts, k, a)
     std = None
     if dist:
         if alpha < 1e-6:
             # we'll take this as zero
-            estimate = nddf.plugin(counts)
+            estimate = _nsb.plugin(counts)
         else:
-            estimate = nddf.pseudo(counts, k, alpha)
+            estimate = _nsb.pseudo(counts, k, alpha)
     else:
         if a is None:
             # NSB
-            estimate, std = nddf.nsb(counts, k)
+            estimate, std = _nsb.nsb(counts, k)
         else:
             # fixed alpha
-            estimate = nddf.dirichlet(counts, k, alpha)
+            estimate = _nsb.dirichlet(counts, k, alpha)
             #TODO: compute variance over the posterior at fixed alpha
 
     if estimate is np.nan:

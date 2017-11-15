@@ -65,12 +65,12 @@ from numpy.distutils.core import Extension # pylint: disable=wrong-import-positi
 VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
 
-NDDF = Extension(
-    name='ndd.nddf',
-    sources=['ndd/exts/ndd.pyf',
+_NSB = Extension(
+    name='ndd._nsb',
+    sources=['ndd/nsb.pyf',
              'ndd/exts/gamma.f90',
              'ndd/exts/quad.f90',
-             'ndd/exts/ndd.f90'],
+             'ndd/exts/estimators.f90'],
     #extra_f90_compile_args = ["-fopenmp"],
     #extra_link_args = ["-lgomp"],
 )
@@ -87,7 +87,7 @@ setup(
     data_files=[(NAME, ['ndd/version.json'])],
     #py_modules=['ndd'],
     packages=['ndd'],
-    ext_modules=[NDDF],
+    ext_modules=[_NSB],
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={
