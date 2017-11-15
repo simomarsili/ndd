@@ -1,21 +1,21 @@
 !    -*- f90 -*-
 ! Note: the context of this file is case sensitive.
 
-python module nddf ! in 
-    interface  ! in :nddf
-        subroutine plugin(n,hist,estimate) ! in :nddf:ndd.f90
+python module _nsb ! in 
+    interface  ! in :_nsb
+        subroutine plugin(n,hist,estimate) ! in :_nsb:ndd.f90
             integer(4), optional,intent(in),check(len(hist)==n),depend(hist) :: n=len(hist)
             integer(4) dimension(n),intent(in) :: hist
             real(8) intent(out) :: estimate
         end subroutine plugin
-        subroutine pseudo(n,hist,nc,alpha,estimate) ! in :nddf:ndd.f90
+        subroutine pseudo(n,hist,nc,alpha,estimate) ! in :_nsb:ndd.f90
             integer(4), optional,intent(in),check(len(hist)==n),depend(hist) :: n=len(hist)
             integer(4) dimension(n),intent(in) :: hist
             integer(4) intent(in) :: nc
             real(8) intent(in) :: alpha
             real(8) intent(out) :: estimate
         end subroutine pseudo
-        subroutine dirichlet(n,hist,nc,alpha,estimate) ! in :nddf:ndd.f90
+        subroutine dirichlet(n,hist,nc,alpha,estimate) ! in :_nsb:ndd.f90
             use dirichlet_mod, only: hdir
             integer(4), optional,intent(in),check(len(hist)==n),depend(hist) :: n=len(hist)
             integer(4) dimension(n),intent(in) :: hist
@@ -23,7 +23,7 @@ python module nddf ! in
             real(8) intent(in) :: alpha
             real(8) intent(out) :: estimate
         end subroutine dirichlet
-        subroutine nsb(n,hist,nc,estimate,err_estimate) ! in :nddf:ndd.f90
+        subroutine nsb(n,hist,nc,estimate,err_estimate) ! in :_nsb:ndd.f90
             use dirichlet_mod, only: dirichlet_finalize,dirichlet_initialize
             use nsb_mod, only: compute_integration_range
             integer(4), optional,intent(in),check(len(hist)==n),depend(hist) :: n=len(hist)
@@ -33,7 +33,7 @@ python module nddf ! in
             real(8) intent(out) :: err_estimate
         end subroutine nsb
     end interface 
-end python module nddf
+end python module _nsb
 
 ! This file was auto-generated with f2py (version:2).
 ! See http://cens.ioc.ee/projects/f2py2e/

@@ -2,8 +2,9 @@
 from __future__ import print_function
 from pkg_resources import parse_version
 
+NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.8'
-VERSION_FILE = 'version.json'
+VERSION_FILE = 'ndd/version.json'
 SETUP_REQUIRES = ['numpy']
 INSTALL_REQUIRES = ['future', 'pytest', 'scipy']
 
@@ -27,7 +28,7 @@ def get_numpy_status():
     return status
 
 def get_version(source):
-    """ Retrieve ndd version number."""
+    """ Retrieve version number."""
     import json
     with open(source, 'r') as _vf:
         version_data = json.load(_vf)
@@ -58,23 +59,24 @@ if NUMPY_STATUS['up_to_date'] is False:
             % NUMPY_REQ_STR)
 
 from numpy.distutils.core import setup # pylint: disable=wrong-import-position
+#from setuptools import setup # pylint: disable=wrong-import-position
 from numpy.distutils.core import Extension # pylint: disable=wrong-import-position
 
 VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
 
-NDDF = Extension(
-    name='nddf',
-    sources=['exts/ndd.pyf',
-             'exts/gamma.f90',
-             'exts/quad.f90',
-             'exts/ndd.f90'],
+_NSB = Extension(
+    name='ndd._nsb',
+    sources=['ndd/nsb.pyf',
+             'ndd/exts/gamma.f90',
+             'ndd/exts/quad.f90',
+             'ndd/exts/estimators.f90'],
     #extra_f90_compile_args = ["-fopenmp"],
     #extra_link_args = ["-lgomp"],
 )
 
 setup(
-    name='ndd',
+    name=NAME,
     version=VERSION,
     description="Entropy from discrete data",
     long_description=LONG_DESCRIPTION,
@@ -82,8 +84,10 @@ setup(
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
-    py_modules=['ndd'],
-    ext_modules=[NDDF],
+    data_files=[(NAME, ['ndd/version.json'])],
+    #py_modules=['ndd'],
+    packages=['ndd'],
+    ext_modules=[_NSB],
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={

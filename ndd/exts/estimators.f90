@@ -429,7 +429,7 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
   end do
   ! correct for the (nc - nbins) bins with frequency alpha
   if (nc < nbins) then
-     write(0,*) "nddf.pseudo: nclasses cant be < than nbins in the histogram"
+     write(0,*) "nsb.pseudo: nclasses cant be < than nbins in the histogram"
      stop
   end if
   if (nc > nbins) estimate = estimate - (nc - nbins)*alpha*log(alpha)
