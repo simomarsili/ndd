@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import sys
 from pkg_resources import parse_version
 
-dist = sys.argv[1]
-numpy_min_version = '1.8'
-version_file = 'version.json'
-setup_requires = ['numpy']
-install_requires=['future', 'pytest', 'scipy']
+NAME = 'ndd'
+NUMPY_MIN_VERSION = '1.8'
+VERSION_FILE = 'ndd/version.json'
+SETUP_REQUIRES = ['numpy']
+INSTALL_REQUIRES = ['future', 'pytest', 'scipy']
 
 def get_numpy_status():
     """
@@ -16,27 +15,26 @@ def get_numpy_status():
     not installed).
     From pymc: https://raw.githubusercontent.com/pymc-devs/pymc/master/setup.py
     """
-    numpy_status = {}
+    status = {}
     try:
         import numpy
         numpy_version = numpy.__version__
-        numpy_status['up_to_date'] = parse_version(
-            numpy_version) >= parse_version(numpy_min_version)
-        numpy_status['version'] = numpy_version
+        status['up_to_date'] = parse_version(
+            numpy_version) >= parse_version(NUMPY_MIN_VERSION)
+        status['version'] = numpy_version
     except ImportError:
-        numpy_status['up_to_date'] = False
-        numpy_status['version'] = ""
-    return numpy_status
+        status['up_to_date'] = False
+        status['version'] = ''
+    return status
 
-def get_ndd_version(vfile):
-    """ Retrieve ndd version number."""
+def get_version(source):
+    """ Retrieve version number."""
     import json
-    with open(vfile, 'r') as f:
-        version_data = json.load(f)
+    with open(source, 'r') as _vf:
+        version_data = json.load(_vf)
     try:
         return version_data['number']
     except KeyError:
-        # no version number in version.json
         raise KeyError("check version file: no version number")
 
 def get_long_description():
@@ -44,55 +42,54 @@ def get_long_description():
     from os import path
     import codecs
     here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as f:
-        return f.read()
+    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as _rf:
+        return _rf.read()
 
 # check numpy first
-numpy_status = get_numpy_status()
-numpy_req_str = "ndd requires NumPy >= %s" % numpy_min_version
-if numpy_status['up_to_date'] is False:
-    if numpy_status['version']:
+NUMPY_STATUS = get_numpy_status()
+NUMPY_REQ_STR = "ndd requires NumPy >= %s" % NUMPY_MIN_VERSION
+if NUMPY_STATUS['up_to_date'] is False:
+    if NUMPY_STATUS['version']:
         raise ImportError(
             "Your installation of NumPy %s is out-of-date.\n%s"
-            % (numpy_status['version'], numpy_req_str))
+            % (NUMPY_STATUS['version'], NUMPY_REQ_STR))
     else:
         raise ImportError(
             "NumPy is not installed.\n%s"
-            % numpy_req_str)
+            % NUMPY_REQ_STR)
 
-#install numpy via pip
-#import pip
-#pip.main(['install'] + setup_requires)
-#setup_requires = []
-from numpy.distutils.core import setup
-from numpy.distutils.core import Extension
+from numpy.distutils.core import setup # pylint: disable=wrong-import-position
+#from setuptools import setup # pylint: disable=wrong-import-position
+from numpy.distutils.core import Extension # pylint: disable=wrong-import-position
 
-# ndd version
-ndd_version = get_ndd_version(version_file)
+VERSION = get_version(VERSION_FILE)
+LONG_DESCRIPTION = get_long_description()
 
-long_description = get_long_description()
-
-nddf = Extension(
-    name = 'nddf',
-    sources = ['exts/ndd.pyf','exts/gamma.f90','exts/quad.f90',
-               'exts/ndd.f90'],
+_NSB = Extension(
+    name='ndd._nsb',
+    sources=['ndd/nsb.pyf',
+             'ndd/exts/gamma.f90',
+             'ndd/exts/quad.f90',
+             'ndd/exts/estimators.f90'],
     #extra_f90_compile_args = ["-fopenmp"],
     #extra_link_args = ["-lgomp"],
 )
 
 setup(
-    name='ndd',
-    version=ndd_version,
+    name=NAME,
+    version=VERSION,
     description="Entropy from discrete data",
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
-    py_modules=['ndd'],
-    ext_modules=[nddf],
-    setup_requires=setup_requires,
-    install_requires=install_requires,
+    data_files=[(NAME, ['ndd/version.json'])],
+    #py_modules=['ndd'],
+    packages=['ndd'],
+    ext_modules=[_NSB],
+    setup_requires=SETUP_REQUIRES,
+    install_requires=INSTALL_REQUIRES,
     extras_require={
         'test': ['pytest'],
         'docs': ['mkdocs']},
