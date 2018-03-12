@@ -5,8 +5,8 @@ The **ndd** module is a minimal Python interface to the Nemenman-Schafee-Bialek
 
 ## Basic usage 
 
-The `ndd.entropy` function takes as input a vector of counts,
-representing the observed frequencies for a set of classes or states,
+The `ndd.entropy` function takes as input a vector of counts 
+(the observed frequencies for a set of classes or states) 
 and returns an entropy estimate (in nats): 
 
 ```python
@@ -18,7 +18,9 @@ and returns an entropy estimate (in nats):
 2.623634344902917
 ```
 
-The uncertainty in the entropy estimate can be quantified by the posterior standard deviation:
+The posterior standard deviation can be used to quantify the uncertainty in 
+the entropy estimate. The `ndd.entropy()` function can optionally returns an 
+approximation to the posterior standard deviation:
 ```python
 >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
 >>> std
@@ -26,20 +28,17 @@ The uncertainty in the entropy estimate can be quantified by the posterior stand
 ```
 
 ### Where to get it
-The source code is hosted on [Github](https://github.com/simomarsili/ndd). 
-To install the package from sources, clone the repository using git and run the `setup.py` script:
+Install using pip:
+
 ```bash
-$ git clone https://github.com/simomarsili/ndd.git
-$ cd ndd
-$ python setup.py install
-```
-(add `--user` to install in `~/.local`) or use `pip`:
-```bash
-$ pip install -r requirements.txt --user
-$ pip install . --user
+pip install git+https://github.com/simomarsili/ndd.git
 ```
 
-In order to compile **ndd**, you will also need a **Fortran compiler** installed on your machine. If you are using Debian or a Debian derivative such as Ubuntu, you can install the gfortran compiler using the following command:
+(add `--user` to install in `~/.local`).  
+In order to compile **ndd**, you will need `numpy >= 1.8` and a
+**Fortran compiler**  installed on your machine.
+If you are using Debian or a Debian derivative such as Ubuntu,
+you can install the gfortran compiler using the following command:
 
 ```bash
 $ sudo apt-get install gfortran
