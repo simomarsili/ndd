@@ -5,7 +5,7 @@ The **ndd** module is a minimal Python interface to the Nemenman-Schafee-Bialek
 
 ## Basic usage 
 
-The `ndd.entropy` function takes as input a vector of counts 
+The `ndd.entropy()` function takes as input a vector of counts 
 (the observed frequencies for a set of classes or states) 
 and returns an entropy estimate (in nats): 
 
@@ -19,7 +19,7 @@ and returns an entropy estimate (in nats):
 ```
 
 The posterior standard deviation can be used to quantify the uncertainty in 
-the entropy estimate. The `ndd.entropy()` function can optionally returns an 
+the entropy estimate. `ndd.entropy()` can optionally returns an 
 approximation to the posterior standard deviation:
 ```python
 >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
