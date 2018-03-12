@@ -99,7 +99,7 @@ contains
   end function log_pna
 
   real(real64) function h_bayes(alpha)
-    ! posterior average of the entropy given the data and alpha
+    ! posterior average of the entropy given data and a specific alpha value
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
     use constants
@@ -254,7 +254,7 @@ contains
 
   real(real64) function m_func(x)
     ! integrate over x = log(alpha)
-    use dirichlet_mod, only: h_bayes, integrand
+    use dirichlet_mod, only: integrand
 
     real(real64), intent(in) :: x
     real(real64) :: alpha
@@ -266,7 +266,7 @@ contains
 
   real(real64) function m2_func(x)
     ! integrate over x = log(alpha)
-    use dirichlet_mod, only: h_bayes, integrand
+    use dirichlet_mod, only: integrand
 
     real(real64), intent(in) :: x
     real(real64) :: alpha
