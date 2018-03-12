@@ -19,8 +19,8 @@ and returns an entropy estimate (in nats):
 ```
 
 The posterior standard deviation can be used to quantify the uncertainty in 
-the entropy estimate. `ndd.entropy()` can optionally returns an 
-approximation to the posterior standard deviation:
+the entropy estimate. Optionally, `ndd.entropy()` can approximate 
+the posterior standard deviation:
 ```python
 >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
 >>> std
