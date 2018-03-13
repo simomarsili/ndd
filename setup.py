@@ -3,7 +3,7 @@ from __future__ import print_function
 from pkg_resources import parse_version
 
 NAME = 'ndd'
-NUMPY_MIN_VERSION = '1.8'
+NUMPY_MIN_VERSION = '1.9'
 VERSION_FILE = 'ndd/version.json'
 SETUP_REQUIRES = ['numpy']
 INSTALL_REQUIRES = ['future', 'pytest', 'scipy']

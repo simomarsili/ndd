@@ -40,7 +40,7 @@ pip install git+https://github.com/simomarsili/ndd.git
 ```
 
 (add `--user` to install in `~/.local`).  
-In order to compile **ndd**, you will need `numpy >= 1.8` and a
+In order to compile **ndd**, you will need `numpy >= 1.9` and a
 **Fortran compiler**  installed on your machine.
 If you are using Debian or a Debian derivative such as Ubuntu,
 you can install the gfortran compiler using the following command:
