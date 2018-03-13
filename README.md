@@ -31,6 +31,11 @@ the posterior standard deviation:
 Install using pip:
 
 ```bash
+pip install -U ndd
+```
+
+or for the latest version of the code:
+```bash
 pip install git+https://github.com/simomarsili/ndd.git
 ```
 
