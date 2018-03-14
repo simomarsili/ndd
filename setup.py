@@ -33,7 +33,7 @@ def get_version(source):
     with open(source, 'r') as _vf:
         version_data = json.load(_vf)
     try:
-        return version_data['number']
+        return version_data['version']
     except KeyError:
         raise KeyError("check version file: no version number")
 
