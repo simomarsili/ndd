@@ -102,7 +102,7 @@ path_to_version = os.path.join(os.path.dirname(__file__), 'version.json')
 with open(path_to_version, 'r') as f:
     version_data = json.load(f)
     try:
-        __version__ = version_data['number']
+        __version__ = version_data['version']
     except KeyError:
         # no version number in version.json
         raise KeyError("check version file: no version number")
