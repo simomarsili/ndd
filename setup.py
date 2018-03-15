@@ -42,7 +42,7 @@ def get_long_description():
     from os import path
     import codecs
     here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as _rf:
+    with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as _rf:
         return _rf.read()
 
 # check numpy first
