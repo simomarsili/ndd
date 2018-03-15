@@ -1,6 +1,6 @@
-## ndd - entropy from discrete data.
+# ndd - Bayesian entropy estimation from discrete data
 
-The **ndd** module is a minimal Python interface to the Nemenman-Schafee-Bialek
+The **ndd** module is a simple Python interface to the Nemenman-Schafee-Bialek
 (NSB) algorithm, a parameter-free, Bayesian entropy estimator for discrete data.
 
 ## Basic usage 
@@ -31,11 +31,16 @@ the posterior standard deviation:
 Install using pip:
 
 ```bash
+pip install -U ndd
+```
+
+or for the latest version of the code:
+```bash
 pip install git+https://github.com/simomarsili/ndd.git
 ```
 
 (add `--user` to install in `~/.local`).  
-In order to compile **ndd**, you will need `numpy >= 1.8` and a
+In order to compile **ndd**, you will need `numpy >= 1.9` and a
 **Fortran compiler**  installed on your machine.
 If you are using Debian or a Debian derivative such as Ubuntu,
 you can install the gfortran compiler using the following command:

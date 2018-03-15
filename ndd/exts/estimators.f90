@@ -87,14 +87,15 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
-    real(real64)   :: wrk(n_multi)
+    real(real64)   :: wsum
 
     log_pna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
-         - alphabet_size * log_gamma(alpha) - log_gamma(n_data + alpha * alphabet_size)
-    do i_ = 1, n_multi 
-       wrk(i_) = multi(i_) * (log_gamma(multi_z(i_) + alpha) - log_gamma(multi_z(i_) + one))
-    end do
-    log_pna = log_pna + sum(wrk)
+         - alphabet_size * log_gamma(alpha) &
+         - log_gamma(n_data + alpha * alphabet_size)
+
+    wsum = sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
+
+    log_pna = log_pna + wsum
     
   end function log_pna
 
@@ -106,13 +107,9 @@ contains
     
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
-    real(real64)   :: wrk(n_multi)
 
     h_bayes = 0.0_real64
-    do i_ = 1,n_multi 
-       wrk(i_) = multi(i_) * (multi_z(i_) + alpha) * digamma(multi_z(i_) + alpha + one) 
-    end do
-    h_bayes = - sum(wrk)
+    h_bayes = - sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
     h_bayes = h_bayes / (n_data + alpha * alphabet_size)
     h_bayes = h_bayes + digamma(n_data + alpha * alphabet_size + one)
 
@@ -130,24 +127,23 @@ contains
     real(real64) :: lpna
     integer(int32) :: mi, mzi
     integer(int32) :: i_
-    real(real64)   :: wrka(n_multi),wrkb(n_multi)
+    real(real64) :: asum, bsum
 
     lpna = log_gamma(n_data + one) &
          + log_gamma(alpha * alphabet_size) & 
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    do i_ = 1,n_multi
-       mzi = multi_z(i_)
-       mi = multi(i_)
-       wrka(i_) = mi * (mzi + alpha) * digamma(mzi + alpha + one)
-       wrkb(i_) = mi * (log_gamma(mzi + alpha) - log_gamma(mzi + one))
-    end do
+    asum = sum(multi * (multi_z + alpha) &
+         * digamma(multi_z + alpha + one))
 
-    lpna = lpna + sum(wrkb)
+    bsum = sum(multi * (log_gamma(multi_z + alpha) &
+         - log_gamma(multi_z + one)))
+
+    lpna = lpna + bsum
     lw = log_fpa(alpha) + lpna - lw_max
     
-    hb = - sum(wrka)
+    hb = -asum
     hb = hb / (n_data + alpha * alphabet_size)
     hb = hb + digamma(n_data + alpha * alphabet_size + one)
     

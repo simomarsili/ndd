@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.5.3] - 2018-03-15
+### Changed
+- require numpy >= 1.9
+
 ## [0.5] - 2017-11-15
 ### Changed
 - now a Python package

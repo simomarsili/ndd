@@ -3,7 +3,7 @@ from __future__ import print_function
 from pkg_resources import parse_version
 
 NAME = 'ndd'
-NUMPY_MIN_VERSION = '1.8'
+NUMPY_MIN_VERSION = '1.9'
 VERSION_FILE = 'ndd/version.json'
 SETUP_REQUIRES = ['numpy']
 INSTALL_REQUIRES = ['future', 'pytest', 'scipy']
@@ -33,7 +33,7 @@ def get_version(source):
     with open(source, 'r') as _vf:
         version_data = json.load(_vf)
     try:
-        return version_data['number']
+        return version_data['version']
     except KeyError:
         raise KeyError("check version file: no version number")
 
@@ -78,7 +78,7 @@ _NSB = Extension(
 setup(
     name=NAME,
     version=VERSION,
-    description="Entropy from discrete data",
+    description="Bayesian entropy estimation from discrete data",
     long_description=LONG_DESCRIPTION,
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',

@@ -7,13 +7,13 @@ build:
 	$(PYTHON) setup.py build
 install:
 	$(PYTHON) setup.py install --prefix $(INSTALL_PATH)
-user: 
+user:
 	$(PYTHON) setup.py install --prefix $(HOME)/.local
-env:
-	(pip install -r requirements.txt; $(PYTHON) setup.py install --prefix ./venv)
+README.rst: README.md
+	pandoc README.md -o README.rst
+dist: README.rst
+	$(PYTHON) setup.py sdist
 test:
-	(cd tests; pytest -v)
-basic_test:
 	(cd tests; pytest -v)
 clean:
 	rm -r build
