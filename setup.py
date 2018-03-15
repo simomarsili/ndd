@@ -85,9 +85,16 @@ setup(
     url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
     data_files=[(NAME, ['ndd/version.json'])],
+
     #py_modules=['ndd'],
     packages=['ndd'],
     ext_modules=[_NSB],
+
+    entry_points={
+        'console_scripts': [
+            'ndd=ndd.entry:main'
+        ]},
+
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={
