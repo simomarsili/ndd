@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+
+## [0.5.3] - 2018-03-15
 ### Changed
 - require numpy >= 1.9
 
