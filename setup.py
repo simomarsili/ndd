@@ -78,7 +78,7 @@ _NSB = Extension(
 setup(
     name=NAME,
     version=VERSION,
-    description="Entropy from discrete data",
+    description="Bayesian entropy estimation from discrete data",
     long_description=LONG_DESCRIPTION,
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
