@@ -47,7 +47,7 @@ def get_long_description():
 
 # check numpy first
 NUMPY_STATUS = get_numpy_status()
-NUMPY_REQ_STR = "ndd requires NumPy >= %s" % NUMPY_MIN_VERSION
+NUMPY_REQ_STR = "ndd requires NumPy >= %s. Run 'pip install -U numpy' " % NUMPY_MIN_VERSION
 if NUMPY_STATUS['up_to_date'] is False:
     if NUMPY_STATUS['version']:
         raise ImportError(
