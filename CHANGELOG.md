@@ -3,11 +3,9 @@
 ## [Unreleased]
 
 ## [0.5.5] - 2018-03-16
-### Added
-- test for non-1D data
-
 ### Changed
 - fix missing README.rst
+- handle input counts arrays > 1D (always flatten to 1D)
 
 ## [0.5.3] - 2018-03-15
 ### Changed

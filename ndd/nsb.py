@@ -21,7 +21,8 @@ def _check_histogram(counts, k=None, alpha=0.0):
     """Check that `counts` contains valid frequency counts."""
 
     try:
-        counts = np.array(counts, dtype=np.int32)
+        # always flatten the input array
+        counts = np.ravel(np.array(counts, dtype=np.int32))
     except ValueError:
         raise
     if np.any(counts < 0):
@@ -50,22 +51,26 @@ def _check_histogram(counts, k=None, alpha=0.0):
 
 def entropy(counts, k=None, a=None, return_std=False, dist=False):
     """
-    Compute an estimate of the entropy from histogram counts.
-    If `a` is passed, compute a Bayesian estimate of the entropy using a single
-    Dirichlet prior with concentration parameter `a` (fixed alpha estimator).
-    If `a` is None, average over a mixture of Dirichlet estimators weighted by
-    an uninformative hyper-prior (NSB estimator).
-    Finally, if `dist` == True, first estimate the underlying distribution over
+    Estimate the entropy of an unknown discrete distribution from
+    an array of counts, using a mixture of (properly weighted) Dirichlet
+    priors (Nemenman-Shafee-Bialek estimator).
+
+    If `a` is passed, use a single Dirichlet prior with concentration
+    parameter `a` (fixed alpha estimator).
+    If `dist` == True, first estimate the underlying distribution over
     states/classes and then plug this estimate into the entropy definition
-    (maximum likelihood estimator). If `a` is passed in combination with
-    `dist=True`, the true distribution is approximated by adding `a`
-    pseudocounts to the empirical bin frequencies (`pseudocount` estimator).
+    (maximum likelihood estimator).
+    If `a` is passed in combination with `dist=True`, the underlying
+    distribution is approximated by adding `a` pseudocounts to the observed
+    state frequencies (`pseudocount` estimator).
 
     Parameters
     ----------
 
     counts : array_like
-        Histogram counts.
+        The number of occurrences of a set of states/classes.
+        Non-1D arrays are interpreted as frequencies on a grid of bins
+        (and flattened).
 
     k : int, optional
         Total number of classes. must be k >= len(counts).
