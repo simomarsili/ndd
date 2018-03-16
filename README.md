@@ -1,11 +1,12 @@
 # ndd - Bayesian entropy estimation from discrete data
 
-The **ndd** module is a simple Python interface to the Nemenman-Schafee-Bialek
-(NSB) algorithm, a parameter-free, Bayesian entropy estimator for discrete data.
+The **ndd** module provides a simple Python interface to an efficient 
+implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
+a parameter-free, Bayesian entropy estimator for discrete data.
 
 ## Basic usage 
 
-The `ndd.entropy()` function takes as input a vector of counts 
+The `ndd.entropy()` function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
 and returns an entropy estimate (in nats): 
 
@@ -18,9 +19,9 @@ and returns an entropy estimate (in nats):
 2.623634344902917
 ```
 
-The posterior standard deviation can be used to quantify the uncertainty in 
-the entropy estimate. Optionally, `ndd.entropy()` can approximate 
-the posterior standard deviation:
+Optionally, the uncertainty in the entropy estimate can be quantified 
+by computing an approximation for the posterior standard deviation:
+
 ```python
 >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
 >>> std
@@ -34,19 +35,18 @@ Install using pip:
 pip install -U ndd
 ```
 
-or for the latest version of the code:
+or directly from sources in github for the latest version of the code:
 ```bash
 pip install git+https://github.com/simomarsili/ndd.git
 ```
 
-(add `--user` to install in `~/.local`).  
-In order to compile **ndd**, you will need `numpy >= 1.9` and a
+In order to compile **ndd**, you will need **numpy** (>= 1.9) and a
 **Fortran compiler**  installed on your machine.
 If you are using Debian or a Debian derivative such as Ubuntu,
 you can install the gfortran compiler using the following command:
 
 ```bash
-$ sudo apt-get install gfortran
+sudo apt-get install gfortran
 ```
 
 ### References

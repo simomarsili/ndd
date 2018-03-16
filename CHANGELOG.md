@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.5.5] - 2018-03-16
+### Changed
+- fix missing README.rst
+- handle input counts arrays > 1D (always flatten to 1D)
+- handle single-class case
+
 ## [0.5.3] - 2018-03-15
 ### Changed
 - require numpy >= 1.9
