@@ -104,6 +104,12 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
     from ndd import _nsb
 
     counts, k, alpha = _check_histogram(counts, k, a)
+    if k == 1: # if the total number of classes is one
+        if return_std:
+            return (0.0, 0.0)
+        else:
+            return 0.0
+
     std = None
     if dist:
         if alpha < 1e-6:
