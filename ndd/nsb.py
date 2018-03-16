@@ -51,9 +51,10 @@ def _check_histogram(counts, k=None, alpha=0.0):
 
 def entropy(counts, k=None, a=None, return_std=False, dist=False):
     """
-    Estimate the entropy of an unknown discrete distribution from
-    an array of counts, using a mixture of (properly weighted) Dirichlet
-    priors (Nemenman-Shafee-Bialek estimator).
+    Return a Bayesian estimate of the entropy of an unknown discrete
+    distribution from an input array of counts. The estimator relies on a
+    mixture of (properly weighted) Dirichlet priors
+    (Nemenman-Shafee-Bialek estimator).
 
     If `a` is passed, use a single Dirichlet prior with concentration
     parameter `a` (fixed alpha estimator).
