@@ -80,6 +80,7 @@ setup(
     version=VERSION,
     description="Bayesian entropy estimation from discrete data",
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
