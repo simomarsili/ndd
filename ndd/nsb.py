@@ -17,18 +17,22 @@ __all__ = ['entropy', 'histogram']
 
 import numpy as np
 
-def _check_histogram(counts, k=None, alpha=0.0):
+def _check_counts(counts, k=None, alpha=0.0):
     """Check that `counts` contains valid frequency counts."""
 
     try:
-        # always flatten the input array
-        counts = np.ravel(np.array(counts, dtype=np.int32))
+        counts = np.array(counts, dtype=np.int32)
     except ValueError:
         raise
+
+    # always flatten the input array
+    counts = counts.flatten()
+
     if np.any(counts < 0):
-        raise ValueError("A bin cant have a frequency < 0")
+        raise ValueError("Frequency counts cant be negative")
 
     nbins = np.int32(len(counts))
+
     if k is None:
         k = nbins
     else:
@@ -104,36 +108,41 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
     """
     from ndd import _nsb
 
-    counts, k, alpha = _check_histogram(counts, k, a)
+    counts, k, alpha = _check_counts(counts, k, a)
+
+    args = {
+        _nsb.plugin: (),
+        _nsb.pseudo: (k, alpha),
+        _nsb.nsb: (k, ),
+        _nsb.dirichlet: (k, alpha)
+    }
+
+    if dist:
+        if alpha < 1e-6:
+            estimator = _nsb.plugin
+        else:
+            estimator = _nsb.pseudo
+    else:
+        if a is None:
+            estimator = _nsb.nsb
+        else:
+            # fixed alpha
+            estimator = _nsb.dirichlet
+            #TODO: compute variance over the posterior at fixed alpha
+
     if k == 1: # if the total number of classes is one
-        if return_std:
+        if estimator == _nsb.nsb and return_std:
             return (0.0, 0.0)
         else:
             return 0.0
 
-    std = None
-    if dist:
-        if alpha < 1e-6:
-            # we'll take this as zero
-            estimate = _nsb.plugin(counts)
-        else:
-            estimate = _nsb.pseudo(counts, k, alpha)
-    else:
-        if a is None:
-            # NSB
-            estimate, std = _nsb.nsb(counts, k)
-        else:
-            # fixed alpha
-            estimate = _nsb.dirichlet(counts, k, alpha)
-            #TODO: compute variance over the posterior at fixed alpha
-
-    if estimate is np.nan:
-        raise FloatingPointError("Estimate is NaN")
-
-    if return_std:
-        return (estimate, std)
-    else:
-        return estimate
+    result = estimator(counts, *args[estimator])
+    if np.any(np.isnan(np.squeeze(result))):
+        raise FloatingPointError("NaN value")
+    if estimator == _nsb.nsb:
+        if not return_std:
+            result = result[0]
+    return result
 
 def histogram(data, return_unique=False):
     """Compute an histogram from data. Wrapper to numpy.unique.
