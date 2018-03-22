@@ -99,23 +99,24 @@ def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
         The estimate is computed over the flattened array.
 
     k : int, optional
-        Total number of classes. must be k >= len(counts).
+        Total number of classes. k >= len(counts).
         Defaults to len(counts).
 
     alpha : float, optional
-        If `alpha` is passed, use a single Dirichlet prior with concentration
-        parameter alpha (fixed alpha estimator). Must be > 0.0.
+        If alpha is passed, use a single Dirichlet prior with concentration
+        parameter alpha (fixed alpha estimator). alpha > 0.0.
 
     return_std : boolean, optional
-        If True, also return the standard deviation over the posterior for H.
+        If True, return the tuple (estimate, std) where std in an estimate
+        of the standard deviation over the posterior for the entropy
+        of the distribution.
 
     dist : boolean, optional
-        If True, first estimate the underlying distribution over
-        states/classes and then plug this estimate into the entropy definition
+        If True, estimate the distribution over states/classes from the
+        frequencies and then plug the estimate into the entropy definition
         (plugin estimator).
-        If `alpha` is passed in combination with `dist=True`, the underlying
-        distribution is approximated by adding alpha pseudocounts to
-        the observed frequencies (pseudocount estimator).
+        If alpha is passed in combination with dist=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
 
     Returns
     -------
