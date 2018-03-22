@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- renamed named argument 'a' as 'alpha' in entropy() function
 
 ## [0.5.5] - 2018-03-16
 ### Changed
