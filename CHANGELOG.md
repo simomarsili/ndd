@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.6] - 2018-03-22
+### Changed
+- entropy(): renamed argument 'a' to 'alpha'
+
 ## [0.5.5] - 2018-03-16
 ### Changed
 - fix missing README.rst
