@@ -17,7 +17,7 @@ __all__ = ['entropy', 'histogram']
 
 import numpy as np
 
-def _check_counts(counts, k=None, alpha=0.0):
+def _check_counts(counts):
     """Check that `counts` contains valid frequency counts."""
 
     try:
@@ -25,33 +25,64 @@ def _check_counts(counts, k=None, alpha=0.0):
     except ValueError:
         raise
 
-    # always flatten the input array
-    counts = counts.flatten()
-
     if np.any(counts < 0):
         raise ValueError("Frequency counts cant be negative")
 
-    nbins = np.int32(len(counts))
+    # flatten the input array
+    return counts.flatten()
+
+def _check_k(n_bins, k=None):
+    """Check the total number of classes `k`."""
 
     if k is None:
-        k = nbins
+        k = np.int32(n_bins)
     else:
         try:
             k = np.int32(k)
         except ValueError:
             raise
-        if k < nbins:
+        if k < n_bins:
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                             % (k, nbins))
-    if alpha is None:
-        alpha = 0.0
-    else:
+                             % (k, n_bins))
+    return k
+
+def _check_alpha(alpha):
+    """Check the value of the concentration parameter."""
+
+    if alpha:
         try:
             alpha = np.float64(alpha)
         except ValueError:
             raise
+        if alpha <= 0:
+            raise ValueError("alpha <= 0")
 
-    return (counts, k, alpha)
+    return alpha
+
+def _set_estimator(k, alpha, dist):
+    from ndd import _nsb
+
+    args_dict = {
+        _nsb.plugin: (),
+        _nsb.pseudo: (k, alpha),
+        _nsb.nsb: (k, ),
+        _nsb.dirichlet: (k, alpha)
+    }
+
+    if dist:
+        if alpha is None:
+            estimator = _nsb.plugin
+        else:
+            estimator = _nsb.pseudo
+    else:
+        if alpha is None:
+            estimator = _nsb.nsb
+        else:
+            # fixed alpha
+            estimator = _nsb.dirichlet
+            #TODO: compute variance over the posterior at fixed alpha
+
+    return (estimator, args_dict[estimator])
 
 def entropy(counts, k=None, a=None, return_std=False, dist=False):
     """
@@ -108,27 +139,13 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
     """
     from ndd import _nsb
 
-    counts, k, alpha = _check_counts(counts, k, a)
+    counts = _check_counts(counts)
 
-    args = {
-        _nsb.plugin: (),
-        _nsb.pseudo: (k, alpha),
-        _nsb.nsb: (k, ),
-        _nsb.dirichlet: (k, alpha)
-    }
+    k = _check_k(len(counts), k)
 
-    if dist:
-        if alpha < 1e-6:
-            estimator = _nsb.plugin
-        else:
-            estimator = _nsb.pseudo
-    else:
-        if a is None:
-            estimator = _nsb.nsb
-        else:
-            # fixed alpha
-            estimator = _nsb.dirichlet
-            #TODO: compute variance over the posterior at fixed alpha
+    alpha = _check_alpha(a)
+
+    estimator, args = _set_estimator(k, alpha, dist)
 
     if k == 1: # if the total number of classes is one
         if estimator == _nsb.nsb and return_std:
@@ -136,12 +153,15 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
         else:
             return 0.0
 
-    result = estimator(counts, *args[estimator])
+    result = estimator(counts, *args)
+
     if np.any(np.isnan(np.squeeze(result))):
         raise FloatingPointError("NaN value")
+
     if estimator == _nsb.nsb:
         if not return_std:
             result = result[0]
+
     return result
 
 def histogram(data, return_unique=False):
