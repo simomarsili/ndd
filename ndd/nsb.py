@@ -84,48 +84,38 @@ def _set_estimator(k, alpha, dist):
 
     return (estimator, args_dict[estimator])
 
-def entropy(counts, k=None, a=None, return_std=False, dist=False):
+def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator relies on a
     mixture of (properly weighted) Dirichlet priors
     (Nemenman-Shafee-Bialek estimator).
 
-    If `a` is passed, use a single Dirichlet prior with concentration
-    parameter `a` (fixed alpha estimator).
-    If `dist` == True, first estimate the underlying distribution over
-    states/classes and then plug this estimate into the entropy definition
-    (maximum likelihood estimator).
-    If `a` is passed in combination with `dist=True`, the underlying
-    distribution is approximated by adding `a` pseudocounts to the observed
-    state frequencies (`pseudocount` estimator).
-
     Parameters
     ----------
 
     counts : array_like
         The number of occurrences of a set of states/classes.
-        Non-1D arrays are interpreted as frequencies on a grid of bins
-        (and flattened).
+        The estimate is computed over the flattened array.
 
     k : int, optional
         Total number of classes. must be k >= len(counts).
         Defaults to len(counts).
 
-    a : float, optional
-        Concentration parameter of the Dirichlet prior.
-        Must be >= 0.0. If no value is passed, use a mixture of Dirichlet
-        priors (Nemenman-Schafee-Bialek algorithm).
+    alpha : float, optional
+        If `alpha` is passed, use a single Dirichlet prior with concentration
+        parameter alpha (fixed alpha estimator). Must be > 0.0.
 
     return_std : boolean, optional
         If True, also return the standard deviation over the posterior for H.
 
     dist : boolean, optional
-        If True, the true underlying distribution is estimated from counts,
-        and plugged in the entropy definition ("plugin" estimator).
-        Use `a` as the concentration parameter for the Dirichlet prior
-        ("pseudocount" estimator).
-        If `a` is None, use the empirical distribution ("ML" estimatator).
+        If True, first estimate the underlying distribution over
+        states/classes and then plug this estimate into the entropy definition
+        (plugin estimator).
+        If `alpha` is passed in combination with `dist=True`, the underlying
+        distribution is approximated by adding alpha pseudocounts to
+        the observed frequencies (pseudocount estimator).
 
     Returns
     -------
@@ -133,8 +123,8 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
         Entropy estimate.
 
     std : float, optional
-        If return_std == True, return the standard deviation over the posterior
-        for H. When dist == True, return None.
+        If return_std == True, return an approximation for the standard
+        deviation over the posterior for the entropy.
 
     """
     from ndd import _nsb
