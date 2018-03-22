@@ -18,8 +18,8 @@ methods = ['NSB', 'Dirichlet', 'ML', 'pseudo']
 ndd_kwargs = {
     'NSB' : {},
     'Dirichlet' : {'alpha':1.0},
-    'ML' : {'alpha':0.0, 'dist':1},
-    'pseudo' : {'alpha':1.0, 'dist':1},
+    'ML' : {'alpha':0.0, 'plugin':1},
+    'pseudo' : {'alpha':1.0, 'plugin':1},
 }
 
 n_array = [int(x) for x in numpy.logspace(1, 3, num=3)]

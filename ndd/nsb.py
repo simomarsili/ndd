@@ -17,10 +17,10 @@ __all__ = ['entropy', 'histogram']
 
 import numpy
 
-def _select_estimator(k, alpha, dist):
+def _select_estimator(k, alpha, plugin):
     from ndd import _nsb
 
-    if dist:
+    if plugin:
         if alpha is None:
             return _nsb.plugin
         else:
@@ -32,7 +32,7 @@ def _select_estimator(k, alpha, dist):
             #TODO: compute variance over the posterior at fixed alpha
             return _nsb.dirichlet
 
-def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
+def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator relies on a
@@ -59,11 +59,11 @@ def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
         of the standard deviation over the posterior for the entropy
         of the distribution.
 
-    dist : boolean, optional
+    plugin : boolean, optional
         If True, estimate the distribution over states/classes from the
         frequencies and then plug the estimate into the entropy definition
         (plugin estimator).
-        If alpha is passed in combination with dist=True, add
+        If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
     Returns
@@ -115,7 +115,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
             raise ValueError("alpha <= 0")
 
         
-    estimator = _select_estimator(k, alpha, dist)
+    estimator = _select_estimator(k, alpha, plugin)
 
     if k == 1: # if the total number of classes is one
         if estimator == _nsb.nsb and return_std:
