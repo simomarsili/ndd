@@ -15,17 +15,17 @@ __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy', 'histogram']
 
-import numpy as np
+import numpy
 
 def _check_counts(counts):
     """Check that `counts` contains valid frequency counts."""
 
     try:
-        counts = np.array(counts, dtype=np.int32)
+        counts = numpy.array(counts, dtype=numpy.int32)
     except ValueError:
         raise
 
-    if np.any(counts < 0):
+    if numpy.any(counts < 0):
         raise ValueError("Frequency counts cant be negative")
 
     # flatten the input array
@@ -35,10 +35,10 @@ def _check_k(n_bins, k=None):
     """Check the total number of classes `k`."""
 
     if k is None:
-        k = np.int32(n_bins)
+        k = numpy.int32(n_bins)
     else:
         try:
-            k = np.int32(k)
+            k = numpy.int32(k)
         except ValueError:
             raise
         if k < n_bins:
@@ -51,7 +51,7 @@ def _check_alpha(alpha):
 
     if alpha:
         try:
-            alpha = np.float64(alpha)
+            alpha = numpy.float64(alpha)
         except ValueError:
             raise
         if alpha <= 0:
@@ -155,7 +155,7 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
 
     result = estimator(counts, *args)
 
-    if np.any(np.isnan(np.squeeze(result))):
+    if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
 
     if estimator == _nsb.nsb:
@@ -189,7 +189,7 @@ def histogram(data, return_unique=False):
 
     """
 
-    unique, counts = np.unique(data, axis=0, return_counts=True)
+    unique, counts = numpy.unique(data, axis=0, return_counts=True)
 
     if return_unique:
         return (unique, counts)
