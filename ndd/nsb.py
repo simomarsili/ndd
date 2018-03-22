@@ -133,7 +133,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
 
     k = _check_k(len(counts), k)
 
-    alpha = _check_alpha(a)
+    alpha = _check_alpha(alpha)
 
     estimator, args = _set_estimator(k, alpha, dist)
 
