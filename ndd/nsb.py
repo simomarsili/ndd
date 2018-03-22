@@ -17,74 +17,22 @@ __all__ = ['entropy', 'histogram']
 
 import numpy
 
-def _check_counts(counts):
-    """Check that `counts` contains valid frequency counts."""
-
-    try:
-        counts = numpy.array(counts, dtype=numpy.int32)
-    except ValueError:
-        raise
-
-    if numpy.any(counts < 0):
-        raise ValueError("Frequency counts cant be negative")
-
-    # flatten the input array
-    return counts.flatten()
-
-def _check_k(n_bins, k=None):
-    """Check the total number of classes `k`."""
-
-    if k is None:
-        k = numpy.int32(n_bins)
-    else:
-        try:
-            k = numpy.int32(k)
-        except ValueError:
-            raise
-        if k < n_bins:
-            raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                             % (k, n_bins))
-    return k
-
-def _check_alpha(alpha):
-    """Check the value of the concentration parameter."""
-
-    if alpha:
-        try:
-            alpha = numpy.float64(alpha)
-        except ValueError:
-            raise
-        if alpha <= 0:
-            raise ValueError("alpha <= 0")
-
-    return alpha
-
-def _set_estimator(k, alpha, dist):
+def _select_estimator(k, alpha, plugin):
     from ndd import _nsb
 
-    args_dict = {
-        _nsb.plugin: (),
-        _nsb.pseudo: (k, alpha),
-        _nsb.nsb: (k, ),
-        _nsb.dirichlet: (k, alpha)
-    }
-
-    if dist:
+    if plugin:
         if alpha is None:
-            estimator = _nsb.plugin
+            return _nsb.plugin
         else:
-            estimator = _nsb.pseudo
+            return _nsb.pseudo
     else:
         if alpha is None:
-            estimator = _nsb.nsb
+            return _nsb.nsb
         else:
-            # fixed alpha
-            estimator = _nsb.dirichlet
             #TODO: compute variance over the posterior at fixed alpha
+            return _nsb.dirichlet
 
-    return (estimator, args_dict[estimator])
-
-def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
+def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator relies on a
@@ -99,23 +47,24 @@ def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
         The estimate is computed over the flattened array.
 
     k : int, optional
-        Total number of classes. must be k >= len(counts).
+        Total number of classes. k >= len(counts).
         Defaults to len(counts).
 
     alpha : float, optional
-        If `alpha` is passed, use a single Dirichlet prior with concentration
-        parameter alpha (fixed alpha estimator). Must be > 0.0.
+        If alpha is passed, use a single Dirichlet prior with concentration
+        parameter alpha (fixed alpha estimator). alpha > 0.0.
 
     return_std : boolean, optional
-        If True, also return the standard deviation over the posterior for H.
+        If True, return the tuple (estimate, std) where std in an estimate
+        of the standard deviation over the posterior for the entropy
+        of the distribution.
 
-    dist : boolean, optional
-        If True, first estimate the underlying distribution over
-        states/classes and then plug this estimate into the entropy definition
+    plugin : boolean, optional
+        If True, estimate the distribution over states/classes from the
+        frequencies and then plug the estimate into the entropy definition
         (plugin estimator).
-        If `alpha` is passed in combination with `dist=True`, the underlying
-        distribution is approximated by adding alpha pseudocounts to
-        the observed frequencies (pseudocount estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
 
     Returns
     -------
@@ -129,13 +78,44 @@ def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
     """
     from ndd import _nsb
 
-    counts = _check_counts(counts)
+    args_dict = {
+        _nsb.plugin: (),
+        _nsb.pseudo: (k, alpha),
+        _nsb.nsb: (k, ),
+        _nsb.dirichlet: (k, alpha)
+    }
 
-    k = _check_k(len(counts), k)
+    try:
+        counts = numpy.array(counts, dtype=numpy.int32)
+    except ValueError:
+        raise
+    if numpy.any(counts < 0):
+        raise ValueError("Frequency counts cant be negative")
+    # flatten the input array
+    counts = counts.flatten()
 
-    alpha = _check_alpha(alpha)
+    n_bins = len(counts)
+    if k is None:
+        k = numpy.int32(n_bins)
+    else:
+        try:
+            k = numpy.int32(k)
+        except ValueError:
+            raise
+        if k < n_bins:
+            raise ValueError("k (%s) is smaller than the number of bins (%s)"
+                             % (k, n_bins))
 
-    estimator, args = _set_estimator(k, alpha, dist)
+    if alpha:
+        try:
+            alpha = numpy.float64(alpha)
+        except ValueError:
+            raise
+        if alpha <= 0:
+            raise ValueError("alpha <= 0")
+
+        
+    estimator = _select_estimator(k, alpha, plugin)
 
     if k == 1: # if the total number of classes is one
         if estimator == _nsb.nsb and return_std:
@@ -143,6 +123,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, dist=False):
         else:
             return 0.0
 
+    args = args_dict[estimator]
     result = estimator(counts, *args)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
