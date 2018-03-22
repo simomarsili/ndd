@@ -13,9 +13,9 @@ from numpy import random as random
 
 EPS = 0.0001
 
-def random_counts(n=None, k=None, a=None):
+def random_counts(n=None, k=None, alpha=None):
     random.seed(123)
-    pp = random.dirichlet([a]*k)
+    pp = random.dirichlet([alpha]*k)
     return random.multinomial(n, pp)
 
 @pytest.fixture()
