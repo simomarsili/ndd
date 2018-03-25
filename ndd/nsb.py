@@ -44,7 +44,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     counts : array_like
         The number of occurrences of a set of states/classes.
-        The estimate is computed over the flattened array.
+        The entropy estimate is computed over the flattened array.
 
     k : int, optional
         Total number of classes. k >= len(counts).
@@ -55,14 +55,13 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
         parameter alpha (fixed alpha estimator). alpha > 0.0.
 
     return_std : boolean, optional
-        If True, return the tuple (estimate, std) where std in an estimate
-        of the standard deviation over the posterior for the entropy
-        of the distribution.
+        If True, also return an approximated value for the standard deviation
+        over the entropy posterior.
 
     plugin : boolean, optional
-        If True, estimate the distribution over states/classes from the
-        frequencies and then plug the estimate into the entropy definition
-        (plugin estimator).
+        If True, return a 'plugin' estimate of the entropy. The discrete
+        distribution is estimated from the empirical frequencies over states
+        and inserted into the entropy definition (plugin estimator).
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
@@ -72,8 +71,9 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
         Entropy estimate.
 
     std : float, optional
-        If return_std == True, return an approximation for the standard
-        deviation over the posterior for the entropy.
+        Uncertainty in the entropy estimate
+        (approximates the standard deviation over the entropy posterior).
+        Only provided if `return_std` is True.
 
     """
     from ndd import _nsb
