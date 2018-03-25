@@ -35,9 +35,9 @@ def _select_estimator(k, alpha, plugin):
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from an input array of counts. The estimator relies on a
-    mixture of (properly weighted) Dirichlet priors
-    (Nemenman-Shafee-Bialek estimator).
+    distribution from an input array of counts. The estimator uses a mixture of
+    Dirichlet priors (Nemenman-Shafee-Bialek estimator), with weights chosen
+    such that the induced prior over the entropy is approximately uniform.
 
     Parameters
     ----------
