@@ -5,9 +5,9 @@ import itertools
 import json
 import ndd
 
-def random_counts(n=None, k=None, a=None):
+def random_counts(n=None, k=None, alpha=None):
     random.seed(123)
-    pp = random.dirichlet([a]*k)
+    pp = random.dirichlet([alpha]*k)
     return random.multinomial(n, pp)
 
 # a test should include:
@@ -17,9 +17,9 @@ methods = ['NSB', 'Dirichlet', 'ML', 'pseudo']
 
 ndd_kwargs = {
     'NSB' : {},
-    'Dirichlet' : {'a':1.0},
-    'ML' : {'a':0.0, 'dist':1},
-    'pseudo' : {'a':1.0, 'dist':1},
+    'Dirichlet' : {'alpha':1.0},
+    'ML' : {'alpha':0.0, 'plugin':1},
+    'pseudo' : {'alpha':1.0, 'plugin':1},
 }
 
 n_array = [int(x) for x in numpy.logspace(1, 3, num=3)]
@@ -27,7 +27,8 @@ k_array = [int(x) for x in numpy.logspace(1, 3, num=3)]
 a_array = numpy.logspace(-2, 1, num=4)
 
 # list of combinations of parameter values
-settings = [{'n':n, 'k':k, 'a':a} for n, k, a in itertools.product(n_array, k_array, a_array)]
+settings = [{'n':n, 'k':k, 'alpha':alpha}
+            for n, k, alpha in itertools.product(n_array, k_array, a_array)]
 
 test_methods = {}
 for method in methods:

@@ -15,76 +15,56 @@ __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy', 'histogram']
 
-import numpy as np
+import numpy
 
-def _check_histogram(counts, k=None, alpha=0.0):
-    """Check that `counts` contains valid frequency counts."""
+def _select_estimator(k, alpha, plugin):
+    from ndd import _nsb
 
-    try:
-        counts = np.array(counts, dtype=np.int32)
-    except ValueError:
-        raise
-    if np.any(counts < 0):
-        raise ValueError("A bin cant have a frequency < 0")
-
-    nbins = np.int32(len(counts))
-    if k is None:
-        k = nbins
+    if plugin:
+        if alpha is None:
+            return _nsb.plugin
+        else:
+            return _nsb.pseudo
     else:
-        try:
-            k = np.int32(k)
-        except ValueError:
-            raise
-        if k < nbins:
-            raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                             % (k, nbins))
-    if alpha is None:
-        alpha = 0.0
-    else:
-        try:
-            alpha = np.float64(alpha)
-        except ValueError:
-            raise
+        if alpha is None:
+            return _nsb.nsb
+        else:
+            #TODO: compute variance over the posterior at fixed alpha
+            return _nsb.dirichlet
 
-    return (counts, k, alpha)
-
-def entropy(counts, k=None, a=None, return_std=False, dist=False):
+def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
-    Compute an estimate of the entropy from histogram counts.
-    If `a` is passed, compute a Bayesian estimate of the entropy using a single
-    Dirichlet prior with concentration parameter `a` (fixed alpha estimator).
-    If `a` is None, average over a mixture of Dirichlet estimators weighted by
-    an uninformative hyper-prior (NSB estimator).
-    Finally, if `dist` == True, first estimate the underlying distribution over
-    states/classes and then plug this estimate into the entropy definition
-    (maximum likelihood estimator). If `a` is passed in combination with
-    `dist=True`, the true distribution is approximated by adding `a`
-    pseudocounts to the empirical bin frequencies (`pseudocount` estimator).
+    Return a Bayesian estimate of the entropy of an unknown discrete
+    distribution from an input array of counts. The estimator relies on a
+    mixture of (properly weighted) Dirichlet priors
+    (Nemenman-Shafee-Bialek estimator).
 
     Parameters
     ----------
 
     counts : array_like
-        Histogram counts.
+        The number of occurrences of a set of states/classes.
+        The estimate is computed over the flattened array.
 
     k : int, optional
-        Total number of classes. must be k >= len(counts).
+        Total number of classes. k >= len(counts).
         Defaults to len(counts).
 
-    a : float, optional
-        Concentration parameter of the Dirichlet prior.
-        Must be >= 0.0. If no value is passed, use a mixture of Dirichlet
-        priors (Nemenman-Schafee-Bialek algorithm).
+    alpha : float, optional
+        If alpha is passed, use a single Dirichlet prior with concentration
+        parameter alpha (fixed alpha estimator). alpha > 0.0.
 
     return_std : boolean, optional
-        If True, also return the standard deviation over the posterior for H.
+        If True, return the tuple (estimate, std) where std in an estimate
+        of the standard deviation over the posterior for the entropy
+        of the distribution.
 
-    dist : boolean, optional
-        If True, the true underlying distribution is estimated from counts,
-        and plugged in the entropy definition ("plugin" estimator).
-        Use `a` as the concentration parameter for the Dirichlet prior
-        ("pseudocount" estimator).
-        If `a` is None, use the empirical distribution ("ML" estimatator).
+    plugin : boolean, optional
+        If True, estimate the distribution over states/classes from the
+        frequencies and then plug the estimate into the entropy definition
+        (plugin estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
 
     Returns
     -------
@@ -92,36 +72,68 @@ def entropy(counts, k=None, a=None, return_std=False, dist=False):
         Entropy estimate.
 
     std : float, optional
-        If return_std == True, return the standard deviation over the posterior
-        for H. When dist == True, return None.
+        If return_std == True, return an approximation for the standard
+        deviation over the posterior for the entropy.
 
     """
     from ndd import _nsb
 
-    counts, k, alpha = _check_histogram(counts, k, a)
-    std = None
-    if dist:
-        if alpha < 1e-6:
-            # we'll take this as zero
-            estimate = _nsb.plugin(counts)
-        else:
-            estimate = _nsb.pseudo(counts, k, alpha)
-    else:
-        if a is None:
-            # NSB
-            estimate, std = _nsb.nsb(counts, k)
-        else:
-            # fixed alpha
-            estimate = _nsb.dirichlet(counts, k, alpha)
-            #TODO: compute variance over the posterior at fixed alpha
+    args_dict = {
+        _nsb.plugin: (),
+        _nsb.pseudo: (k, alpha),
+        _nsb.nsb: (k, ),
+        _nsb.dirichlet: (k, alpha)
+    }
 
-    if estimate is np.nan:
-        raise FloatingPointError("Estimate is NaN")
+    try:
+        counts = numpy.array(counts, dtype=numpy.int32)
+    except ValueError:
+        raise
+    if numpy.any(counts < 0):
+        raise ValueError("Frequency counts cant be negative")
+    # flatten the input array
+    counts = counts.flatten()
 
-    if return_std:
-        return (estimate, std)
+    n_bins = len(counts)
+    if k is None:
+        k = numpy.int32(n_bins)
     else:
-        return estimate
+        try:
+            k = numpy.int32(k)
+        except ValueError:
+            raise
+        if k < n_bins:
+            raise ValueError("k (%s) is smaller than the number of bins (%s)"
+                             % (k, n_bins))
+
+    if alpha:
+        try:
+            alpha = numpy.float64(alpha)
+        except ValueError:
+            raise
+        if alpha <= 0:
+            raise ValueError("alpha <= 0")
+
+        
+    estimator = _select_estimator(k, alpha, plugin)
+
+    if k == 1: # if the total number of classes is one
+        if estimator == _nsb.nsb and return_std:
+            return (0.0, 0.0)
+        else:
+            return 0.0
+
+    args = args_dict[estimator]
+    result = estimator(counts, *args)
+
+    if numpy.any(numpy.isnan(numpy.squeeze(result))):
+        raise FloatingPointError("NaN value")
+
+    if estimator == _nsb.nsb:
+        if not return_std:
+            result = result[0]
+
+    return result
 
 def histogram(data, return_unique=False):
     """Compute an histogram from data. Wrapper to numpy.unique.
@@ -148,7 +160,7 @@ def histogram(data, return_unique=False):
 
     """
 
-    unique, counts = np.unique(data, axis=0, return_counts=True)
+    unique, counts = numpy.unique(data, axis=0, return_counts=True)
 
     if return_unique:
         return (unique, counts)
