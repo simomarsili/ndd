@@ -17,21 +17,6 @@ __all__ = ['entropy', 'histogram']
 
 import numpy
 
-def _select_estimator(k, alpha, plugin):
-    from ndd import _nsb
-
-    if plugin:
-        if alpha is None:
-            return _nsb.plugin
-        else:
-            return _nsb.pseudo
-    else:
-        if alpha is None:
-            return _nsb.nsb
-        else:
-            #TODO: compute variance over the posterior at fixed alpha
-            return _nsb.dirichlet
-
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
@@ -78,13 +63,6 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     from ndd import _nsb
 
-    args_dict = {
-        _nsb.plugin: (),
-        _nsb.pseudo: (k, alpha),
-        _nsb.nsb: (k, ),
-        _nsb.dirichlet: (k, alpha)
-    }
-
     try:
         counts = numpy.array(counts, dtype=numpy.int32)
     except ValueError:
@@ -106,6 +84,12 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
                              % (k, n_bins))
 
+    if k == 1: # if the total number of classes is one
+        if return_std:
+            return (0.0, 0.0)
+        else:
+            return 0.0
+
     if alpha:
         try:
             alpha = numpy.float64(alpha)
@@ -114,24 +98,22 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
         if alpha <= 0:
             raise ValueError("alpha <= 0")
 
-        
-    estimator = _select_estimator(k, alpha, plugin)
-
-    if k == 1: # if the total number of classes is one
-        if estimator == _nsb.nsb and return_std:
-            return (0.0, 0.0)
+    if plugin:
+        if alpha is None:
+            result = _nsb.plugin(counts)
         else:
-            return 0.0
-
-    args = args_dict[estimator]
-    result = estimator(counts, *args)
+            result =  _nsb.pseudo(counts, k, alpha)
+    else:
+        if alpha is None:
+            result = _nsb.nsb(counts, k)
+            if not return_std:
+                result = result[0]
+        else:
+            #TODO: compute variance over the posterior at fixed alpha
+            result = _nsb.dirichlet(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
-
-    if estimator == _nsb.nsb:
-        if not return_std:
-            result = result[0]
 
     return result
 
