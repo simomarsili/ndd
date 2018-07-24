@@ -49,6 +49,16 @@ you can install the gfortran compiler using the following command:
 sudo apt-get install gfortran
 ```
 
+### Running tests
+Clone the repo, install tests requirements and run the tests with `make`:
+
+```bash
+git clone https://github.com/simomarsili/ndd.git
+cd ndd
+pip install .[test]
+make test
+```
+
 ### References
 
 Some refs:

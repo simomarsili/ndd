@@ -6,7 +6,7 @@
 ### Changed
 - entropy(): removed the (broken) function for estimator selection
 
-## [0.6] - 2018-03-22
+## [0.7] - 2018-03-22
 ### Changed
 - entropy(): renamed argument 'dist' to 'plugin'
 
