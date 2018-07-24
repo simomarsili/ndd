@@ -5,8 +5,9 @@ from pkg_resources import parse_version
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
 VERSION_FILE = 'ndd/version.json'
-SETUP_REQUIRES = ['numpy']
-INSTALL_REQUIRES = ['future', 'pytest', 'scipy']
+SETUP_REQUIRES = ['numpy>=1.9']
+INSTALL_REQUIRES = []
+EXTRAS_REQUIRES = {'test': ['pytest']}
 
 def get_numpy_status():
     """
@@ -86,14 +87,16 @@ setup(
     url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
     data_files=[(NAME, ['ndd/version.json'])],
-    #py_modules=['ndd'],
     packages=['ndd'],
+    package_data={'':
+                  ['LICENSE.txt',
+                   'README.rst',
+                   'requirements.txt']},
     ext_modules=[_NSB],
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={
-        'test': ['pytest'],
-        'docs': ['mkdocs']},
+        'test': ['pytest']},
     license='BSD 3-Clause',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
