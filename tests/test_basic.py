@@ -18,7 +18,6 @@ def random_counts(n=None, k=None, alpha=None):
     pp = random.dirichlet([alpha]*k)
     return random.multinomial(n, pp)
 
-@pytest.fixture()
 def cases():
     import json
     with open('data.json', 'r') as _jf:
