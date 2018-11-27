@@ -6,6 +6,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     ascii, chr, hex, input, next, oct, open,
     pow, round, super,
     filter, map, zip)
+import os
 import ndd
 import pytest
 import numpy
@@ -13,36 +14,30 @@ from numpy import random as random
 
 EPS = 0.0001
 
+def tests_dir():
+    """Return None is no tests dir."""
+    cwd = os.getcwd()
+    basename = os.path.basename(cwd)
+    if basename == 'tests':
+        return cwd
+    else:
+        tests_dir = os.path.join(cwd, 'tests')
+        if os.path.exists(tests_dir):
+            return tests_dir
+
 def random_counts(n=None, k=None, alpha=None):
     random.seed(123)
     pp = random.dirichlet([alpha]*k)
     return random.multinomial(n, pp)
 
-def cases():
-    import json
-    with open('data.json', 'r') as _jf:
-        return json.load(_jf)
-    
-@pytest.mark.parametrize('setting, kwargs, result', cases()['NSB'])
-def test_NSB(setting, kwargs, result):
-    """Basic tests."""
-    counts = random_counts(**setting)
-    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
+tdir = tests_dir()
+import json
+with open(os.path.join(tdir, 'data.json'), 'r') as _jf:
+    CASES = json.load(_jf)
 
-@pytest.mark.parametrize('setting, kwargs, result', cases()['Dirichlet'])
-def test_Dirichlet(setting, kwargs, result):
+@pytest.mark.parametrize('setting, kwargs, result', CASES)
+def test_ndd(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
-    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
-
-@pytest.mark.parametrize('setting, kwargs, result', cases()['ML'])
-def test_ML(setting, kwargs, result):
-    """Basic tests."""
-    counts = random_counts(**setting)
-    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
-
-@pytest.mark.parametrize('setting, kwargs, result', cases()['pseudo'])
-def test_pseudo(setting, kwargs, result):
-    """Basic tests."""
-    counts = random_counts(**setting)
-    assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
+    test_result = ndd.entropy(counts, k=setting['k'], **kwargs)
+    assert numpy.abs(test_result - numpy.float64(result)) < EPS
