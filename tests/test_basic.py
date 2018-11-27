@@ -18,30 +18,29 @@ def random_counts(n=None, k=None, alpha=None):
     pp = random.dirichlet([alpha]*k)
     return random.multinomial(n, pp)
 
-def cases():
-    import json
-    with open('data.json', 'r') as _jf:
-        return json.load(_jf)
+import json
+with open('data.json', 'r') as _jf:
+    CASES = json.load(_jf)
     
-@pytest.mark.parametrize('setting, kwargs, result', cases()['NSB'])
+@pytest.mark.parametrize('setting, kwargs, result', CASES['NSB'])
 def test_NSB(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
     assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
 
-@pytest.mark.parametrize('setting, kwargs, result', cases()['Dirichlet'])
+@pytest.mark.parametrize('setting, kwargs, result', CASES['Dirichlet'])
 def test_Dirichlet(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
     assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
 
-@pytest.mark.parametrize('setting, kwargs, result', cases()['ML'])
+@pytest.mark.parametrize('setting, kwargs, result', CASES['ML'])
 def test_ML(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
     assert numpy.abs(ndd.entropy(counts, **kwargs) - numpy.float64(result)) < EPS
 
-@pytest.mark.parametrize('setting, kwargs, result', cases()['pseudo'])
+@pytest.mark.parametrize('setting, kwargs, result', CASES['pseudo'])
 def test_pseudo(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
