@@ -6,7 +6,7 @@ NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
 VERSION_FILE = 'ndd/version.json'
 SETUP_REQUIRES = ['numpy>=1.9']
-INSTALL_REQUIRES = []
+INSTALL_REQUIRES = ['future']
 EXTRAS_REQUIRES = {'test': ['pytest']}
 
 def get_numpy_status():
