@@ -33,7 +33,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     k : int, optional
         Total number of classes. k >= len(counts).
-        A float value is accepted for whole numbers (e.g. k=1.e3).
+        A float value is a valid input for whole numbers (e.g. k=1.e3).
         Defaults to len(counts).
 
     alpha : float, optional
