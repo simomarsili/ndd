@@ -14,9 +14,10 @@ module dirichlet_mod
   use iso_fortran_env
   implicit none
 
-  integer(int32)              :: alphabet_size
   integer(int32)              :: n_data
   integer(int32)              :: n_multi
+  real(real64)                :: n_empty_bins
+  real(real64)                :: alphabet_size
   integer(int32), allocatable :: multi_z(:)
   integer(int32), allocatable :: multi(:)
 
@@ -26,7 +27,7 @@ contains
     ! set alphabet_size, n_data
     ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
-    integer(int32), intent(in) :: nc
+    real(real64), intent(in) :: nc
     
     alphabet_size = nc
     n_data = sum(counts)
@@ -48,14 +49,18 @@ contains
     ! nmax is the largest number of samples in a bin
     nbins = size(counts)
     nmax = maxval(counts)
-    allocate(multi0(nmax+1),stat=err)
-    ! multi0(n+1) is the number of states with frequency n
+    allocate(multi0(nmax),stat=err)
+    ! multi0(n) is the number of states with frequency n
     multi0 = 0
     ! take into account the alphabet_size - nbins states with zero frequency
-    multi0(1) = alphabet_size - nbins
+    n_empty_bins = alphabet_size - nbins
     do i_ = 1,nbins
        ni_ = counts(i_)
-       multi0(ni_ + 1) = multi0(ni_ + 1) + 1
+       if (ni_ == 0) then
+          n_empty_bins = n_empty_bins + 1.0_real64
+       else
+          multi0(ni_) = multi0(ni_) + 1
+       end if
     end do
 
     ! further compress data into 'sparse' multiplicities
@@ -63,10 +68,10 @@ contains
     allocate(multi_z(n_multi),stat=err)
     allocate(multi(n_multi),stat=err)
     k_ = 0
-    do i_ = 1, nmax + 1
+    do i_ = 1, nmax
        if (multi0(i_) > 0) then 
           k_ = k_ + 1
-          multi_z(k_) = i_ - 1
+          multi_z(k_) = i_
           multi(k_) = multi0(i_)
        end if
     end do
@@ -93,7 +98,9 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
+    wsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
+    wsum = wsum + &
+         sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
 
     log_pna = log_pna + wsum
     
@@ -108,8 +115,9 @@ contains
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
 
-    h_bayes = 0.0_real64
-    h_bayes = - sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
+    h_bayes = - n_empty_bins * alpha * digamma(alpha + one)
+    h_bayes = h_bayes - &
+         sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
     h_bayes = h_bayes / (n_data + alpha * alphabet_size)
     h_bayes = h_bayes + digamma(n_data + alpha * alphabet_size + one)
 
@@ -134,10 +142,12 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    asum = sum(multi * (multi_z + alpha) &
+    asum = n_empty_bins * alpha * digamma(alpha + one)
+    asum = asum + sum(multi * (multi_z + alpha) &
          * digamma(multi_z + alpha + one))
 
-    bsum = sum(multi * (log_gamma(multi_z + alpha) &
+    bsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
+    bsum = bsum + sum(multi * (log_gamma(multi_z + alpha) &
          - log_gamma(multi_z + one)))
 
     lpna = lpna + bsum
@@ -442,7 +452,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
 
   integer(int32), intent(in)  :: n
   integer(int32), intent(in)  :: counts(n)
-  integer(int32), intent(in)  :: nc
+  real(real64), intent(in)    :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
 
@@ -469,7 +479,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
   integer(int32), intent(in)  :: n
   integer(int32), intent(in)  :: counts(n)
-  integer(int32), intent(in)  :: nc
+  real(real64), intent(in)    :: nc
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
 

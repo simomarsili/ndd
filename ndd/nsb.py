@@ -33,6 +33,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     k : int, optional
         Total number of classes. k >= len(counts).
+        A float value is accepted for whole numbers (e.g. k=1.e3).
         Defaults to len(counts).
 
     alpha : float, optional
@@ -62,6 +63,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     """
     from ndd import _nsb
+    import numbers
 
     try:
         counts = numpy.array(counts, dtype=numpy.int32)
@@ -74,15 +76,17 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     n_bins = len(counts)
     if k is None:
-        k = numpy.int32(n_bins)
+        k = numpy.float64(n_bins)
     else:
         try:
-            k = numpy.int32(k)
+            k = numpy.float64(k)
         except ValueError:
             raise
         if k < n_bins:
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
                              % (k, n_bins))
+        if not k.is_integer():
+            raise ValueError("k (%s) should be a whole number.")
 
     if k == 1: # if the total number of classes is one
         if return_std:
