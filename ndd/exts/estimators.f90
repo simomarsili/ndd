@@ -14,10 +14,10 @@ module dirichlet_mod
   use iso_fortran_env
   implicit none
 
-  integer(int32)              :: alphabet_size
   integer(int32)              :: n_data
   integer(int32)              :: n_multi
-  integer(int32)              :: n_empty_bins
+  real(real64)                :: n_empty_bins
+  real(real64)                :: alphabet_size
   integer(int32), allocatable :: multi_z(:)
   integer(int32), allocatable :: multi(:)
 
@@ -27,7 +27,7 @@ contains
     ! set alphabet_size, n_data
     ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
-    integer(int32), intent(in) :: nc
+    real(real64), intent(in) :: nc
     
     alphabet_size = nc
     n_data = sum(counts)
@@ -57,7 +57,7 @@ contains
     do i_ = 1,nbins
        ni_ = counts(i_)
        if (ni_ == 0) then
-          n_empty_bins = n_empty_bins + 1
+          n_empty_bins = n_empty_bins + 1.0_real64
        else
           multi0(ni_) = multi0(ni_) + 1
        end if
@@ -452,7 +452,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
 
   integer(int32), intent(in)  :: n
   integer(int32), intent(in)  :: counts(n)
-  integer(int32), intent(in)  :: nc
+  real(real64), intent(in)    :: nc
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
 
@@ -479,7 +479,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
   integer(int32), intent(in)  :: n
   integer(int32), intent(in)  :: counts(n)
-  integer(int32), intent(in)  :: nc
+  real(real64), intent(in)    :: nc
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
 

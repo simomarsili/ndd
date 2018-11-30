@@ -11,7 +11,7 @@ python module _nsb ! in
         subroutine pseudo(n,hist,nc,alpha,estimate) ! in :_nsb:ndd.f90
             integer(4), optional,intent(in),check(len(hist)==n),depend(hist) :: n=len(hist)
             integer(4) dimension(n),intent(in) :: hist
-            integer(4) intent(in) :: nc
+            real(8) intent(in) :: nc
             real(8) intent(in) :: alpha
             real(8) intent(out) :: estimate
         end subroutine pseudo
@@ -19,7 +19,7 @@ python module _nsb ! in
             use dirichlet_mod, only: hdir
             integer(4), optional,intent(in),check(len(hist)==n),depend(hist) :: n=len(hist)
             integer(4) dimension(n),intent(in) :: hist
-            integer(4) intent(in) :: nc
+            real(8) intent(in) :: nc
             real(8) intent(in) :: alpha
             real(8) intent(out) :: estimate
         end subroutine dirichlet
@@ -28,7 +28,7 @@ python module _nsb ! in
             use nsb_mod, only: compute_integration_range
             integer(4), optional,intent(in),check(len(hist)==n),depend(hist) :: n=len(hist)
             integer(4) dimension(n),intent(in) :: hist
-            integer(4) intent(in) :: nc
+            real(8) intent(in) :: nc
             real(8) intent(out) :: estimate
             real(8) intent(out) :: err_estimate
         end subroutine nsb
