@@ -29,7 +29,8 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     counts : array_like
         The number of occurrences of a set of states/classes.
-        The entropy estimate is computed over the flattened array.
+        If `counts` is a matrix, a separate entropy estimate is computed over
+        each row.
 
     k : int, optional
         Total number of classes. k >= len(counts).
