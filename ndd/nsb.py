@@ -72,8 +72,10 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     if numpy.any(counts < 0):
         raise ValueError("Frequency counts cant be negative")
     # flatten the input array
-    counts = counts.flatten()
-
+    # counts = counts.flatten()
+    order = len(counts.shape)
+    if order > 2:
+        raise ValueError("Counts array must be either 1D or 2D")
     n_bins = len(counts)
     if k is None:
         k = numpy.float64(n_bins)
@@ -109,7 +111,11 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
             result =  _nsb.pseudo(counts, k, alpha)
     else:
         if alpha is None:
-            result = _nsb.nsb(counts, k)
+            if order == 1:
+                estimator = _nsb.nsb
+            elif order == 2:
+                estimator = _nsb.nsb2d
+            result = estimator(counts, k)
             if not return_std:
                 result = result[0]
         else:
