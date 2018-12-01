@@ -501,12 +501,12 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
 end subroutine nsb
 
-subroutine nsb2d(m,n,counts,nc,estimate,err_estimate)
+subroutine nsb2d(n,m,counts,nc,estimate,err_estimate)
   use iso_fortran_env
   implicit none
 
-  integer(int32), intent(in)  :: m
   integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: m
   integer(int32), intent(in)  :: counts(n,m)
   real(real64), intent(in)    :: nc
   real(real64),   intent(out) :: estimate(m)

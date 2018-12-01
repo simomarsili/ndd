@@ -76,6 +76,8 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     order = len(counts.shape)
     if order > 2:
         raise ValueError("Counts array must be either 1D or 2D")
+    if order == 2:
+        counts = counts.T
     n_bins = len(counts)
     if k is None:
         k = numpy.float64(n_bins)
@@ -112,10 +114,9 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     else:
         if alpha is None:
             if order == 1:
-                estimator = _nsb.nsb
+                result = _nsb.nsb(counts, k)
             elif order == 2:
-                estimator = _nsb.nsb2d
-            result = estimator(counts, k)
+                result = _nsb.nsb2d(counts, k)
             if not return_std:
                 result = result[0]
         else:
