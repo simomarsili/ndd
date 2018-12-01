@@ -72,8 +72,12 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     if numpy.any(counts < 0):
         raise ValueError("Frequency counts cant be negative")
     # flatten the input array
-    counts = counts.flatten()
-
+    # counts = counts.flatten()
+    order = len(counts.shape)
+    if order > 2:
+        raise ValueError("Counts array must be either 1D or 2D")
+    if order == 2:
+        counts = counts.T
     n_bins = len(counts)
     if k is None:
         k = numpy.float64(n_bins)
@@ -104,17 +108,29 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     if plugin:
         if alpha is None:
-            result = _nsb.plugin(counts)
+            if order == 1:
+                result = _nsb.plugin(counts, k)
+            elif order == 2:
+                result = _nsb.plugin2d(counts, k)
         else:
-            result =  _nsb.pseudo(counts, k, alpha)
+            if order == 1:
+                result = _nsb.pseudo(counts, k, alpha)
+            elif order == 2:
+                result = _nsb.pseudo2d(counts, k, alpha)
     else:
         if alpha is None:
-            result = _nsb.nsb(counts, k)
+            if order == 1:
+                result = _nsb.nsb(counts, k)
+            elif order == 2:
+                result = _nsb.nsb2d(counts, k)
             if not return_std:
                 result = result[0]
         else:
             #TODO: compute variance over the posterior at fixed alpha
-            result = _nsb.dirichlet(counts, k, alpha)
+            if order == 1:
+                result = _nsb.dirichlet(counts, k, alpha)
+            elif order == 2:
+                result = _nsb.dirichlet2d(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")

@@ -501,3 +501,86 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
 end subroutine nsb
 
+subroutine plugin2d(n,m,counts,estimate)
+  ! plugin estimator - no prior, no regularization 
+  use iso_fortran_env
+  implicit none
+
+  integer(int32), intent(in) :: n
+  integer(int32), intent(in) :: m
+  integer(int32), intent(in) :: counts(n,m)
+  real(real64),  intent(out) :: estimate(m)
+
+  integer(int32) :: k
+
+  do k = 1,m
+     call plugin(n, counts(:,k), estimate(k))
+  end do
+
+end subroutine plugin2d
+
+subroutine pseudo2d(n,m,counts,nc,alpha,estimate)
+  use iso_fortran_env
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: m
+  integer(int32), intent(in)  :: counts(n,m)
+  integer(int32), intent(in)  :: nc
+  real(real64),   intent(in)  :: alpha
+  real(real64),   intent(out) :: estimate(m)
+
+  integer(int32) :: nbins,n_data
+  integer(int32) :: i
+  real(real64)   :: ni
+  integer(int32) :: k
+
+  if (alpha < 1.0e-10_real64) then
+     ! if alpha == 0.0 (no pseudocounts)
+     do k = 1,m
+        call plugin(n, counts(:,k), estimate(k))
+     end do
+  else
+     do k = 1,m
+        call pseudo(n,counts(:,k),nc,alpha,estimate(k))
+     end do
+  end if
+
+end subroutine pseudo2d
+
+subroutine dirichlet2d(n,m,counts,nc,alpha,estimate)
+  use iso_fortran_env
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: m
+  integer(int32), intent(in)  :: counts(n,m)
+  real(real64), intent(in)    :: nc
+  real(real64),   intent(in)  :: alpha
+  real(real64),   intent(out) :: estimate(m)
+  integer(int32) :: k
+
+  do k = 1,m
+     call dirichlet(n,counts(:,k),nc,alpha,estimate(k))
+  end do
+
+end subroutine dirichlet2d
+
+subroutine nsb2d(n,m,counts,nc,estimate,err_estimate)
+  use iso_fortran_env
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: m
+  integer(int32), intent(in)  :: counts(n,m)
+  real(real64), intent(in)    :: nc
+  real(real64),   intent(out) :: estimate(m)
+  real(real64),   intent(out) :: err_estimate(m)
+  integer(int32) :: k
+
+  do k = 1,m
+     call nsb(n,counts(:,k),nc,estimate(k),err_estimate(k))
+  end do
+
+end subroutine nsb2d
+
