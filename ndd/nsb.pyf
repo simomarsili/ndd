@@ -36,6 +36,31 @@ python module _nsb ! in
             real(8) intent(out) :: estimate
             real(8) intent(out) :: err_estimate
         end subroutine nsb
+        subroutine plugin2d(n,m,counts,estimate) ! in :_nsb:estimators.f90
+            use iso_fortran_env
+            integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
+            integer(4), optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
+            integer(4) dimension(n,m),intent(in) :: counts
+            real(8) dimension(m),intent(out),depend(m) :: estimate
+        end subroutine plugin2d
+        subroutine pseudo2d(n,m,counts,nc,alpha,estimate) ! in :_nsb:estimators.f90
+            use iso_fortran_env
+            integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
+            integer(4), optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
+            integer(4) dimension(n,m),intent(in) :: counts
+            integer(4) intent(in) :: nc
+            real(8) intent(in) :: alpha
+            real(8) dimension(m),intent(out),depend(m) :: estimate
+        end subroutine pseudo2d
+        subroutine dirichlet2d(n,m,counts,nc,alpha,estimate) ! in :_nsb:estimators.f90
+            use iso_fortran_env
+            integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
+            integer(4), optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
+            integer(4) dimension(n,m),intent(in) :: counts
+            real(8) intent(in) :: nc
+            real(8) intent(in) :: alpha
+            real(8) dimension(m),intent(out),depend(m) :: estimate
+        end subroutine dirichlet2d
         subroutine nsb2d(n,m,counts,nc,estimate,err_estimate) ! in :_nsb:estimators.f90
             use iso_fortran_env
             integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)

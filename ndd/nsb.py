@@ -108,9 +108,15 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     if plugin:
         if alpha is None:
-            result = _nsb.plugin(counts)
+            if order == 1:
+                result = _nsb.plugin(counts, k)
+            elif order == 2:
+                result = _nsb.plugin2d(counts, k)
         else:
-            result =  _nsb.pseudo(counts, k, alpha)
+            if order == 1:
+                result = _nsb.pseudo(counts, k, alpha)
+            elif order == 2:
+                result = _nsb.pseudo2d(counts, k, alpha)
     else:
         if alpha is None:
             if order == 1:
@@ -121,7 +127,10 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
                 result = result[0]
         else:
             #TODO: compute variance over the posterior at fixed alpha
-            result = _nsb.dirichlet(counts, k, alpha)
+            if order == 1:
+                result = _nsb.dirichlet(counts, k, alpha)
+            elif order == 2:
+                result = _nsb.dirichlet2d(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
