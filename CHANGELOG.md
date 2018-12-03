@@ -2,8 +2,6 @@
 
 ## [Unreleased]
 ### Changed
-- input data must be 1D or 2D; each row in a 2D input is taken as an array
-  of counts and an array of estimates is returned
 
 ## [0.7.1] - 2018-06-22
 ### Changed

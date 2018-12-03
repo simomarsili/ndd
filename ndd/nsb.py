@@ -17,7 +17,9 @@ __all__ = ['entropy', 'histogram']
 
 import numpy
 
-def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
+
+def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
+            axis=None):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator uses a mixture of
@@ -29,8 +31,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     counts : array_like
         The number of occurrences of a set of states/classes.
-        If `counts` is a matrix, a separate entropy estimate is computed over
-        each row.
+        It will be flattened if it is not already 1-D.
 
     k : int, optional
         Total number of classes. k >= len(counts).
@@ -73,12 +74,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     if numpy.any(counts < 0):
         raise ValueError("Frequency counts cant be negative")
     # flatten the input array
-    # counts = counts.flatten()
-    order = len(counts.shape)
-    if order > 2:
-        raise ValueError("Counts array must be either 1D or 2D")
-    if order == 2:
-        counts = counts.T
+    counts = counts.flatten()
     n_bins = len(counts)
     if k is None:
         k = numpy.float64(n_bins)
@@ -109,29 +105,17 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     if plugin:
         if alpha is None:
-            if order == 1:
-                result = _nsb.plugin(counts, k)
-            elif order == 2:
-                result = _nsb.plugin2d(counts, k)
+            result = _nsb.plugin(counts, k)
         else:
-            if order == 1:
-                result = _nsb.pseudo(counts, k, alpha)
-            elif order == 2:
-                result = _nsb.pseudo2d(counts, k, alpha)
+            result = _nsb.pseudo(counts, k, alpha)
     else:
         if alpha is None:
-            if order == 1:
-                result = _nsb.nsb(counts, k)
-            elif order == 2:
-                result = _nsb.nsb2d(counts, k)
+            result = _nsb.nsb(counts, k)
             if not return_std:
                 result = result[0]
         else:
             #TODO: compute variance over the posterior at fixed alpha
-            if order == 1:
-                result = _nsb.dirichlet(counts, k, alpha)
-            elif order == 2:
-                result = _nsb.dirichlet2d(counts, k, alpha)
+            result = _nsb.dirichlet(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
@@ -163,7 +147,7 @@ def histogram(data, return_unique=False):
 
     """
 
-    unique, counts = numpy.unique(data, axis=0, return_counts=True)
+    unique, counts = numpy.unique(data, return_counts=True, axis=0)
 
     if return_unique:
         return (unique, counts)
