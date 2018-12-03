@@ -65,7 +65,6 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
 
     """
     from ndd import _nsb
-    import numbers
 
     try:
         counts = numpy.array(counts, dtype=numpy.int32)
@@ -89,7 +88,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
         if not k.is_integer():
             raise ValueError("k (%s) should be a whole number.")
 
-    if k == 1: # if the total number of classes is one
+    if k == 1:  # if the total number of classes is one
         if return_std:
             return (0.0, 0.0)
         else:
@@ -114,13 +113,14 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
             if not return_std:
                 result = result[0]
         else:
-            #TODO: compute variance over the posterior at fixed alpha
+            # TODO: compute variance over the posterior at fixed alpha
             result = _nsb.dirichlet(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
 
     return result
+
 
 def histogram(data, return_unique=False, axis=None):
     """Compute an histogram from data. Wrapper to numpy.unique.
