@@ -122,7 +122,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
     return result
 
 
-def histogram(data, return_unique=False, axis=None):
+def histogram(data, return_unique=False):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
@@ -130,6 +130,9 @@ def histogram(data, return_unique=False, axis=None):
 
     data : array_like
         Input data array.
+        If n-dimensional, statistics is computed over
+        axis 0.
+
 
     return_unique : bool, optional
         If True, also return the unique elements corresponding to each bin.
@@ -155,7 +158,7 @@ def histogram(data, return_unique=False, axis=None):
 
     """
 
-    unique, counts = numpy.unique(data, return_counts=True, axis=axis)
+    unique, counts = numpy.unique(data, return_counts=True, axis=0)
 
     if return_unique:
         return (unique, counts)
