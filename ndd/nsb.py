@@ -122,18 +122,26 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
 
     return result
 
-def histogram(data, return_unique=False):
+def histogram(data, return_unique=False, axis=None):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
     ----------
 
     data : array_like
-        Input data array. If n-dimensional, statistics is computed along
-        axis 0.
+        Input data array.
 
     return_unique : bool, optional
         If True, also return the unique elements corresponding to each bin.
+
+    axis : int, optional
+        The axis to operate on. If None, `counts` will be flattened.
+        If an integer, the subarrays indexed by the given axis will be
+        flattened and treated as the elements of a 1-D array with the dimension
+        of the given axis. Object arrays or structured arrays
+        that contain objects are not supported if the `axis` kwarg is used. The
+        default is None.
+        Check numpy.unique docstrings for more details.
 
     Returns
     -------
@@ -147,7 +155,7 @@ def histogram(data, return_unique=False):
 
     """
 
-    unique, counts = numpy.unique(data, return_counts=True, axis=0)
+    unique, counts = numpy.unique(data, return_counts=True, axis=axis)
 
     if return_unique:
         return (unique, counts)

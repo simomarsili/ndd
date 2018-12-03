@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Changed
+- ndd.histog has an 'axis' keyword argument
 
 ## [0.7.1] - 2018-06-22
 ### Changed
