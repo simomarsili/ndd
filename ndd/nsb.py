@@ -164,3 +164,35 @@ def histogram(data, return_unique=False):
         return (unique, counts)
     else:
         return counts
+
+
+def entropy_from_data(a, p=None, r=1, **kwargs):
+g    """
+    Estimate the entropy from custom columns subsets.
+
+    Parameters
+    ----------
+
+    a : array_like
+        Data matrix with columns corresponding to different variables.
+
+    p : list, optional
+        Columns subset. If None, all columns are included.
+
+    r : int, optional
+        Return an entropy estimate for each of the r-sized subsets of columns
+        from a. Default is to estimate entropy for each column.
+
+    return_std : boolean, optional
+        If True, also return an approximated value for the standard deviation
+        over the entropy posterior.
+
+    kwargs : dict, optional
+        Pass to ndd.entropy().
+
+    Returns
+    -------
+    entropy : list
+        Entropy estimates.
+
+    """
