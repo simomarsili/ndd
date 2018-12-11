@@ -15,6 +15,7 @@ __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy', 'histogram']
 
+import functools
 import numpy
 
 
@@ -166,29 +167,28 @@ def histogram(data, return_unique=False):
         return counts
 
 
-def entropy_from_data(a, p=None, r=1, **kwargs):
-g    """
-    Estimate the entropy from custom columns subsets.
+def entropy_fromsamples(a, r=1, k=None):
+    """
+    NSB entropy estimates from data samples.
 
     Parameters
     ----------
 
-    a : array_like
-        Data matrix with columns corresponding to different variables.
-
-    p : list, optional
-        Columns subset. If None, all columns are included.
+    a : 2D array-like
+        n-by-p matrix containing m samples of p discrete variables.
 
     r : int, optional
-        Return an entropy estimate for each of the r-sized subsets of columns
-        from a. Default is to estimate entropy for each column.
+        For each possible combination of r columns, return the estimated
+        entropy for the corresponding r-dimensional variable.
+        See itertools.combinations(range(n), r=r).
+        If 0, return a single entropy estimate from frequencies computed
+        over the flattened array.
+        Defaults to 1 (a different estimate for each column/variable).
 
-    return_std : boolean, optional
-        If True, also return an approximated value for the standard deviation
-        over the entropy posterior.
+    k : 1D p-dimensional array or int, optional
+        If array, contains the alphabet size for the p variables.
+        If int, the variables are assumed to have the same alphabet size.
 
-    kwargs : dict, optional
-        Pass to ndd.entropy().
 
     Returns
     -------
@@ -196,3 +196,41 @@ g    """
         Entropy estimates.
 
     """
+    import itertools
+    try:
+        from collections.abc import Sequence
+    except ImportError:
+        from collections import Sequence
+    import ndd
+
+    try:
+        n, p = a.shape
+        at = a.T
+    except AttributeError:
+        raise
+
+    if r == 0:
+        counts = ndd.histogram(a.flatten())
+        return ndd.entropy(counts, k=k)
+
+    if k is None:
+        ks = [numpy.unique(x).size for x in at]
+    else:
+        if isinstance(k, Sequence):
+            ks = list(k)
+        else:
+            ks = [k]*n
+    ks = numpy.array(ks)
+
+    def func(X, K):
+        """Template for generic function of samples."""
+        data = list(zip(*X))
+        counts = ndd.histogram(data)
+        alphabet_size = numpy.prod(K)
+        return ndd.entropy(counts, k=alphabet_size)
+
+    estimates = []
+    for ix in itertools.combinations(range(p), r=r):
+        ix = list(ix)
+        estimates.append(func(at[ix], ks[ix]))
+    return estimates
