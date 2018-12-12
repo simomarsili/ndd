@@ -214,11 +214,6 @@ def entropy_fromsamples(a, k=None):
 
     data = list(zip(*at))
     counts = ndd.histogram(data)
-    """
-    return (data,
-            counts,
-            alphabet_size)
-    """
     return ndd.entropy(counts, k=alphabet_size)
 
 
