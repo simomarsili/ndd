@@ -167,7 +167,7 @@ def histogram(data, return_unique=False):
         return counts
 
 
-def entropy_fromsamples(a, k=None):
+def entropy_fromsamples(a, k=None, axis=0):
     """
     NSB entropy estimate from data samples.
 
@@ -175,15 +175,20 @@ def entropy_fromsamples(a, k=None):
     ----------
 
     a : 2D array-like
-        n-by-p matrix containing m samples of p discrete variables.
+        n-by-p matrix containing n samples of p discrete variables.
+        (see axis keyword).
 
     k : int or 1D p-dimensional array or int, optional
-        If int, the value is used as the number of possible outcomes,
-        or alphabet size.
+        If int, the number of possible outcomes, or alphabet size.
         If k is an array, the alphabet size is computed as numpy.prod(k).
         Defaults to the product of the number of unique elements
-        in each column.
+        observed for each variable.
 
+    axis : int, optional
+        If 0 (default), the different rows of the n-by-p matrix a
+        correspond to different different samples.
+        If 1, different columns correspond to different samples and
+        the data matrix is p-by-n.
 
     Returns
     -------
@@ -194,8 +199,13 @@ def entropy_fromsamples(a, k=None):
     import ndd
 
     try:
-        n, p = a.shape
-        at = a.T
+        if axis == 0:
+            n, p = a.shape
+            a = a.T
+        elif axis == 1:
+            p, n = a.shape
+        else:
+            raise ValueError("axis value must be either 0 or 1")
     except AttributeError:
         raise
 
@@ -207,12 +217,12 @@ def entropy_fromsamples(a, k=None):
             raise ValueError("k should have len %s" % p)
     except TypeError:
         if k is None:
-            ks = [numpy.unique(v).size for v in at]
+            ks = [numpy.unique(v).size for v in a]
             alphabet_size = numpy.prod(ks)
         else:
             alphabet_size = k
 
-    data = list(zip(*at))
+    data = list(zip(*a))
     counts = ndd.histogram(data)
     return ndd.entropy(counts, k=alphabet_size)
 
@@ -232,14 +242,13 @@ def combinations(func, a, k=None, r=1):
         For each possible combination of r columns, return the estimated
         entropy for the corresponding r-dimensional variable.
         See itertools.combinations(range(n), r=r).
-        If 0, return a single entropy estimate from frequencies computed
-        over the flattened array.
         Defaults to 1 (a different estimate for each column/variable).
 
-    k : 1D p-dimensional array or int, optional
-        If array, contains the alphabet size for the p variables.
-        If int, the variables are assumed to have the same alphabet size.
-
+    k : 1D p-dimensional array, optional
+        The alphabet size for the r-dimensional variable corresponding to the
+        column indices ix is computed as numpy.prod([k[x] for x in ix]).
+        Defaults to the product of the number of unique elements
+        in each column.
 
     Returns
     -------
@@ -248,11 +257,6 @@ def combinations(func, a, k=None, r=1):
 
     """
     import itertools
-    try:
-        from collections.abc import Sequence
-    except ImportError:
-        from collections import Sequence
-    import ndd
 
     try:
         n, p = a.shape
@@ -260,21 +264,24 @@ def combinations(func, a, k=None, r=1):
     except AttributeError:
         raise
 
-    if r == 0:
-        counts = ndd.histogram(a.flatten())
-        return ndd.entropy(counts, k=k)
+    if r <= 0:
+        raise ValueError("r must be > 0 (input value: %s)" % r)
 
-    if k is None:
-        ks = [numpy.unique(x).size for x in at]
-    else:
-        if isinstance(k, Sequence):
+    try:
+        if len(k) == p:
             ks = list(k)
         else:
-            ks = [k]*n
+            raise ValueError("k should have len %s" % p)
+    except TypeError:
+        if k is None:
+            ks = [numpy.unique(v).size for v in at]
+        else:
+            raise
     ks = numpy.array(ks)
 
     estimates = []
     for ix in itertools.combinations(range(p), r=r):
         ix = list(ix)
-        estimates.append(func(at[ix], ks[ix]))
+        # at is transposed, samples on different columns
+        estimates.append(func(at[ix], ks[ix], axis=1))
     return estimates
