@@ -167,7 +167,63 @@ def histogram(data, return_unique=False):
         return counts
 
 
-def entropy_fromsamples(a, r=1, k=None):
+def entropy_fromsamples(a, k=None):
+    """
+    NSB entropy estimate from data samples.
+
+    Parameters
+    ----------
+
+    a : 2D array-like
+        n-by-p matrix containing m samples of p discrete variables.
+
+    k : int or 1D p-dimensional array or int, optional
+        If int, the value is used as the number of possible outcomes,
+        or alphabet size.
+        If k is an array, the alphabet size is computed as numpy.prod(k).
+        Defaults to the product of the number of unique elements
+        in each column.
+
+
+    Returns
+    -------
+    entropy : float
+        Entropy estimate.
+
+    """
+    import ndd
+
+    try:
+        n, p = a.shape
+        at = a.T
+    except AttributeError:
+        raise
+
+    try:
+        if len(k) == p:
+            ks = list(k)
+            alphabet_size = numpy.prod(ks)
+        else:
+            raise ValueError("k should have len %s" % p)
+    except TypeError:
+        if k is None:
+            ks = [numpy.unique(v).size for v in at]
+            alphabet_size = numpy.prod(ks)
+        else:
+            alphabet_size = k
+
+    data = list(zip(*at))
+    counts = ndd.histogram(data)
+    """
+    return (data,
+            counts,
+            alphabet_size)
+    """
+    return ndd.entropy(counts, k=alphabet_size)
+
+
+# this should be a decorator
+def combinations(func, a, k=None, r=1):
     """
     NSB entropy estimates from data samples.
 
@@ -221,13 +277,6 @@ def entropy_fromsamples(a, r=1, k=None):
         else:
             ks = [k]*n
     ks = numpy.array(ks)
-
-    def func(X, K):
-        """Template for generic function of samples."""
-        data = list(zip(*X))
-        counts = ndd.histogram(data)
-        alphabet_size = numpy.prod(K)
-        return ndd.entropy(counts, k=alphabet_size)
 
     estimates = []
     for ix in itertools.combinations(range(p), r=r):
