@@ -169,7 +169,7 @@ def histogram(data, return_unique=False):
 
 def entropy_fromsamples(a, k=None, axis=0):
     """
-    NSB entropy estimate from data samples.
+    Compute an entropy estimate from data samples.
 
     Parameters
     ----------
@@ -179,7 +179,8 @@ def entropy_fromsamples(a, k=None, axis=0):
         (see axis keyword).
 
     k : int or 1D p-dimensional array or int, optional
-        If int, the number of possible outcomes, or alphabet size.
+        If int, the number of possible outcomes, or alphabet size,
+        for the p-dimensional discrete variable.
         If k is an array, the alphabet size is computed as numpy.prod(k).
         Defaults to the product of the number of unique elements
         observed for each variable.
@@ -200,9 +201,13 @@ def entropy_fromsamples(a, k=None, axis=0):
 
     try:
         if axis == 0:
+            if a.ndim == 1:
+                a = a[:, numpy.newaxis]
             n, p = a.shape
             a = a.T
         elif axis == 1:
+            if a.ndim == 1:
+                a = a[numpy.newaxis, :]
             p, n = a.shape
         else:
             raise ValueError("axis value must be either 0 or 1")
@@ -211,14 +216,14 @@ def entropy_fromsamples(a, k=None, axis=0):
 
     try:
         if len(k) == p:
-            ks = list(k)
-            alphabet_size = numpy.prod(ks)
+            k = list(k)
+            alphabet_size = numpy.prod(k)
         else:
             raise ValueError("k should have len %s" % p)
     except TypeError:
         if k is None:
-            ks = [numpy.unique(v).size for v in a]
-            alphabet_size = numpy.prod(ks)
+            k = [numpy.unique(v).size for v in a]
+            alphabet_size = numpy.prod(k)
         else:
             alphabet_size = k
 
@@ -227,16 +232,16 @@ def entropy_fromsamples(a, k=None, axis=0):
     return ndd.entropy(counts, k=alphabet_size)
 
 
-# this should be a decorator
 def combinations(func, a, k=None, r=1):
     """
-    NSB entropy estimates from data samples.
+    Evaluate function func(a, k) over all possible combinations of r variables
+    from a set of p variables.
 
     Parameters
     ----------
 
     a : 2D array-like
-        n-by-p matrix containing m samples of p discrete variables.
+        n-by-p matrix containing n samples of p discrete variables.
 
     r : int, optional
         For each possible combination of r columns, return the estimated
@@ -282,6 +287,26 @@ def combinations(func, a, k=None, r=1):
     estimates = []
     for ix in itertools.combinations(range(p), r=r):
         ix = list(ix)
-        # at is transposed, samples on different columns
+        # at is transposed, samples are on different columns
         estimates.append(func(at[ix], ks[ix], axis=1))
     return estimates
+
+
+def multivariate_information(a, k=None):
+    """docs."""
+    import ndd
+
+    try:
+        n, p = a.shape
+        at = a.T
+    except AttributeError:
+        raise
+
+    multi_info = 0.0
+    for r in range(1, p+1):
+        sgn = (-1)**r
+        multi_info += sgn * numpy.sum(ndd.combinations(ndd.entropy_fromsamples, a, k=k, r=r))
+
+    return - multi_info
+        
+

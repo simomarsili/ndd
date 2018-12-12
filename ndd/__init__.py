@@ -118,7 +118,11 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     filter, map, zip)
 import os
 import json
-from ndd.nsb import (entropy, histogram)
+from ndd.nsb import (entropy,  # pylint: disable=unused-import
+                     histogram,
+                     entropy_fromsamples,
+                     combinations,
+                     multivariate_information)
 
 path_to_version = os.path.join(os.path.dirname(__file__), 'version.json')
 with open(path_to_version, 'r') as f:
