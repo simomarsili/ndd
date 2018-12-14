@@ -17,6 +17,7 @@ __all__ = ['entropy', 'histogram']
 
 import numpy
 import ndd
+import ndd._nsb
 
 
 def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
@@ -56,8 +57,9 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     axis : 'precomputed' (default), None or int, optional
         By default ('precomputed') `ar` is an array of precomputed counts.
-        If None or int, `ar` is taken to be is an array of data samples,
-        and `axis` indexes different samples (see numpy.unique docstrings).
+        If None or int, counts are computed from `ar`, that is taken as
+        an ndarray of data, and `axis` defines the axis indexing different
+        samples (see also numpy.unique docstrings, axis kw).
         If None, frequencies are computed on the flattened array.
         If int: frequencies are computed along axis `axis`. The subarrays
         indexed by the given axis will be flattened and treated
@@ -74,8 +76,6 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         Only provided if `return_std` is True.
 
     """
-    from ndd import _nsb, histogram
-    import ndd
 
     if axis == 'precomputed':
         try:
@@ -88,9 +88,9 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         counts = counts.flatten()
     else:
         # difefrent samples in different columns
-        ar = ndd.nsb._contiguous_2D_array(ar, axis=axis, transpose=True)
+        ar = ndd.nsb._2D_array(ar, axis=axis, transpose=True)
         ks = [len(numpy.unique(v)) for v in ar]
-        counts = histogram(ar, axis=1)
+        counts = ndd.histogram(ar, axis=1)
 
     n_bins = len(counts)
     if k is None:
@@ -125,17 +125,17 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     if plugin:
         if alpha is None:
-            result = _nsb.plugin(counts, k)
+            result = ndd._nsb.plugin(counts, k)
         else:
-            result = _nsb.pseudo(counts, k, alpha)
+            result = ndd._nsb.pseudo(counts, k, alpha)
     else:
         if alpha is None:
-            result = _nsb.nsb(counts, k)
+            result = ndd._nsb.nsb(counts, k)
             if not return_std:
                 result = result[0]
         else:
             # TODO: compute variance over the posterior at fixed alpha
-            result = _nsb.dirichlet(counts, k, alpha)
+            result = ndd._nsb.dirichlet(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
@@ -187,7 +187,7 @@ def histogram(data, return_unique=False, axis=None):
         return counts
 
 
-def _contiguous_2D_array(ar, axis=0, transpose=False):
+def _2D_array(ar, axis=0, transpose=False):
     """Transform a generic N-dimensional ndarray to a 2-D array.
        (see numpy.unique)
     """
@@ -214,7 +214,7 @@ def entropy_combinations(ar, k=None, r=1, axis=0):
     from itertools import combinations
 
     # put samples on different columns
-    ar = ndd.nsb._contiguous_2D_array(ar, transpose=True)
+    ar = ndd.nsb._2D_array(ar, transpose=True)
     p, n = ar.shape
 
     try:
