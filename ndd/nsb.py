@@ -209,90 +209,56 @@ def _2D_array(ar, axis=0, transpose=False):
     return numpy.ascontiguousarray(ar)
 
 
-def entropy_combinations(ar, k=None, r=1, axis=0):
-    """n-by-p data matrix"""
+def entropy_combinations(ar, ks=None, r=1, axis=0):
+    """
+    Given an array of data, compute an estimate for all possible combinations
+    of `r` variables.
+
+    Paramaters
+    ----------
+
+    ar : array-like
+         Array of n samples from p discrete variables.
+
+    ks : 1D p-dimensional array, optional
+         Alphabet size for each variable.
+         The alphabet sizes for the r-dimensional variable corresponding to the
+         column indices ix is computed as numpy.prod([k[x] for x in ix]).
+         Defaults to the number of unique elements in each column.
+
+    r : int, optional
+        For each possible combination of r columns, return the estimated
+        entropy for the corresponding r-dimensional variable.
+        See itertools.combinations(range(p), r=r).
+        Defaults to 1 (a different estimate for each column/variable).
+
+    axis : None or int
+        The axis indexing the different samples.
+
+    """
     from itertools import combinations
 
-    # put samples on different columns
-    ar = ndd.nsb._2D_array(ar, transpose=True)
+    # build a contiguous 2D array
+    # with different samples on different columns
+    ar = ndd.nsb._2D_array(ar, axis=0, transpose=True)
     p, n = ar.shape
 
     try:
-        if len(k) == p:
-            k = numpy.array(k)
+        if len(ks) == p:
+            ks = numpy.array(ks)
         else:
             raise ValueError("k should have len %s" % p)
     except TypeError:
-        if k is None:
-            k = numpy.array([numpy.unique(v).size for v in ar])
+        if ks is None:
+            ks = numpy.array([numpy.unique(v).size for v in ar])
         else:
             raise
 
     estimates = []
     for ix in combinations(range(p), r=r):
         ix = list(ix)
-        alphabet_size = numpy.prod(k[ix])
-        estimates.append(ndd.entropy(ar[ix], k=alphabet_size, axis=1))
-    return estimates
-
-
-def combinations(func, a, k=None, r=1):
-    """
-    Evaluate function func(a, k) over all possible combinations of r variables
-    from a set of p variables.
-
-    Parameters
-    ----------
-
-    a : 2D array-like
-        n-by-p matrix containing n samples of p discrete variables.
-
-    r : int, optional
-        For each possible combination of r columns, return the estimated
-        entropy for the corresponding r-dimensional variable.
-        See itertools.combinations(range(n), r=r).
-        Defaults to 1 (a different estimate for each column/variable).
-
-    k : 1D p-dimensional array, optional
-        The alphabet size for the r-dimensional variable corresponding to the
-        column indices ix is computed as numpy.prod([k[x] for x in ix]).
-        Defaults to the product of the number of unique elements
-        in each column.
-
-    Returns
-    -------
-    entropy : list
-        Entropy estimates.
-
-    """
-    import itertools
-
-    try:
-        n, p = a.shape
-        at = a.T
-    except AttributeError:
-        raise
-
-    if r <= 0:
-        raise ValueError("r must be > 0 (input value: %s)" % r)
-
-    try:
-        if len(k) == p:
-            ks = list(k)
-        else:
-            raise ValueError("k should have len %s" % p)
-    except TypeError:
-        if k is None:
-            ks = [numpy.unique(v).size for v in at]
-        else:
-            raise
-    ks = numpy.array(ks)
-
-    estimates = []
-    for ix in itertools.combinations(range(p), r=r):
-        ix = list(ix)
-        # at is transposed, samples are on different columns
-        estimates.append(func(at[ix], k=numpy.prod(ks[ix]), axis=1))
+        k = numpy.prod(ks[ix])
+        estimates.append(ndd.entropy(ar[ix], k=k, axis=1))
     return estimates
 
 
