@@ -120,7 +120,6 @@ import os
 import json
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      histogram,
-                     entropy_fromsamples,
                      combinations,
                      multivariate_information)
 

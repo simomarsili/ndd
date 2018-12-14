@@ -15,12 +15,12 @@ __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy', 'histogram']
 
-import functools
 import numpy
+import ndd
 
 
-def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
-            axis=None):
+def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
+            axis='precomputed'):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator uses a mixture of
@@ -30,9 +30,9 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
     Parameters
     ----------
 
-    counts : array_like
-        The number of occurrences of a set of states/classes.
-        It will be flattened if it is not already 1-D.
+    ar : array_like
+        The number of occurrences of a set of states/classes
+        (or an array of data samples, see the `axis` keyword arg).
 
     k : int, optional
         Total number of classes. k >= len(counts).
@@ -54,6 +54,15 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
+    axis : 'precomputed' (default), None or int, optional
+        By default ('precomputed') `ar` is an array of precomputed counts.
+        If None or int, `ar` is taken to be is an array of data samples,
+        and `axis` indexes different samples (see numpy.unique docstrings).
+        If None, frequencies are computed on the flattened array.
+        If int: frequencies are computed along axis `axis`. The subarrays
+        indexed by the given axis will be flattened and treated
+        as the elements of a 1-D array with the dimension of the given axis.
+
     Returns
     -------
     entropy : float
@@ -65,19 +74,30 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
         Only provided if `return_std` is True.
 
     """
-    from ndd import _nsb
+    from ndd import _nsb, histogram
+    import ndd
 
-    try:
-        counts = numpy.array(counts, dtype=numpy.int32)
-    except ValueError:
-        raise
-    if numpy.any(counts < 0):
-        raise ValueError("Frequency counts cant be negative")
-    # flatten the input array
-    counts = counts.flatten()
+    if axis == 'precomputed':
+        try:
+            counts = numpy.array(ar, dtype=numpy.int32)
+        except ValueError:
+            raise
+        if numpy.any(counts < 0):
+            raise ValueError("Frequency counts cant be negative")
+        # flatten the input array; TODO: as numpy.unique
+        counts = counts.flatten()
+    else:
+        # difefrent samples in different columns
+        ar = ndd.nsb._contiguous_2D_array(ar, axis=axis, transpose=True)
+        ks = [len(numpy.unique(v)) for v in ar]
+        counts = histogram(ar, axis=1)
+
     n_bins = len(counts)
     if k is None:
-        k = numpy.float64(n_bins)
+        if axis == 'precomputed':
+            k = numpy.float64(n_bins)
+        else:
+            k = numpy.prod(ks)
     else:
         try:
             k = numpy.float64(k)
@@ -123,7 +143,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
     return result
 
 
-def histogram(data, return_unique=False):
+def histogram(data, return_unique=False, axis=None):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
@@ -159,7 +179,7 @@ def histogram(data, return_unique=False):
 
     """
 
-    unique, counts = numpy.unique(data, return_counts=True, axis=0)
+    unique, counts = numpy.unique(data, return_counts=True, axis=axis)
 
     if return_unique:
         return (unique, counts)
@@ -167,69 +187,53 @@ def histogram(data, return_unique=False):
         return counts
 
 
-def entropy_fromsamples(a, k=None, axis=0):
+def _contiguous_2D_array(ar, axis=0, transpose=False):
+    """Transform a generic N-dimensional ndarray to a 2-D array.
+       (see numpy.unique)
     """
-    Compute an entropy estimate from data samples.
 
-    Parameters
-    ----------
+    ar = numpy.asanyarray(ar)
+    if axis != 0:
+        try:
+            ar = numpy.swapaxes(ar, axis, 0)
+        except numpy.AxisError:
+            raise numpy.AxisError(axis, ar.ndim)
 
-    a : 2D array-like
-        n-by-p matrix containing n samples of p discrete variables.
-        (see axis keyword).
+    if ar.ndim > 2:
+        n = ar.shape[0]
+        ar = ar.reshape(n, -1)
 
-    k : int or 1D p-dimensional array or int, optional
-        If int, the number of possible outcomes, or alphabet size,
-        for the p-dimensional discrete variable.
-        If k is an array, the alphabet size is computed as numpy.prod(k).
-        Defaults to the product of the number of unique elements
-        observed for each variable.
+    if transpose:
+        ar = ar.T
 
-    axis : int, optional
-        If 0 (default), the different rows of the n-by-p matrix a
-        correspond to different different samples.
-        If 1, different columns correspond to different samples and
-        the data matrix is p-by-n.
+    return numpy.ascontiguousarray(ar)
 
-    Returns
-    -------
-    entropy : float
-        Entropy estimate.
 
-    """
-    import ndd
+def entropy_combinations(ar, k=None, r=1, axis=0):
+    """n-by-p data matrix"""
+    from itertools import combinations
 
-    try:
-        if axis == 0:
-            if a.ndim == 1:
-                a = a[:, numpy.newaxis]
-            n, p = a.shape
-            a = a.T
-        elif axis == 1:
-            if a.ndim == 1:
-                a = a[numpy.newaxis, :]
-            p, n = a.shape
-        else:
-            raise ValueError("axis value must be either 0 or 1")
-    except AttributeError:
-        raise
+    # put samples on different columns
+    ar = ndd.nsb._contiguous_2D_array(ar, transpose=True)
+    p, n = ar.shape
 
     try:
         if len(k) == p:
-            k = list(k)
-            alphabet_size = numpy.prod(k)
+            k = numpy.array(k)
         else:
             raise ValueError("k should have len %s" % p)
     except TypeError:
         if k is None:
-            k = [numpy.unique(v).size for v in a]
-            alphabet_size = numpy.prod(k)
+            k = numpy.array([numpy.unique(v).size for v in ar])
         else:
-            alphabet_size = k
+            raise
 
-    data = list(zip(*a))
-    counts = ndd.histogram(data)
-    return ndd.entropy(counts, k=alphabet_size)
+    estimates = []
+    for ix in combinations(range(p), r=r):
+        ix = list(ix)
+        alphabet_size = numpy.prod(k[ix])
+        estimates.append(ndd.entropy(ar[ix], k=alphabet_size, axis=1))
+    return estimates
 
 
 def combinations(func, a, k=None, r=1):
@@ -288,7 +292,7 @@ def combinations(func, a, k=None, r=1):
     for ix in itertools.combinations(range(p), r=r):
         ix = list(ix)
         # at is transposed, samples are on different columns
-        estimates.append(func(at[ix], ks[ix], axis=1))
+        estimates.append(func(at[ix], k=numpy.prod(ks[ix]), axis=1))
     return estimates
 
 
@@ -308,5 +312,3 @@ def multivariate_information(a, k=None):
         multi_info += sgn * numpy.sum(ndd.combinations(ndd.entropy_fromsamples, a, k=k, r=r))
 
     return - multi_info
-        
-
