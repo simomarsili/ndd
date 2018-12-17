@@ -87,7 +87,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         # flatten the input array; TODO: as numpy.unique
         counts = counts.flatten()
     else:
-        # difefrent samples in different columns
+        # diffrent samples as different columns
         ar = ndd.nsb._2D_array(ar, axis=axis, transpose=True)
         ks = [len(numpy.unique(v)) for v in ar]
         counts = ndd.histogram(ar, axis=1)
@@ -189,14 +189,20 @@ def histogram(data, return_unique=False, axis=None):
 
 def _2D_array(ar, axis=0, transpose=False):
     """Transform a generic N-dimensional ndarray to a 2-D array.
-       (see numpy.unique)
+       (see numpy.unique). The sample axis is moved to 0 and others dimensions
+       are flattened.
     """
 
     ar = numpy.asanyarray(ar)
+
+    if ar.ndim == 1:
+        n = ar.shape[0]
+        ar = ar.reshape(n, 1)
+
     if axis != 0:
         try:
             ar = numpy.swapaxes(ar, axis, 0)
-        except numpy.AxisError:
+        except ValueError:
             raise numpy.AxisError(axis, ar.ndim)
 
     if ar.ndim > 2:
@@ -209,22 +215,26 @@ def _2D_array(ar, axis=0, transpose=False):
     return numpy.ascontiguousarray(ar)
 
 
-def entropy_combinations(ar, ks=None, r=1, axis=0):
+def _combinations(func, ar, ks=None, r=1):
     """
-    Given an array of data, compute an estimate for all possible combinations
-    of `r` variables.
+    Given a function and a n-by-p array of data, compute the function over all
+    possible p-choose-r combinations of r columns.
 
     Paramaters
     ----------
 
+    func : function
+        Function taking as input a data array, alphabet size and
+        axis indexing samples: func(data, k=k, axis=axis)).
+
     ar : array-like
-         Array of n samples from p discrete variables.
+        Array of n samples from p discrete variables.
 
     ks : 1D p-dimensional array, optional
-         Alphabet size for each variable.
-         The alphabet sizes for the r-dimensional variable corresponding to the
-         column indices ix is computed as numpy.prod([k[x] for x in ix]).
-         Defaults to the number of unique elements in each column.
+        Alphabet size for each variable.
+        The alphabet sizes for the r-dimensional variable corresponding to the
+        column indices ix is computed as numpy.prod([k[x] for x in ix]).
+        Defaults to the number of unique elements in each column.
 
     r : int, optional
         For each possible combination of r columns, return the estimated
@@ -232,16 +242,17 @@ def entropy_combinations(ar, ks=None, r=1, axis=0):
         See itertools.combinations(range(p), r=r).
         Defaults to 1 (a different estimate for each column/variable).
 
-    axis : None or int
-        The axis indexing the different samples.
-
     """
     from itertools import combinations
 
-    # build a contiguous 2D array
-    # with different samples on different columns
-    ar = ndd.nsb._2D_array(ar, axis=0, transpose=True)
-    p, n = ar.shape
+    try:
+        n, p = ar.shape
+    except ValueError:
+        n, p = ar.shape[0], 1
+        ar = ar.reshape(n, 1)
+
+    # transpose the array
+    ar = ar.T
 
     try:
         if len(ks) == p:
@@ -258,24 +269,24 @@ def entropy_combinations(ar, ks=None, r=1, axis=0):
     for ix in combinations(range(p), r=r):
         ix = list(ix)
         k = numpy.prod(ks[ix])
-        estimates.append(ndd.entropy(ar[ix], k=k, axis=1))
+        # operate over rows
+        estimates.append(func(ar[ix], k=k, axis=1))
     return estimates
 
 
-def multivariate_information(a, k=None):
+def multivariate_information(a, ks=None):
     """docs."""
     import ndd
 
     try:
         n, p = a.shape
-        at = a.T
     except AttributeError:
         raise
 
     multi_info = 0.0
     for r in range(1, p+1):
         sgn = (-1)**r
-        multi_info += sgn * numpy.sum(ndd.combinations(
-            ndd.entropy_fromsamples, a, k=k, r=r))
+        multi_info += sgn * numpy.sum(ndd._combinations(
+            ndd.entropy, a, ks=ks, r=r))
 
     return - multi_info
