@@ -275,6 +275,7 @@ def multivariate_information(a, k=None):
     multi_info = 0.0
     for r in range(1, p+1):
         sgn = (-1)**r
-        multi_info += sgn * numpy.sum(ndd.combinations(ndd.entropy_fromsamples, a, k=k, r=r))
+        multi_info += sgn * numpy.sum(ndd.combinations(
+            ndd.entropy_fromsamples, a, k=k, r=r))
 
     return - multi_info
