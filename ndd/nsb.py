@@ -21,7 +21,7 @@ import ndd._nsb
 
 
 def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
-            axis='precomputed'):
+            frequencies='precomputed'):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator uses a mixture of
@@ -55,11 +55,10 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
-    axis : 'precomputed' (default), None or int, optional
-        By default ('precomputed') `ar` is an array of precomputed counts.
-        If None or int, counts are computed from `ar`, that is taken as
-        an ndarray of data, and `axis` defines the axis indexing different
-        samples (see also numpy.unique docstrings, axis kw).
+    frequencies : 'precomputed' (default), None or int, optional
+        By default ('precomputed') `ar` is an array of bin counts.
+        If None or int, defines the axis indexing different samples in the data
+        array `ar`. See also numpy.unique docstrings, "axis" kwarg.
         If None, frequencies are computed on the flattened array.
         If int: frequencies are computed along axis `axis`. The subarrays
         indexed by the given axis will be flattened and treated
@@ -77,7 +76,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     """
 
-    if axis == 'precomputed':
+    if frequencies == 'precomputed':
         try:
             counts = numpy.array(ar, dtype=numpy.int32)
         except ValueError:
@@ -88,21 +87,31 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         counts = counts.flatten()
     else:
         # diffrent samples as different columns
-        ar = ndd.nsb._2D_array(ar, axis=axis, transpose=True)
+        samples_axis = frequencies
+        ar = ndd.nsb._2D_array(ar, axis=samples_axis, transpose=True)
         ks = [len(numpy.unique(v)) for v in ar]
         counts = ndd.histogram(ar, axis=1)
 
     n_bins = len(counts)
+    kmax = 150 * numpy.log(2)  # 200 bits
     if k is None:
-        if axis == 'precomputed':
+        if frequencies == 'precomputed':
             k = numpy.float64(n_bins)
         else:
-            k = numpy.prod(ks)
+            k = numpy.sum(numpy.log(x) for x in ks)
+            if k > kmax:
+                # too large a number; backoff to n_bins
+                # TODO: log warning
+                raise ValueError('max k value is %r' % numpy.exp(kmax))
+            else:
+                k = numpy.exp(k)
     else:
         try:
             k = numpy.float64(k)
         except ValueError:
             raise
+        if k > kmax:
+            raise ValueError('max k value is %r' % numpy.exp(kmax))
         if k < n_bins:
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
                              % (k, n_bins))
