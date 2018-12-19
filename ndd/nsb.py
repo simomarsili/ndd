@@ -23,7 +23,7 @@ MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
 
 def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
-            frequencies='precomputed'):
+            counts='precomputed'):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator uses a mixture of
@@ -57,14 +57,13 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
-    frequencies : 'precomputed' (default), None or int, optional
+    counts : 'precomputed' (default), None or int, optional
         By default ('precomputed') `ar` is an array of bin counts.
         If None or int, defines the axis indexing different samples in the data
-        array `ar`. See also numpy.unique docstrings, "axis" kwarg.
-        If None, frequencies are computed on the flattened array.
-        If int: frequencies are computed along axis `axis`. The subarrays
-        indexed by the given axis will be flattened and treated
-        as the elements of a 1-D array with the dimension of the given axis.
+        array `ar`. If None, compute counts on the flattened array.
+        If int: compute counts along the given axis. In this case,
+        the subarrays indexed by the axis will be flattened and treated
+        as the elements of a 1-D array with the dimension of the axis.
 
     Returns
     -------
@@ -78,25 +77,25 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     """
 
-    if frequencies == 'precomputed':
+    if counts == 'precomputed':
         try:
-            counts = numpy.array(ar, dtype=numpy.int32)
+            freqs = numpy.array(ar, dtype=numpy.int32)
         except ValueError:
             raise
-        if numpy.any(counts < 0):
+        if numpy.any(freqs < 0):
             raise ValueError("Frequency counts cant be negative")
         # flatten the input array; TODO: as numpy.unique
-        counts = counts.flatten()
+        freqs = freqs.flatten()
     else:
         # diffrent samples as different columns
-        samples_axis = frequencies
+        samples_axis = counts
         ar = ndd.nsb._2darray(ar, axis=samples_axis)
         ks = [len(numpy.unique(v)) for v in ar]
-        counts = ndd.histogram(ar, axis=1)
+        freqs = ndd.histogram(ar, axis=1)
 
-    n_bins = len(counts)
+    n_bins = len(freqs)
     if k is None:
-        if frequencies == 'precomputed':
+        if counts == 'precomputed':
             k = numpy.float64(n_bins)
         else:
             k = numpy.sum(numpy.log(x) for x in ks)
@@ -137,17 +136,17 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     if plugin:
         if alpha is None:
-            result = ndd._nsb.plugin(counts, k)
+            result = ndd._nsb.plugin(freqs, k)
         else:
-            result = ndd._nsb.pseudo(counts, k, alpha)
+            result = ndd._nsb.pseudo(freqs, k, alpha)
     else:
         if alpha is None:
-            result = ndd._nsb.nsb(counts, k)
+            result = ndd._nsb.nsb(freqs, k)
             if not return_std:
                 result = result[0]
         else:
             # TODO: compute variance over the posterior at fixed alpha
-            result = ndd._nsb.dirichlet(counts, k, alpha)
+            result = ndd._nsb.dirichlet(freqs, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
@@ -272,12 +271,12 @@ def _combinations(func, ar, ks=None, r=1):
         else:
             raise
 
+    alphabet_sizes = (numpy.prod(x) for x in combinations(ks, r=r))
+    data = combinations(ar, r=r)
+
     estimates = []
-    for ix in combinations(range(p), r=r):
-        ix = list(ix)
-        k = numpy.prod(ks[ix])
-        # operate over rows
-        estimates.append(func(ar[ix], k=k))
+    for k, d in zip(alphabet_sizes, data):
+        estimates.append(func(d, k=k))
     return estimates
 
 
