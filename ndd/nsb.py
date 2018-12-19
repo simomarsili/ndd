@@ -164,3 +164,32 @@ def histogram(data, return_unique=False, axis=None):
         return (unique, counts)
     else:
         return counts
+
+
+def _2darray(ar, axis=0, to_axis=1):
+    """
+    For a 2D n-by-p data array, transpose it.
+    For a generic ndarray, move axis `axis` to axis `to_axis`,
+    and flatten the subarrays corresponding to other dimensions.
+    """
+
+    ar = numpy.asanyarray(ar)
+
+    if ar.ndim == 1:
+        n = ar.shape[0]
+        ar = ar.reshape(n, 1)
+
+    if axis != 0:
+        try:
+            ar = numpy.swapaxes(ar, axis, 0)
+        except ValueError:
+            raise numpy.AxisError(axis, ar.ndim)
+
+    if ar.ndim > 2:
+        n = ar.shape[0]
+        ar = ar.reshape(n, -1)
+
+    if to_axis == 1:
+        ar = ar.T
+
+    return numpy.ascontiguousarray(ar)
