@@ -21,6 +21,7 @@ import ndd._nsb
 
 MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
+
 def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
             frequencies='precomputed'):
     """
@@ -236,7 +237,8 @@ def _combinations(func, ar, ks=None, r=1):
 
     func : function
         Function taking as input a data array, alphabet size and
-        axis indexing samples: func(data, k=k, axis=axis)).
+        the axis along which frequencies should be computed:
+        func(data, k=k, frequencies=axis)).
 
     ar : array-like
         Array of n samples from p discrete variables.
@@ -281,7 +283,7 @@ def _combinations(func, ar, ks=None, r=1):
         ix = list(ix)
         k = numpy.prod(ks[ix])
         # operate over rows
-        estimates.append(func(ar[ix], k=k, axis=1))
+        estimates.append(func(ar[ix], k=k, frequencies=1))
     return estimates
 
 
