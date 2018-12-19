@@ -100,7 +100,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         else:
             k = numpy.sum(numpy.log(x) for x in ks)
             if k > kmax:
-                # too large a number; backoff to n_bins
+                # too large a number; backoff to n_bins?
                 # TODO: log warning
                 raise ValueError('max k value is %r' % numpy.exp(kmax))
             else:
