@@ -16,10 +16,14 @@ __author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy', 'histogram']
 
 import numpy
+import ndd
+import ndd._nsb
+
+MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
 
-def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
-            axis=None):
+def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
+            counts='precomputed'):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator uses a mixture of
@@ -29,9 +33,9 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
     Parameters
     ----------
 
-    counts : array_like
-        The number of occurrences of a set of states/classes.
-        It will be flattened if it is not already 1-D.
+    ar : array_like
+        The number of occurrences of a set of states/classes
+        (or an array of data samples, see the `axis` keyword arg).
 
     k : int, optional
         Total number of classes. k >= len(counts).
@@ -53,6 +57,14 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
+    counts : 'precomputed' (default), None or int, optional
+        By default ('precomputed') `ar` is an array of bin counts.
+        If None or int, defines the axis indexing different samples in the data
+        array `ar`. If None, compute counts on the flattened array.
+        If int: compute counts along the given axis. In this case,
+        the subarrays indexed by the axis will be flattened and treated
+        as the elements of a 1-D array with the dimension of the axis.
+
     Returns
     -------
     entropy : float
@@ -64,24 +76,44 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
         Only provided if `return_std` is True.
 
     """
-    import ndd._nsb
 
-    try:
-        counts = numpy.array(counts, dtype=numpy.int32)
-    except ValueError:
-        raise
-    if numpy.any(counts < 0):
-        raise ValueError("Frequency counts cant be negative")
-    # flatten the input array
-    counts = counts.flatten()
-    n_bins = len(counts)
+    if counts == 'precomputed':
+        try:
+            freqs = numpy.array(ar, dtype=numpy.int32)
+        except ValueError:
+            raise
+        if numpy.any(freqs < 0):
+            raise ValueError("Frequency counts cant be negative")
+        # flatten the input array; TODO: as numpy.unique
+        freqs = freqs.flatten()
+    else:
+        # diffrent samples as different columns
+        samples_axis = counts
+        ar = ndd.nsb._2darray(ar, axis=samples_axis)
+        ks = [len(numpy.unique(v)) for v in ar]
+        freqs = ndd.histogram(ar, axis=1)
+
+    n_bins = len(freqs)
     if k is None:
-        k = numpy.float64(n_bins)
+        if counts == 'precomputed':
+            k = numpy.float64(n_bins)
+        else:
+            k = numpy.sum(numpy.log(x) for x in ks)
+            if k > MAX_LOGK:
+                # too large a number; backoff to n_bins?
+                # TODO: log warning
+                raise ValueError('k (%r) larger than %r' %
+                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
+            else:
+                k = numpy.exp(k)
     else:
         try:
             k = numpy.float64(k)
         except ValueError:
             raise
+        if numpy.log(k) > MAX_LOGK:
+            raise ValueError('k (%r) larger than %r' %
+                             (k, numpy.exp(MAX_LOGK)))
         if k < n_bins:
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
                              % (k, n_bins))
@@ -104,17 +136,17 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
 
     if plugin:
         if alpha is None:
-            result = ndd._nsb.plugin(counts, k)
+            result = ndd._nsb.plugin(freqs, k)
         else:
-            result = ndd._nsb.pseudo(counts, k, alpha)
+            result = ndd._nsb.pseudo(freqs, k, alpha)
     else:
         if alpha is None:
-            result = ndd._nsb.nsb(counts, k)
+            result = ndd._nsb.nsb(freqs, k)
             if not return_std:
                 result = result[0]
         else:
             # TODO: compute variance over the posterior at fixed alpha
-            result = ndd._nsb.dirichlet(counts, k, alpha)
+            result = ndd._nsb.dirichlet(freqs, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
@@ -193,3 +225,56 @@ def _2darray(ar, axis=0, to_axis=1):
         ar = ar.T
 
     return numpy.ascontiguousarray(ar)
+
+
+def _combinations(func, ar, ks=None, r=1):
+    """
+    Given a function and a n-by-p array of data, compute the function over all
+    possible p-choose-r combinations of r columns.
+
+    Paramaters
+    ----------
+
+    func : function
+        Function taking as input a discrete data array and alphabet size:
+        func(data, k=k).
+
+    ar : array-like
+        Array of n samples from p discrete variables.
+
+    ks : 1D p-dimensional array, optional
+        Alphabet size for each variable.
+        The alphabet sizes for the r-dimensional variable corresponding to the
+        column indices ix is computed as numpy.prod([k[x] for x in ix]).
+        Defaults to the number of unique elements in each column.
+
+    r : int, optional
+        For each possible combination of r columns, return the estimated
+        entropy for the corresponding r-dimensional variable.
+        See itertools.combinations(range(p), r=r).
+        Defaults to 1 (a different estimate for each column/variable).
+
+    """
+    from itertools import combinations
+
+    ar = ndd.nsb._2darray(ar, axis=0)
+    p, n = ar.shape
+
+    try:
+        if len(ks) == p:
+            ks = numpy.array(ks)
+        else:
+            raise ValueError("k should have len %s" % p)
+    except TypeError:
+        if ks is None:
+            ks = numpy.array([numpy.unique(v).size for v in ar])
+        else:
+            raise
+
+    alphabet_sizes = (numpy.prod(x) for x in combinations(ks, r=r))
+    data = combinations(ar, r=r)
+
+    estimates = []
+    for k, d in zip(alphabet_sizes, data):
+        estimates.append(func(d, k=k))
+    return estimates
