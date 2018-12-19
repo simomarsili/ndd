@@ -137,5 +137,4 @@ __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simo.marsili@gmail.com)"
 __all__ = ["entropy",
            "histogram",
-           "entropy_combinations",
-           "multivariate_information"]
+           "_combinations"]
