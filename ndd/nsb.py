@@ -90,7 +90,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
     else:
         # diffrent samples as different columns
         samples_axis = frequencies
-        ar = ndd.nsb._2D_array(ar, axis=samples_axis, transpose=True)
+        ar = ndd.nsb._2darray(ar, axis=samples_axis)
         ks = [len(numpy.unique(v)) for v in ar]
         counts = ndd.histogram(ar, axis=1)
 
@@ -199,10 +199,11 @@ def histogram(data, return_unique=False, axis=None):
         return counts
 
 
-def _2D_array(ar, axis=0, transpose=False):
-    """Transform a generic N-dimensional ndarray to a 2-D array.
-       (see numpy.unique). The sample axis is moved to 0 and others dimensions
-       are flattened.
+def _2darray(ar, axis=0, to_axis=1):
+    """
+    For a 2D n-by-p data array, transpose it.
+    For a generic ndarray, move axis `axis` to axis `to_axis`,
+    and flatten the subarrays corresponding to other dimensions.
     """
 
     ar = numpy.asanyarray(ar)
@@ -221,7 +222,7 @@ def _2D_array(ar, axis=0, transpose=False):
         n = ar.shape[0]
         ar = ar.reshape(n, -1)
 
-    if transpose:
+    if to_axis == 1:
         ar = ar.T
 
     return numpy.ascontiguousarray(ar)
