@@ -120,8 +120,7 @@ import os
 import json
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      histogram,
-                     _combinations,
-                     multivariate_information)
+                     _combinations)
 
 path_to_version = os.path.join(os.path.dirname(__file__), 'version.json')
 with open(path_to_version, 'r') as f:
