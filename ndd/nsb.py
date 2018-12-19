@@ -64,7 +64,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
         Only provided if `return_std` is True.
 
     """
-    from ndd import _nsb
+    import ndd._nsb
 
     try:
         counts = numpy.array(counts, dtype=numpy.int32)
@@ -104,17 +104,17 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False,
 
     if plugin:
         if alpha is None:
-            result = _nsb.plugin(counts, k)
+            result = ndd._nsb.plugin(counts, k)
         else:
-            result = _nsb.pseudo(counts, k, alpha)
+            result = ndd._nsb.pseudo(counts, k, alpha)
     else:
         if alpha is None:
-            result = _nsb.nsb(counts, k)
+            result = ndd._nsb.nsb(counts, k)
             if not return_std:
                 result = result[0]
         else:
             # TODO: compute variance over the posterior at fixed alpha
-            result = _nsb.dirichlet(counts, k, alpha)
+            result = ndd._nsb.dirichlet(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
