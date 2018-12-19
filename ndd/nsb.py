@@ -278,3 +278,21 @@ def _combinations(func, ar, ks=None, r=1):
     for k, d in zip(alphabet_sizes, data):
         estimates.append(func(d, k=k))
     return estimates
+
+
+def multivariate_information(a, ks=None):
+    """docs."""
+    import ndd
+
+    try:
+        n, p = a.shape
+    except AttributeError:
+        raise
+
+    multi_info = 0.0
+    for r in range(1, p+1):
+        sgn = (-1)**r
+        multi_info += sgn * numpy.sum(ndd._combinations(
+            ndd.entropy, a, ks=ks, r=r))
+
+    return - multi_info
