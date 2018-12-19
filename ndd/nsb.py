@@ -57,7 +57,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
-    counts : 'precomputed' (default), None or int, optional
+    counts : 'precomputed', None or int, optional
         By default ('precomputed') `ar` is an array of bin counts.
         If None or int, defines the axis indexing different samples in the data
         array `ar`. If None, compute counts on the flattened array.
