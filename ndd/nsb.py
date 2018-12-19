@@ -237,9 +237,8 @@ def _combinations(func, ar, ks=None, r=1):
     ----------
 
     func : function
-        Function taking as input a data array, alphabet size and
-        the axis along which frequencies should be computed:
-        func(data, k=k, frequencies=axis)).
+        Function taking as input a discrete data array and alphabet size:
+        func(data, k=k).
 
     ar : array-like
         Array of n samples from p discrete variables.
@@ -259,14 +258,8 @@ def _combinations(func, ar, ks=None, r=1):
     """
     from itertools import combinations
 
-    try:
-        n, p = ar.shape
-    except ValueError:
-        n, p = ar.shape[0], 1
-        ar = ar.reshape(n, 1)
-
-    # transpose the array
-    ar = ar.T
+    ar = ndd.nsb._2darray(ar, axis=0)
+    p, n = ar.shape
 
     try:
         if len(ks) == p:
@@ -284,7 +277,7 @@ def _combinations(func, ar, ks=None, r=1):
         ix = list(ix)
         k = numpy.prod(ks[ix])
         # operate over rows
-        estimates.append(func(ar[ix], k=k, frequencies=1))
+        estimates.append(func(ar[ix], k=k))
     return estimates
 
 
