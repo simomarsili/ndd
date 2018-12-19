@@ -19,6 +19,7 @@ import numpy
 import ndd
 import ndd._nsb
 
+MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
 def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
             frequencies='precomputed'):
@@ -93,16 +94,16 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         counts = ndd.histogram(ar, axis=1)
 
     n_bins = len(counts)
-    kmax = 150 * numpy.log(2)  # 200 bits
     if k is None:
         if frequencies == 'precomputed':
             k = numpy.float64(n_bins)
         else:
             k = numpy.sum(numpy.log(x) for x in ks)
-            if k > kmax:
+            if k > MAX_LOGK:
                 # too large a number; backoff to n_bins?
                 # TODO: log warning
-                raise ValueError('max k value is %r' % numpy.exp(kmax))
+                raise ValueError('k (%r) larger than %r' %
+                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
             else:
                 k = numpy.exp(k)
     else:
@@ -110,8 +111,9 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
             k = numpy.float64(k)
         except ValueError:
             raise
-        if k > kmax:
-            raise ValueError('max k value is %r' % numpy.exp(kmax))
+        if numpy.log(k) > MAX_LOGK:
+            raise ValueError('k (%r) larger than %r' %
+                             (k, numpy.exp(MAX_LOGK)))
         if k < n_bins:
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
                              % (k, n_bins))
