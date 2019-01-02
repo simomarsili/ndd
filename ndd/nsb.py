@@ -66,7 +66,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     """
 
-    freqs = ndd.nsb._check_counts(counts)
+    counts = ndd.nsb._check_counts(counts)
     k = _check_k(k=k, n_bins=len(counts))
 
     if k == 1:  # if the total number of classes is one
@@ -85,17 +85,17 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     if plugin:
         if alpha is None:
-            result = ndd._nsb.plugin(freqs, k)
+            result = ndd._nsb.plugin(counts, k)
         else:
-            result = ndd._nsb.pseudo(freqs, k, alpha)
+            result = ndd._nsb.pseudo(counts, k, alpha)
     else:
         if alpha is None:
-            result = ndd._nsb.nsb(freqs, k)
+            result = ndd._nsb.nsb(counts, k)
             if not return_std:
                 result = result[0]
         else:
             # TODO: compute variance over the posterior at fixed alpha
-            result = ndd._nsb.dirichlet(freqs, k, alpha)
+            result = ndd._nsb.dirichlet(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
