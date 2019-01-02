@@ -163,14 +163,6 @@ def histogram(data):
     data : array_like
         Input data array.
 
-    axis : int, optional
-        The axis to operate on. If None, `data` will be flattened.
-        If an integer, the subarrays indexed by the given axis will be
-        flattened and treated as the elements of a 1-D array with
-        the dimension of the given axis. Object arrays or structured arrays
-        that contain objects are not supported if the `axis` kwarg is used. The
-        default is None. Check numpy.unique docstrings for more details.
-
     Returns
     -------
 
