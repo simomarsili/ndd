@@ -147,7 +147,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
     return result
 
 
-def histogram(data, return_unique=False, axis=None):
+def histogram(data, axis=None):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
@@ -157,10 +157,6 @@ def histogram(data, return_unique=False, axis=None):
         Input data array.
         If n-dimensional, statistics is computed over
         axis 0.
-
-
-    return_unique : bool, optional
-        If True, also return the unique elements corresponding to each bin.
 
     axis : int, optional
         The axis to operate on. If None, `counts` will be flattened.
@@ -177,18 +173,12 @@ def histogram(data, return_unique=False, axis=None):
     counts : ndarray
         Bin counts.
 
-    unique : ndarray, optional
-        Unique elements corresponding to each bin in counts.
-        Only if return_elements == True
-
     """
 
-    unique, counts = numpy.unique(data, return_counts=True, axis=axis)
+    # switch to 2D array
+    _, counts = numpy.unique(data, return_counts=True, axis=axis)
 
-    if return_unique:
-        return (unique, counts)
-    else:
-        return counts
+    return counts
 
 
 def _2darray(ar, axis=0, to_axis=1):

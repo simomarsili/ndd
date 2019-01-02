@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- histogram(): remove unique elements of array as optional output
 
 ## [0.7.1] - 2018-06-22
 ### Changed
