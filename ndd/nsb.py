@@ -67,13 +67,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
 
     freqs = ndd.nsb._check_counts(counts)
-    ks = [len(freqs)]
-
-    n_bins = len(counts)
-    if k is None and counts == 'precomputed':
-        k = numpy.float64(n_bins)
-    else:
-        k = _check_k(k, n_bins, ks)
+    k = _check_k(k=k, n_bins=len(counts))
 
     if k == 1:  # if the total number of classes is one
         if return_std:
@@ -163,8 +157,7 @@ def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
     """
 
     counts, ks = ndd.histogram(ar, axis=axis)
-    n_bins = len(counts)
-    k = _check_k(k, n_bins, ks)
+    k = _check_k(k=k, n_bins=len(counts), ks=ks)
     return entropy(counts, k=k, alpha=alpha, return_std=return_std,
                    plugin=plugin)
 
@@ -293,26 +286,29 @@ def _combinations(func, ar, ks=None, r=1):
 
 def _check_counts(a):
     try:
-        freqs = numpy.array(a, dtype=numpy.int32)
+        a = numpy.array(a, dtype=numpy.int32)
     except ValueError:
         raise
-    if numpy.any(freqs < 0):
-        raise ValueError("Frequency counts cant be negative")
+    if numpy.any(a < 0):
+        raise ValueError("Frequency counts can't be negative")
     # flatten the input array; TODO: as numpy.unique
-    return freqs.flatten()
+    return a.flatten()
 
 
-def _check_k(k, n_bins, ks):
+def _check_k(k, n_bins, ks=None):
     MAX_LOGK = 150 * numpy.log(2)  # 200 bits
     if k is None:
-        k = numpy.sum(numpy.log(x) for x in ks)
-        if k > MAX_LOGK:
-            # too large a number; backoff to n_bins?
-            # TODO: log warning
-            raise ValueError('k (%r) larger than %r' %
-                             (numpy.exp(k), numpy.exp(MAX_LOGK)))
+        if ks is None:
+            k = numpy.float64(n_bins)
         else:
-            k = numpy.exp(k)
+            k = numpy.sum(numpy.log(x) for x in ks)
+            if k > MAX_LOGK:
+                # too large a number; backoff to n_bins?
+                # TODO: log warning
+                raise ValueError('k (%r) larger than %r' %
+                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
+            else:
+                k = numpy.exp(k)
     else:
         try:
             k = numpy.float64(k)
