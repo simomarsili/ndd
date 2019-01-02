@@ -1,6 +1,9 @@
 # Change log
 
 ## [Unreleased]
+### Added
+- data_entropy()
+
 ### Changed
 - histogram(): remove unique elements of array as optional output
 

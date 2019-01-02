@@ -19,23 +19,20 @@ import numpy
 import ndd
 import ndd._nsb
 
-MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
-
-def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
-            counts='precomputed'):
+def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from an input array of counts. The estimator uses a mixture of
-    Dirichlet priors (Nemenman-Shafee-Bialek estimator), with weights chosen
+    distribution from an input array of counts.
+    The estimator uses a mixture of Dirichlet priors
+    (Nemenman-Shafee-Bialek estimator), with weights chosen
     such that the induced prior over the entropy is approximately uniform.
 
     Parameters
     ----------
 
-    ar : array_like
-        The number of occurrences of a set of states/classes
-        (or an array of data samples, see the `axis` keyword arg).
+    counts : array_like
+        The number of occurrences of a set of states/classes.
 
     k : int, optional
         Total number of classes. k >= len(counts).
@@ -57,14 +54,6 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
-    counts : 'precomputed', None or int, optional
-        By default ('precomputed') `ar` is an array of bin counts.
-        If None or int, defines the axis indexing different samples in the data
-        array `ar`. If None, compute counts on the flattened array.
-        If int: compute counts along the given axis. In this case,
-        the subarrays indexed by the axis will be flattened and treated
-        as the elements of a 1-D array with the dimension of the axis.
-
     Returns
     -------
     entropy : float
@@ -77,14 +66,11 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     """
 
-    if counts == 'precomputed':
-        freqs = ndd.nsb._check_counts(ar)
-        ks = [len(freqs)]
-    else:
-        freqs, ks = ndd.histogram(ar, axis=counts)
+    freqs = ndd.nsb._check_counts(counts)
+    ks = [len(freqs)]
 
-    n_bins = len(freqs)
-    if counts == 'precomputed':
+    n_bins = len(counts)
+    if k is None and counts == 'precomputed':
         k = numpy.float64(n_bins)
     else:
         k = _check_k(k, n_bins, ks)
@@ -121,6 +107,66 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         raise FloatingPointError("NaN value")
 
     return result
+
+
+def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
+                 axis=None):
+    """
+    Return a Bayesian estimate of the entropy of an unknown discrete
+    distribution from an input array of counts. The estimator uses a mixture of
+    Dirichlet priors (Nemenman-Shafee-Bialek estimator), with weights chosen
+    such that the induced prior over the entropy is approximately uniform.
+
+    Parameters
+    ----------
+
+    ar : array_like
+        Array of data samples (see the `axis` keyword arg).
+
+    k : int, optional
+        Total number of classes. k >= len(counts).
+        A float value is a valid input for whole numbers (e.g. k=1.e3).
+        Defaults to len(counts).
+
+    alpha : float, optional
+        If alpha is passed, use a single Dirichlet prior with concentration
+        parameter alpha (fixed alpha estimator). alpha > 0.0.
+
+    return_std : boolean, optional
+        If True, also return an approximated value for the standard deviation
+        over the entropy posterior.
+
+    plugin : boolean, optional
+        If True, return a 'plugin' estimate of the entropy. The discrete
+        distribution is estimated from the empirical frequencies over states
+        and inserted into the entropy definition (plugin estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
+
+    axis : None or int, optional
+        If None or int, defines the axis indexing different samples in the data
+        array `ar`. If None, compute counts on the flattened array.
+        If int: compute counts along the given axis. In this case,
+        the subarrays indexed by the axis will be flattened and treated
+        as the elements of a 1-D array with the dimension of the axis.
+
+    Returns
+    -------
+    entropy : float
+        Entropy estimate.
+
+    std : float, optional
+        Uncertainty in the entropy estimate
+        (approximates the standard deviation over the entropy posterior).
+        Only provided if `return_std` is True.
+
+    """
+
+    counts, ks = ndd.histogram(ar, axis=axis)
+    n_bins = len(counts)
+    k = _check_k(k, n_bins, ks)
+    return entropy(counts, k=k, alpha=alpha, return_std=return_std,
+                   plugin=plugin)
 
 
 def histogram(data, axis=None):
@@ -257,6 +303,7 @@ def _check_counts(a):
 
 
 def _check_k(k, n_bins, ks):
+    MAX_LOGK = 150 * numpy.log(2)  # 200 bits
     if k is None:
         k = numpy.sum(numpy.log(x) for x in ks)
         if k > MAX_LOGK:
