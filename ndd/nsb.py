@@ -79,35 +79,15 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     if counts == 'precomputed':
         freqs = ndd.nsb._check_counts(ar)
+        ks = [len(freqs)]
     else:
         freqs, ks = ndd.histogram(ar, axis=counts)
 
     n_bins = len(freqs)
-    if k is None:
-        if counts == 'precomputed':
-            k = numpy.float64(n_bins)
-        else:
-            k = numpy.sum(numpy.log(x) for x in ks)
-            if k > MAX_LOGK:
-                # too large a number; backoff to n_bins?
-                # TODO: log warning
-                raise ValueError('k (%r) larger than %r' %
-                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
-            else:
-                k = numpy.exp(k)
+    if counts == 'precomputed':
+        k = numpy.float64(n_bins)
     else:
-        try:
-            k = numpy.float64(k)
-        except ValueError:
-            raise
-        if numpy.log(k) > MAX_LOGK:
-            raise ValueError('k (%r) larger than %r' %
-                             (k, numpy.exp(MAX_LOGK)))
-        if k < n_bins:
-            raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                             % (k, n_bins))
-        if not k.is_integer():
-            raise ValueError("k (%s) should be a whole number.")
+        k = _check_k(k, n_bins, ks)
 
     if k == 1:  # if the total number of classes is one
         if return_std:
@@ -274,3 +254,30 @@ def _check_counts(a):
         raise ValueError("Frequency counts cant be negative")
     # flatten the input array; TODO: as numpy.unique
     return freqs.flatten()
+
+
+def _check_k(k, n_bins, ks):
+    if k is None:
+        k = numpy.sum(numpy.log(x) for x in ks)
+        if k > MAX_LOGK:
+            # too large a number; backoff to n_bins?
+            # TODO: log warning
+            raise ValueError('k (%r) larger than %r' %
+                             (numpy.exp(k), numpy.exp(MAX_LOGK)))
+        else:
+            k = numpy.exp(k)
+    else:
+        try:
+            k = numpy.float64(k)
+        except ValueError:
+            raise
+        if numpy.log(k) > MAX_LOGK:
+            raise ValueError('k (%r) larger than %r' %
+                             (k, numpy.exp(MAX_LOGK)))
+        if k < n_bins:
+            raise ValueError("k (%s) is smaller than the number of bins (%s)"
+                             % (k, n_bins))
+        if not k.is_integer():
+            raise ValueError("k (%s) should be a whole number.")
+
+    return k
