@@ -103,8 +103,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     return result
 
 
-def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
-                 axis=None):
+def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts. The estimator uses a mixture of
@@ -137,13 +136,6 @@ def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
-    axis : None or int, optional
-        If None or int, defines the axis indexing different samples in the data
-        array `ar`. If None, compute counts on the flattened array.
-        If int: compute counts along the given axis. In this case,
-        the subarrays indexed by the axis will be flattened and treated
-        as the elements of a 1-D array with the dimension of the axis.
-
     Returns
     -------
     entropy : float
@@ -156,13 +148,13 @@ def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     """
 
-    counts, ks = ndd.histogram(ar, axis=axis)
+    counts, ks = ndd.histogram(ar)
     k = _check_k(k=k, n_bins=len(counts), ks=ks)
     return entropy(counts, k=k, alpha=alpha, return_std=return_std,
                    plugin=plugin)
 
 
-def histogram(data, axis=None):
+def histogram(data):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
@@ -190,11 +182,8 @@ def histogram(data, axis=None):
         the remaining axes in `data` array.
 
     """
-    if axis is None:
-        _, counts = numpy.unique(data, return_counts=True)
-        return counts, [len(counts)]
     # reshape as a p-by-n array
-    data = ndd.nsb._2darray(data, axis=axis)
+    data = ndd.nsb._2darray(data)
     # number of unique elements for each of the p variables
     ks = [len(numpy.unique(v)) for v in data]
     # statistics for the p-dimensional variable
@@ -202,11 +191,10 @@ def histogram(data, axis=None):
     return counts, ks
 
 
-def _2darray(ar, axis=0, to_axis=1):
+def _2darray(ar):
     """
     For a 2D n-by-p data array, transpose it.
-    For a generic ndarray, move axis `axis` to axis `to_axis`,
-    and flatten the subarrays corresponding to other dimensions.
+    For a generic ndarray, flatten the subarrays indexed by axis 0
     """
 
     ar = numpy.asanyarray(ar)
@@ -215,18 +203,11 @@ def _2darray(ar, axis=0, to_axis=1):
         n = ar.shape[0]
         ar = ar.reshape(n, 1)
 
-    if axis != 0:
-        try:
-            ar = numpy.swapaxes(ar, axis, 0)
-        except ValueError:
-            raise numpy.AxisError(axis, ar.ndim)
-
     if ar.ndim > 2:
         n = ar.shape[0]
         ar = ar.reshape(n, -1)
 
-    if to_axis == 1:
-        ar = ar.T
+    ar = ar.T
 
     return numpy.ascontiguousarray(ar)
 
@@ -261,7 +242,7 @@ def _combinations(func, ar, ks=None, r=1):
     """
     from itertools import combinations
 
-    ar = ndd.nsb._2darray(ar, axis=0)
+    ar = ndd.nsb._2darray(ar)
     p, n = ar.shape
 
     try:
