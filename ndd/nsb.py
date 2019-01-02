@@ -78,14 +78,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
     """
 
     if counts == 'precomputed':
-        try:
-            freqs = numpy.array(ar, dtype=numpy.int32)
-        except ValueError:
-            raise
-        if numpy.any(freqs < 0):
-            raise ValueError("Frequency counts cant be negative")
-        # flatten the input array; TODO: as numpy.unique
-        freqs = freqs.flatten()
+        freqs = ndd.nsb._check_counts(ar)
     else:
         # diffrent samples as different columns
         samples_axis = counts
@@ -278,3 +271,14 @@ def _combinations(func, ar, ks=None, r=1):
     for k, d in zip(alphabet_sizes, data):
         estimates.append(func(d, k=k))
     return estimates
+
+
+def _check_counts(a):
+    try:
+        freqs = numpy.array(a, dtype=numpy.int32)
+    except ValueError:
+        raise
+    if numpy.any(freqs < 0):
+        raise ValueError("Frequency counts cant be negative")
+    # flatten the input array; TODO: as numpy.unique
+    return freqs.flatten()
