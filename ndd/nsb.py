@@ -80,11 +80,7 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
     if counts == 'precomputed':
         freqs = ndd.nsb._check_counts(ar)
     else:
-        # diffrent samples as different columns
-        samples_axis = counts
-        ar = ndd.nsb._2darray(ar, axis=samples_axis)
-        ks = [len(numpy.unique(v)) for v in ar]
-        freqs = ndd.histogram(ar, axis=1)
+        freqs, ks = ndd.histogram(ar, axis=counts)
 
     n_bins = len(freqs)
     if k is None:
@@ -155,17 +151,14 @@ def histogram(data, axis=None):
 
     data : array_like
         Input data array.
-        If n-dimensional, statistics is computed over
-        axis 0.
 
     axis : int, optional
-        The axis to operate on. If None, `counts` will be flattened.
+        The axis to operate on. If None, `data` will be flattened.
         If an integer, the subarrays indexed by the given axis will be
-        flattened and treated as the elements of a 1-D array with the dimension
-        of the given axis. Object arrays or structured arrays
+        flattened and treated as the elements of a 1-D array with
+        the dimension of the given axis. Object arrays or structured arrays
         that contain objects are not supported if the `axis` kwarg is used. The
-        default is None.
-        Check numpy.unique docstrings for more details.
+        default is None. Check numpy.unique docstrings for more details.
 
     Returns
     -------
@@ -173,12 +166,21 @@ def histogram(data, axis=None):
     counts : ndarray
         Bin counts.
 
+    ks : ndarray
+        Number of unique elements along axis for each variable indexed by
+        the remaining axes in `data` array.
+
     """
-
-    # switch to 2D array
-    _, counts = numpy.unique(data, return_counts=True, axis=axis)
-
-    return counts
+    if axis is None:
+        _, counts = numpy.unique(data, return_counts=True)
+        return counts, [len(counts)]
+    # reshape as a p-by-n array
+    data = ndd.nsb._2darray(data, axis=axis)
+    # number of unique elements for each of the p variables
+    ks = [len(numpy.unique(v)) for v in data]
+    # statistics for the p-dimensional variable
+    _, counts = numpy.unique(data, return_counts=True, axis=1)
+    return counts, ks
 
 
 def _2darray(ar, axis=0, to_axis=1):
