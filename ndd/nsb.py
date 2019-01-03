@@ -29,10 +29,10 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     ----------
 
     counts : array_like
-        The number of occurrences of a set of states/classes.
+        The number of occurrences of a set of bins.
 
     k : int, optional
-        Total number of classes. k >= len(counts).
+        Number of bins. k >= len(counts).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
         Defaults to len(counts).
 
@@ -46,7 +46,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
-        distribution is estimated from the empirical frequencies over states
+        distribution is estimated from the empirical frequencies over bins
         and inserted into the entropy definition (plugin estimator).
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
@@ -109,15 +109,15 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
     ----------
 
     data : array-like or generator
-        Generators must return hashable objects (tuples etc) as 1D samples.
-        If not a generator, the input will be treated as an array of n samples
+        If a generator, data must return hashable objects (e.g. tuples) as
+        1D samples. Otherwise, data will be treated as an array of n samples
         from p variables.
 
     k : int or list, optional
-        Total number of classes. k >= len(counts).
-        If a list, len(k) == p where (n, p) is the shape of the data array.
+        Number of bins. If a list, set k = numpy.prod(k).
         Floats are valid input for whole numbers (e.g. k=1.e3).
-        Defaults to len(counts).
+        Defaults to the number of unique objects in data (if 1D),
+        or to the product of the number of unique elements for each variable.
 
     alpha : float, optional
         If alpha is passed, use a single Dirichlet prior with concentration
@@ -129,7 +129,7 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
 
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
-        distribution is estimated from the empirical frequencies over states
+        distribution is estimated from the empirical frequencies over bins
         and inserted into the entropy definition (plugin estimator).
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
