@@ -276,13 +276,26 @@ def _check_counts(a):
     return a.flatten()
 
 
-def _check_k(k, n_bins, ks=None):
+def _check_k(k, n_bins):
+    """
+    if k is None, set k = number of bins
+    if k is a sequence, set k = prod(k) and check
+    if k is an integer, just check
+    """
     MAX_LOGK = 150 * numpy.log(2)  # 200 bits
     if k is None:
-        if ks is None:
-            k = numpy.float64(n_bins)
-        else:
-            k = numpy.sum(numpy.log(x) for x in ks)
+        # set k to the number of observed bins
+        k = numpy.float64(n_bins)
+    else:
+        try:
+            k = numpy.float64(k)
+        except ValueError:
+            raise
+        if k.ndim:
+            if k.ndim > 1:
+                raise ValueError('k must be a scalar or 1D array')
+            # if k is not a sequence, set k = prod(k)
+            k = numpy.sum(numpy.log(x) for x in k)
             if k > MAX_LOGK:
                 # too large a number; backoff to n_bins?
                 # TODO: log warning
@@ -290,18 +303,15 @@ def _check_k(k, n_bins, ks=None):
                                  (numpy.exp(k), numpy.exp(MAX_LOGK)))
             else:
                 k = numpy.exp(k)
-    else:
-        try:
-            k = numpy.float64(k)
-        except ValueError:
-            raise
-        if numpy.log(k) > MAX_LOGK:
-            raise ValueError('k (%r) larger than %r' %
-                             (k, numpy.exp(MAX_LOGK)))
+        else:
+            # if a scalar check size
+            if numpy.log(k) > MAX_LOGK:
+                raise ValueError('k (%r) larger than %r' %
+                                 (k, numpy.exp(MAX_LOGK)))
+        # consistency checks
         if k < n_bins:
             raise ValueError("k (%s) is smaller than the number of bins (%s)"
                              % (k, n_bins))
         if not k.is_integer():
             raise ValueError("k (%s) should be a whole number.")
-
     return k
