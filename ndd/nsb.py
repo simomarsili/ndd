@@ -63,7 +63,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     """
 
-    counts = ndd.nsb._check_counts(counts)
+    counts = _check_counts(counts)
     k = _check_k(k=k, n_bins=len(counts))
 
     if k == 1:  # if the total number of classes is one
@@ -100,7 +100,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     return result
 
 
-def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False):
+def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from data.
@@ -108,12 +108,15 @@ def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False):
     Parameters
     ----------
 
-    ar : array_like
-        Array of data samples (see the `axis` keyword arg).
+    data : array-like or generator
+        Generators must return hashable objects (tuples etc) as 1D samples.
+        If not a generator, the input will be treated as an array of n samples
+        from p variables.
 
-    k : int, optional
+    k : int or list, optional
         Total number of classes. k >= len(counts).
-        A float value is a valid input for whole numbers (e.g. k=1.e3).
+        If a list, len(k) == p where (n, p) is the shape of the data array.
+        Floats are valid input for whole numbers (e.g. k=1.e3).
         Defaults to len(counts).
 
     alpha : float, optional
@@ -143,7 +146,7 @@ def data_entropy(ar, k=None, alpha=None, return_std=False, plugin=False):
 
     """
 
-    counts, ks = ndd.histogram(ar)
+    counts, ks = ndd.histogram(data)
     k = _check_k(k=k, n_bins=len(counts), ks=ks)
     return entropy(counts, k=k, alpha=alpha, return_std=return_std,
                    plugin=plugin)
@@ -169,12 +172,22 @@ def histogram(data):
         the remaining axes in `data` array.
 
     """
-    # reshape as a p-by-n array
-    data = ndd.nsb._2darray(data)
-    # number of unique elements for each of the p variables
-    ks = [len(numpy.unique(v)) for v in data]
-    # statistics for the p-dimensional variable
-    _, counts = numpy.unique(data, return_counts=True, axis=1)
+    import types
+    if isinstance(data, types.GeneratorType):
+        from collections import Counter
+        try:
+            counter = Counter(data)
+        except TypeError:
+            raise
+        counts = list(counter.values())
+        ks = [len(counts)]
+    else:
+        # reshape as a p-by-n array
+        data = ndd.nsb._2darray(data)
+        # number of unique elements for each of the p variables
+        ks = [len(numpy.unique(v)) for v in data]
+        # statistics for the p-dimensional variable
+        _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts, ks
 
 
@@ -229,7 +242,7 @@ def _combinations(func, ar, ks=None, r=1):
     """
     from itertools import combinations
 
-    ar = ndd.nsb._2darray(ar)
+    ar = _2darray(ar)
     p, n = ar.shape
 
     try:
