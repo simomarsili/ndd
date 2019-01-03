@@ -147,7 +147,7 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
     """
 
     counts, ks = ndd.histogram(data)
-    k = _check_k(k=k, n_bins=len(counts), ks=ks)
+    k = _check_k(k=k, n_bins=len(counts))
     return entropy(counts, k=k, alpha=alpha, return_std=return_std,
                    plugin=plugin)
 
