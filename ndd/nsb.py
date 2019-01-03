@@ -160,8 +160,10 @@ def histogram(data):
     Parameters
     ----------
 
-    data : array_like
-        Input data array.
+    data : array-like or generator
+        If a generator, data must return hashable objects (e.g. tuples) as
+        1D samples. Otherwise, data will be treated as an array of n samples
+        from p variables.
 
     Returns
     -------
@@ -170,7 +172,7 @@ def histogram(data):
         Bin counts.
 
     ks : ndarray
-        Number of unique elements along axis for each variable indexed by
+        Number of unique elements along axis 0 for each variable indexed by
         the remaining axes in `data` array.
 
     """
@@ -180,7 +182,8 @@ def histogram(data):
         try:
             counter = Counter(data)
         except TypeError:
-            raise
+            # if unhashable
+            counter = Counter((str(x) for x in data))
         counts = list(counter.values())
         ks = [len(counts)]
     else:
