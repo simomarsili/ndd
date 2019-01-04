@@ -115,7 +115,7 @@ class Entropy(object):
 
         """
         self.fit(counts, k)
-        return self.entropy
+        return self.estimate
 
     def fit(self, counts, k=None):
         """
@@ -131,13 +131,13 @@ class Entropy(object):
         counts = self.check_counts(counts)
         k = self.check_k(k=k, n_bins=len(counts))
         if k == 1:  # single bin
-            self.entropy = self.std = 0.0
+            self.estimate = self.std = 0.0
         else:
             result = self.estimator(counts, k)
             if isinstance(result, tuple):
-                self.entropy, self.std = result
+                self.estimate, self.std = result
             else:
-                self.entropy = result
+                self.estimate = result
 
 
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
@@ -187,9 +187,9 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     estimator.fit(counts, k)
 
     if return_std:
-        result = estimator.entropy, estimator.std
+        result = estimator.estimate, estimator.std
     else:
-        result = estimator.entropy
+        result = estimator.estimate
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
@@ -250,9 +250,9 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
     estimator.fit(counts, k)
 
     if return_std:
-        result = estimator.entropy, estimator.std
+        result = estimator.estimate, estimator.std
     else:
-        result = estimator.entropy
+        result = estimator.estimate
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
