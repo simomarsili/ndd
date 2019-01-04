@@ -19,8 +19,6 @@ import numpy
 import ndd
 import ndd._nsb
 
-MAX_LOGK = 150 * numpy.log(2)  # 200 bits
-
 
 class Entropy(object):
     def __init__(self, alpha=None, plugin=False):
@@ -83,6 +81,8 @@ class Entropy(object):
         if k is a sequence, set k = prod(k) and check
         if k is an integer, just check
         """
+        MAX_LOGK = 150 * numpy.log(2)  # 200 bits
+
         if k is None:
             # set k to the number of observed bins
             k = numpy.float64(n_bins)
@@ -95,14 +95,14 @@ class Entropy(object):
                 if k.ndim > 1:
                     raise ValueError('k must be a scalar or 1D array')
                 # if k is not a sequence, set k = prod(k)
-                k = numpy.sum(numpy.log(x) for x in k)
-                if k > MAX_LOGK:
+                logk = numpy.sum(numpy.log(x) for x in k)
+                if logk > MAX_LOGK:
                     # too large a number; backoff to n_bins?
                     # TODO: log warning
                     raise ValueError('k (%r) larger than %r' %
-                                     (numpy.exp(k), numpy.exp(MAX_LOGK)))
+                                     (numpy.exp(logk), numpy.exp(MAX_LOGK)))
                 else:
-                    k = numpy.exp(k)
+                    k = numpy.prod(k)
             else:
                 # if a scalar check size
                 if numpy.log(k) > MAX_LOGK:
@@ -110,14 +110,45 @@ class Entropy(object):
                                      (k, numpy.exp(MAX_LOGK)))
             # consistency checks
             if k < n_bins:
-                raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                                 % (k, n_bins))
+                raise ValueError("k (%s) is smaller than the number of bins"
+                                 "(%s)" % (k, n_bins))
             if not k.is_integer():
-                raise ValueError("k (%s) should be a whole number.")
+                raise ValueError("k (%s) should be a whole number." % k)
         return k
 
-    def fit(self, counts, k):
+    def __call__(self, counts, k=None, return_std=False):
+        """
+        counts : array_like
+            The number of occurrences of a set of bins.
+
+        k : int or array_like, optional
+            Number of bins. k >= len(counts).
+            If array, set k = numpy.prod(k).
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to len(counts).
+
+        """
+        self.fit(counts, k)
+
+        if return_std:
+            return self.entropy, self.std
+        else:
+            return self.entropy
+
+    def fit(self, counts, k=None):
+        """
+        counts : array_like
+            The number of occurrences of a set of bins.
+
+        k : int or array_like, optional
+            Number of bins. k >= len(counts).
+            If array, set k = numpy.prod(k).
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to len(counts).
+
+        """
         counts = self.check_counts(counts)
+        k = self.check_k(k=k, n_bins=len(counts))
         if k == 1:  # single bin
             self.entropy = self.std = 0.0
         else:
@@ -126,8 +157,6 @@ class Entropy(object):
                 self.entropy, self.std = result
             else:
                 self.entropy = result
-
-    
 
 
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
@@ -172,8 +201,6 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
         Only provided if `return_std` is True.
 
     """
-
-    k = Entropy.check_k(k=k, n_bins=len(counts))
 
     estimator = Entropy(alpha, plugin)
     estimator.fit(counts, k)
@@ -238,9 +265,19 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
     counts, ks = ndd.histogram(data)
     if k is None:
         k = ks
-    k = Entropy.check_k(k=k, n_bins=len(counts))
-    return entropy(counts, k=k, alpha=alpha, return_std=return_std,
-                   plugin=plugin)
+
+    estimator = Entropy(alpha, plugin)
+    estimator.fit(counts, k)
+
+    if return_std:
+        result = estimator.entropy, estimator.std
+    else:
+        result = estimator.entropy
+
+    if numpy.any(numpy.isnan(numpy.squeeze(result))):
+        raise FloatingPointError("NaN value")
+
+    return result
 
 
 def histogram(data):
