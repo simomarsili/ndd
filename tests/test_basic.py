@@ -7,12 +7,14 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     pow, round, super,
     filter, map, zip)
 import os
-import ndd
+import json
 import pytest
 import numpy
 from numpy import random as random
+import ndd
 
 EPS = 0.0001
+
 
 def tests_dir():
     """Return None is no tests dir."""
@@ -25,15 +27,16 @@ def tests_dir():
         if os.path.exists(tests_dir):
             return tests_dir
 
+
 def random_counts(n=None, k=None, alpha=None):
     random.seed(123)
     pp = random.dirichlet([alpha]*k)
     return random.multinomial(n, pp)
 
-tdir = tests_dir()
-import json
-with open(os.path.join(tdir, 'data.json'), 'r') as _jf:
+
+with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
     CASES = json.load(_jf)
+
 
 @pytest.mark.parametrize('setting, kwargs, result', CASES)
 def test_ndd(setting, kwargs, result):
