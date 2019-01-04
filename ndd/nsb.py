@@ -24,6 +24,7 @@ MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
 class Entropy(object):
     def __init__(self, alpha=None, plugin=False):
+        self.estimate = None
         self.std = None
 
         # check alpha value
