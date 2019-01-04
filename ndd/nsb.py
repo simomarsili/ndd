@@ -64,7 +64,18 @@ class Entropy(object):
     def nsb(counts, k):
         return ndd._nsb.nsb(counts, k)
 
+    @staticmethod
+    def check_counts(a):
+        try:
+            a = numpy.asarray(a, dtype=numpy.int32)
+        except ValueError:
+            raise
+        if numpy.any(a < 0):
+            raise ValueError("Frequency counts can't be negative")
+        return a.flatten()
+
     def fit(self, counts, k):
+        counts = self.check_counts(counts)
         if k == 1:  # single bin
             self.entropy = self.std = 0.0
         else:
@@ -118,7 +129,6 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     """
 
-    counts = _check_counts(counts)
     k = _check_k(k=k, n_bins=len(counts))
 
     estimator = Entropy(alpha, plugin)
@@ -299,17 +309,6 @@ def _combinations(func, ar, ks=None, r=1):
     for k, d in zip(alphabet_sizes, data):
         estimates.append(func(d, k=k))
     return estimates
-
-
-def _check_counts(a):
-    try:
-        a = numpy.array(a, dtype=numpy.int32)
-    except ValueError:
-        raise
-    if numpy.any(a < 0):
-        raise ValueError("Frequency counts can't be negative")
-    # flatten the input array; TODO: as numpy.unique
-    return a.flatten()
 
 
 def _check_k(k, n_bins):
