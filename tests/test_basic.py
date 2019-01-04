@@ -39,7 +39,7 @@ with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
 
 
 @pytest.mark.parametrize('setting, kwargs, result', CASES)
-def test_ndd(setting, kwargs, result):
+def test_entropy(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
     test_result = ndd.entropy(counts, k=setting['k'], **kwargs)
