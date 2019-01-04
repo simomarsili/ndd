@@ -14,6 +14,7 @@ from numpy import random as random
 import ndd
 
 EPS = 0.0001
+SEED = 123
 
 
 def tests_dir():
@@ -34,13 +35,41 @@ def random_counts(n=None, k=None, alpha=None):
     return random.multinomial(n, pp)
 
 
+def random_ndarray(n, p, seed):
+    import string
+    random.seed(seed)
+    alphabet = list(string.ascii_uppercase)
+    return random.choice(alphabet, size=(n, p))
+
+
+def random_tuple_generator(n, p, seed):
+    import string
+    random.seed(seed)
+    alphabet = list(string.ascii_uppercase)
+    for j in range(n):
+        yield tuple(random.choice(alphabet, size=p))
+
+
 with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
     CASES = json.load(_jf)
 
 
 @pytest.mark.parametrize('setting, kwargs, result', CASES)
-def test_ndd(setting, kwargs, result):
+def test_entropy(setting, kwargs, result):
     """Basic tests."""
     counts = random_counts(**setting)
     test_result = ndd.entropy(counts, k=setting['k'], **kwargs)
     assert numpy.abs(test_result - numpy.float64(result)) < EPS
+
+
+def test_histogram_ndarray():
+    N, P = 100, 2
+    data = random_ndarray(N, P, SEED)
+    assert ndd.entropy(*ndd.histogram(data)) == 6.412863794582687
+
+
+def test_histogram_generator():
+    N, P = 100, 2
+    data = random_tuple_generator(N, P, SEED)
+    h, k = ndd.histogram(data)
+    assert ndd.entropy(h, k) == 4.554190036710228
