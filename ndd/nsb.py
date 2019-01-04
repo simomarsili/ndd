@@ -19,26 +19,20 @@ import numpy
 import ndd
 import ndd._nsb
 
-MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
-
-def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
-            counts='precomputed'):
+def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from an input array of counts. The estimator uses a mixture of
-    Dirichlet priors (Nemenman-Shafee-Bialek estimator), with weights chosen
-    such that the induced prior over the entropy is approximately uniform.
+    distribution from an input array of counts.
 
     Parameters
     ----------
 
-    ar : array_like
-        The number of occurrences of a set of states/classes
-        (or an array of data samples, see the `axis` keyword arg).
+    counts : array_like
+        The number of occurrences of a set of bins.
 
     k : int, optional
-        Total number of classes. k >= len(counts).
+        Number of bins. k >= len(counts).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
         Defaults to len(counts).
 
@@ -52,18 +46,10 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
-        distribution is estimated from the empirical frequencies over states
+        distribution is estimated from the empirical frequencies over bins
         and inserted into the entropy definition (plugin estimator).
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
-
-    counts : 'precomputed', None or int, optional
-        By default ('precomputed') `ar` is an array of bin counts.
-        If None or int, defines the axis indexing different samples in the data
-        array `ar`. If None, compute counts on the flattened array.
-        If int: compute counts along the given axis. In this case,
-        the subarrays indexed by the axis will be flattened and treated
-        as the elements of a 1-D array with the dimension of the axis.
 
     Returns
     -------
@@ -77,48 +63,8 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     """
 
-    if counts == 'precomputed':
-        try:
-            freqs = numpy.array(ar, dtype=numpy.int32)
-        except ValueError:
-            raise
-        if numpy.any(freqs < 0):
-            raise ValueError("Frequency counts cant be negative")
-        # flatten the input array; TODO: as numpy.unique
-        freqs = freqs.flatten()
-    else:
-        # diffrent samples as different columns
-        samples_axis = counts
-        ar = ndd.nsb._2darray(ar, axis=samples_axis)
-        ks = [len(numpy.unique(v)) for v in ar]
-        freqs = ndd.histogram(ar, axis=1)
-
-    n_bins = len(freqs)
-    if k is None:
-        if counts == 'precomputed':
-            k = numpy.float64(n_bins)
-        else:
-            k = numpy.sum(numpy.log(x) for x in ks)
-            if k > MAX_LOGK:
-                # too large a number; backoff to n_bins?
-                # TODO: log warning
-                raise ValueError('k (%r) larger than %r' %
-                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
-            else:
-                k = numpy.exp(k)
-    else:
-        try:
-            k = numpy.float64(k)
-        except ValueError:
-            raise
-        if numpy.log(k) > MAX_LOGK:
-            raise ValueError('k (%r) larger than %r' %
-                             (k, numpy.exp(MAX_LOGK)))
-        if k < n_bins:
-            raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                             % (k, n_bins))
-        if not k.is_integer():
-            raise ValueError("k (%s) should be a whole number.")
+    counts = _check_counts(counts)
+    k = _check_k(k=k, n_bins=len(counts))
 
     if k == 1:  # if the total number of classes is one
         if return_std:
@@ -136,17 +82,17 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
 
     if plugin:
         if alpha is None:
-            result = ndd._nsb.plugin(freqs, k)
+            result = ndd._nsb.plugin(counts, k)
         else:
-            result = ndd._nsb.pseudo(freqs, k, alpha)
+            result = ndd._nsb.pseudo(counts, k, alpha)
     else:
         if alpha is None:
-            result = ndd._nsb.nsb(freqs, k)
+            result = ndd._nsb.nsb(counts, k)
             if not return_std:
                 result = result[0]
         else:
             # TODO: compute variance over the posterior at fixed alpha
-            result = ndd._nsb.dirichlet(freqs, k, alpha)
+            result = ndd._nsb.dirichlet(counts, k, alpha)
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
@@ -154,29 +100,70 @@ def entropy(ar, k=None, alpha=None, return_std=False, plugin=False,
     return result
 
 
-def histogram(data, return_unique=False, axis=None):
+def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
+    """
+    Return a Bayesian estimate of the entropy of an unknown discrete
+    distribution from data.
+
+    Parameters
+    ----------
+
+    data : array-like or generator
+        If a generator, data must return hashable objects (e.g. tuples) as
+        1D samples. Otherwise, data will be treated as an array of n samples
+        from p variables.
+
+    k : int or list, optional
+        Number of bins. If a list, set k = numpy.prod(k).
+        Floats are valid input for whole numbers (e.g. k=1.e3).
+        Defaults to the number of unique objects in data (if 1D),
+        or to the product of the number of unique elements for each variable.
+
+    alpha : float, optional
+        If alpha is passed, use a single Dirichlet prior with concentration
+        parameter alpha (fixed alpha estimator). alpha > 0.0.
+
+    return_std : boolean, optional
+        If True, also return an approximated value for the standard deviation
+        over the entropy posterior.
+
+    plugin : boolean, optional
+        If True, return a 'plugin' estimate of the entropy. The discrete
+        distribution is estimated from the empirical frequencies over bins
+        and inserted into the entropy definition (plugin estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
+
+    Returns
+    -------
+    entropy : float
+        Entropy estimate.
+
+    std : float, optional
+        Uncertainty in the entropy estimate
+        (approximates the standard deviation over the entropy posterior).
+        Only provided if `return_std` is True.
+
+    """
+
+    counts, ks = ndd.histogram(data)
+    if k is None:
+        k = ks
+    k = _check_k(k=k, n_bins=len(counts))
+    return entropy(counts, k=k, alpha=alpha, return_std=return_std,
+                   plugin=plugin)
+
+
+def histogram(data):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
     ----------
 
-    data : array_like
-        Input data array.
-        If n-dimensional, statistics is computed over
-        axis 0.
-
-
-    return_unique : bool, optional
-        If True, also return the unique elements corresponding to each bin.
-
-    axis : int, optional
-        The axis to operate on. If None, `counts` will be flattened.
-        If an integer, the subarrays indexed by the given axis will be
-        flattened and treated as the elements of a 1-D array with the dimension
-        of the given axis. Object arrays or structured arrays
-        that contain objects are not supported if the `axis` kwarg is used. The
-        default is None.
-        Check numpy.unique docstrings for more details.
+    data : array-like or generator
+        If a generator, data must return hashable objects (e.g. tuples) as
+        1D samples. Otherwise, data will be treated as an array of n samples
+        from p variables.
 
     Returns
     -------
@@ -184,25 +171,35 @@ def histogram(data, return_unique=False, axis=None):
     counts : ndarray
         Bin counts.
 
-    unique : ndarray, optional
-        Unique elements corresponding to each bin in counts.
-        Only if return_elements == True
+    ks : ndarray
+        Number of unique elements along axis 0 for each variable indexed by
+        the remaining axes in `data` array.
 
     """
-
-    unique, counts = numpy.unique(data, return_counts=True, axis=axis)
-
-    if return_unique:
-        return (unique, counts)
+    import types
+    if isinstance(data, types.GeneratorType):
+        from collections import Counter
+        try:
+            counter = Counter(data)
+        except TypeError:
+            # if unhashable
+            counter = Counter((str(x) for x in data))
+        counts = list(counter.values())
+        ks = [len(counts)]
     else:
-        return counts
+        # reshape as a p-by-n array
+        data = ndd.nsb._2darray(data)
+        # number of unique elements for each of the p variables
+        ks = [len(numpy.unique(v)) for v in data]
+        # statistics for the p-dimensional variable
+        _, counts = numpy.unique(data, return_counts=True, axis=1)
+    return counts, ks
 
 
-def _2darray(ar, axis=0, to_axis=1):
+def _2darray(ar):
     """
     For a 2D n-by-p data array, transpose it.
-    For a generic ndarray, move axis `axis` to axis `to_axis`,
-    and flatten the subarrays corresponding to other dimensions.
+    For a generic ndarray, flatten the subarrays indexed by axis 0
     """
 
     ar = numpy.asanyarray(ar)
@@ -211,18 +208,11 @@ def _2darray(ar, axis=0, to_axis=1):
         n = ar.shape[0]
         ar = ar.reshape(n, 1)
 
-    if axis != 0:
-        try:
-            ar = numpy.swapaxes(ar, axis, 0)
-        except ValueError:
-            raise numpy.AxisError(axis, ar.ndim)
-
     if ar.ndim > 2:
         n = ar.shape[0]
         ar = ar.reshape(n, -1)
 
-    if to_axis == 1:
-        ar = ar.T
+    ar = ar.T
 
     return numpy.ascontiguousarray(ar)
 
@@ -257,7 +247,7 @@ def _combinations(func, ar, ks=None, r=1):
     """
     from itertools import combinations
 
-    ar = ndd.nsb._2darray(ar, axis=0)
+    ar = _2darray(ar)
     p, n = ar.shape
 
     try:
@@ -296,3 +286,55 @@ def multivariate_information(a, ks=None):
             ndd.entropy, a, ks=ks, r=r))
 
     return - multi_info
+
+
+def _check_counts(a):
+    try:
+        a = numpy.array(a, dtype=numpy.int32)
+    except ValueError:
+        raise
+    if numpy.any(a < 0):
+        raise ValueError("Frequency counts can't be negative")
+    # flatten the input array; TODO: as numpy.unique
+    return a.flatten()
+
+
+def _check_k(k, n_bins):
+    """
+    if k is None, set k = number of bins
+    if k is a sequence, set k = prod(k) and check
+    if k is an integer, just check
+    """
+    MAX_LOGK = 150 * numpy.log(2)  # 200 bits
+    if k is None:
+        # set k to the number of observed bins
+        k = numpy.float64(n_bins)
+    else:
+        try:
+            k = numpy.float64(k)
+        except ValueError:
+            raise
+        if k.ndim:
+            if k.ndim > 1:
+                raise ValueError('k must be a scalar or 1D array')
+            # if k is not a sequence, set k = prod(k)
+            k = numpy.sum(numpy.log(x) for x in k)
+            if k > MAX_LOGK:
+                # too large a number; backoff to n_bins?
+                # TODO: log warning
+                raise ValueError('k (%r) larger than %r' %
+                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
+            else:
+                k = numpy.exp(k)
+        else:
+            # if a scalar check size
+            if numpy.log(k) > MAX_LOGK:
+                raise ValueError('k (%r) larger than %r' %
+                                 (k, numpy.exp(MAX_LOGK)))
+        # consistency checks
+        if k < n_bins:
+            raise ValueError("k (%s) is smaller than the number of bins (%s)"
+                             % (k, n_bins))
+        if not k.is_integer():
+            raise ValueError("k (%s) should be a whole number.")
+    return k
