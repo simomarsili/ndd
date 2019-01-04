@@ -2,6 +2,9 @@
 *#
 *.pyc
 .cache
+.pytest_cache
+.tox
+venv
 TODO
 tests/*
 !tests/data.json
@@ -12,3 +15,5 @@ exts/*
 !exts/*.pyf
 build/*
 dist/*
+ndd/*.so
+ndd/*.c
