@@ -20,6 +20,145 @@ import ndd
 import ndd._nsb
 
 
+class Entropy(object):
+    def __init__(self, alpha=None, plugin=False):
+        self.std = None
+
+        # check alpha value
+        if alpha:
+            try:
+                alpha = numpy.float64(alpha)
+            except ValueError:
+                raise
+            if alpha <= 0:
+                raise ValueError("alpha <= 0")
+        self.alpha = alpha
+
+        # set estimator
+        if plugin:
+            if alpha is None:
+                self.estimator = self.plugin
+            else:
+                self.estimator = lambda counts, k: self.pseudocounts(
+                    counts, k, self.alpha)
+        else:
+            if alpha is None:
+                self.estimator = self.nsb
+            else:
+                self.estimator = lambda counts, k: self.ww(
+                    counts, k, self.alpha)
+
+    @staticmethod
+    def plugin(counts, k):
+        return ndd._nsb.plugin(counts, k)
+
+    @staticmethod
+    def pseudocounts(counts, k, alpha):
+        return ndd._nsb.pseudo(counts, k, alpha)
+
+    @staticmethod
+    def ww(counts, k, alpha):
+        return ndd._nsb.dirichlet(counts, k, alpha)
+
+    @staticmethod
+    def nsb(counts, k):
+        return ndd._nsb.nsb(counts, k)
+
+    @staticmethod
+    def check_counts(a):
+        try:
+            a = numpy.asarray(a, dtype=numpy.int32)
+        except ValueError:
+            raise
+        if numpy.any(a < 0):
+            raise ValueError("Frequency counts can't be negative")
+        return a.flatten()
+
+    @staticmethod
+    def check_k(k, n_bins):
+        """
+        if k is None, set k = number of bins
+        if k is a sequence, set k = prod(k) and check
+        if k is an integer, just check
+        """
+        MAX_LOGK = 150 * numpy.log(2)  # 200 bits
+
+        if k is None:
+            # set k to the number of observed bins
+            k = numpy.float64(n_bins)
+        else:
+            try:
+                k = numpy.float64(k)
+            except ValueError:
+                raise
+            if k.ndim:
+                if k.ndim > 1:
+                    raise ValueError('k must be a scalar or 1D array')
+                # if k is not a sequence, set k = prod(k)
+                logk = numpy.sum(numpy.log(x) for x in k)
+                if logk > MAX_LOGK:
+                    # too large a number; backoff to n_bins?
+                    # TODO: log warning
+                    raise ValueError('k (%r) larger than %r' %
+                                     (numpy.exp(logk), numpy.exp(MAX_LOGK)))
+                else:
+                    k = numpy.prod(k)
+            else:
+                # if a scalar check size
+                if numpy.log(k) > MAX_LOGK:
+                    raise ValueError('k (%r) larger than %r' %
+                                     (k, numpy.exp(MAX_LOGK)))
+            # consistency checks
+            if k < n_bins:
+                raise ValueError("k (%s) is smaller than the number of bins"
+                                 "(%s)" % (k, n_bins))
+            if not k.is_integer():
+                raise ValueError("k (%s) should be a whole number." % k)
+        return k
+
+    def __call__(self, counts, k=None, return_std=False):
+        """
+        counts : array_like
+            The number of occurrences of a set of bins.
+
+        k : int or array_like, optional
+            Number of bins. k >= len(counts).
+            If array, set k = numpy.prod(k).
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to len(counts).
+
+        """
+        self.fit(counts, k)
+
+        if return_std:
+            return self.entropy, self.std
+        else:
+            return self.entropy
+
+    def fit(self, counts, k=None):
+        """
+        counts : array_like
+            The number of occurrences of a set of bins.
+
+        k : int or array_like, optional
+            Number of bins. k >= len(counts).
+            If array, set k = numpy.prod(k).
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to len(counts).
+
+        """
+        counts = self.check_counts(counts)
+        k = self.check_k(k=k, n_bins=len(counts))
+        if k == 1:  # single bin
+            self.entropy = self.std = 0.0
+        else:
+            result = self.estimator(counts, k)
+            if isinstance(result, tuple):
+                self.entropy, self.std = result
+            else:
+                self.entropy = result
+
+
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
@@ -63,36 +202,13 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     """
 
-    counts = _check_counts(counts)
-    k = _check_k(k=k, n_bins=len(counts))
+    estimator = Entropy(alpha, plugin)
+    estimator.fit(counts, k)
 
-    if k == 1:  # if the total number of classes is one
-        if return_std:
-            return (0.0, 0.0)
-        else:
-            return 0.0
-
-    if alpha:
-        try:
-            alpha = numpy.float64(alpha)
-        except ValueError:
-            raise
-        if alpha <= 0:
-            raise ValueError("alpha <= 0")
-
-    if plugin:
-        if alpha is None:
-            result = ndd._nsb.plugin(counts, k)
-        else:
-            result = ndd._nsb.pseudo(counts, k, alpha)
+    if return_std:
+        result = estimator.entropy, estimator.std
     else:
-        if alpha is None:
-            result = ndd._nsb.nsb(counts, k)
-            if not return_std:
-                result = result[0]
-        else:
-            # TODO: compute variance over the posterior at fixed alpha
-            result = ndd._nsb.dirichlet(counts, k, alpha)
+        result = estimator.entropy
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
@@ -149,9 +265,19 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
     counts, ks = ndd.histogram(data)
     if k is None:
         k = ks
-    k = _check_k(k=k, n_bins=len(counts))
-    return entropy(counts, k=k, alpha=alpha, return_std=return_std,
-                   plugin=plugin)
+
+    estimator = Entropy(alpha, plugin)
+    estimator.fit(counts, k)
+
+    if return_std:
+        result = estimator.entropy, estimator.std
+    else:
+        result = estimator.entropy
+
+    if numpy.any(numpy.isnan(numpy.squeeze(result))):
+        raise FloatingPointError("NaN value")
+
+    return result
 
 
 def histogram(data):
@@ -264,55 +390,3 @@ def _combinations(func, ar, ks=None, r=1):
     for k, d in zip(alphabet_sizes, data):
         estimates.append(func(d, k=k))
     return estimates
-
-
-def _check_counts(a):
-    try:
-        a = numpy.array(a, dtype=numpy.int32)
-    except ValueError:
-        raise
-    if numpy.any(a < 0):
-        raise ValueError("Frequency counts can't be negative")
-    # flatten the input array; TODO: as numpy.unique
-    return a.flatten()
-
-
-def _check_k(k, n_bins):
-    """
-    if k is None, set k = number of bins
-    if k is a sequence, set k = prod(k) and check
-    if k is an integer, just check
-    """
-    MAX_LOGK = 150 * numpy.log(2)  # 200 bits
-    if k is None:
-        # set k to the number of observed bins
-        k = numpy.float64(n_bins)
-    else:
-        try:
-            k = numpy.float64(k)
-        except ValueError:
-            raise
-        if k.ndim:
-            if k.ndim > 1:
-                raise ValueError('k must be a scalar or 1D array')
-            # if k is not a sequence, set k = prod(k)
-            k = numpy.sum(numpy.log(x) for x in k)
-            if k > MAX_LOGK:
-                # too large a number; backoff to n_bins?
-                # TODO: log warning
-                raise ValueError('k (%r) larger than %r' %
-                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
-            else:
-                k = numpy.exp(k)
-        else:
-            # if a scalar check size
-            if numpy.log(k) > MAX_LOGK:
-                raise ValueError('k (%r) larger than %r' %
-                                 (k, numpy.exp(MAX_LOGK)))
-        # consistency checks
-        if k < n_bins:
-            raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                             % (k, n_bins))
-        if not k.is_integer():
-            raise ValueError("k (%s) should be a whole number.")
-    return k
