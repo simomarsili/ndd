@@ -22,10 +22,28 @@ import ndd._nsb
 MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
 
-class Entropy(object):
-    def __init__(self, alpha=None, plugin=False):
+class Estimator(object):
+    def __init__(self):
         self.estimate = None
         self.std = None
+
+    def _check(self):
+        # check input data
+        raise NotImplementedError
+
+    def fit(self):
+        # set self.estimate, self.std
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwargs):
+        """Return estimate from input data. Delegate to fit."""
+        self.fit(*args, **kwargs)
+        return self.estimate
+
+
+class Entropy(Estimator):
+    def __init__(self, alpha=None, plugin=False):
+        super().__init__()
 
         # check alpha value
         if alpha:
@@ -67,8 +85,13 @@ class Entropy(object):
     def _nsb(counts, k):
         return ndd._nsb.nsb(counts, k)
 
+    def _check(self, counts, k):
+        counts = self._check_counts(a=counts)
+        k = self._check_k(k=k, n_bins=len(counts))
+        return counts, k
+
     @staticmethod
-    def check_counts(a):
+    def _check_counts(a):
         try:
             a = numpy.asarray(a, dtype=numpy.int32)
         except ValueError:
@@ -78,7 +101,7 @@ class Entropy(object):
         return a.flatten()
 
     @staticmethod
-    def check_k(k, n_bins):
+    def _check_k(k, n_bins):
         """
         if k is None, set k = number of bins
         if k is an integer, just check
@@ -104,20 +127,6 @@ class Entropy(object):
                 raise ValueError("k (%s) should be a whole number." % k)
         return k
 
-    def __call__(self, counts, k=None, return_std=False):
-        """
-        counts : array_like
-            The number of occurrences of a set of bins.
-
-        k : int, optional
-            Number of bins. k >= len(counts).
-            Float is valid input for whole numbers (e.g. k=1.e3).
-            Defaults to len(counts).
-
-        """
-        self.fit(counts, k)
-        return self.estimate
-
     def fit(self, counts, k=None):
         """
         counts : array_like
@@ -129,8 +138,7 @@ class Entropy(object):
             Defaults to len(counts).
 
         """
-        counts = self.check_counts(counts)
-        k = self.check_k(k=k, n_bins=len(counts))
+        counts, k = self._check(counts, k)
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
