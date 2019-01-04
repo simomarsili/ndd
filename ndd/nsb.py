@@ -176,14 +176,10 @@ def histogram(data):
         the remaining axes in `data` array.
 
     """
-    import types
-    if isinstance(data, types.GeneratorType):
+    import inspect
+    if inspect.isgenerator(data):
         from collections import Counter
-        try:
-            counter = Counter(data)
-        except TypeError:
-            # if unhashable
-            counter = Counter((str(x) for x in data))
+        counter = Counter(data)
         counts = list(counter.values())
         ks = [len(counts)]
     else:
