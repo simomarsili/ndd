@@ -37,31 +37,31 @@ class Entropy(object):
         # set estimator
         if plugin:
             if alpha is None:
-                self.estimator = self.plugin
+                self.estimator = self._plugin
             else:
-                self.estimator = lambda counts, k: self.pseudocounts(
+                self.estimator = lambda counts, k: self._pseudocounts(
                     counts, k, self.alpha)
         else:
             if alpha is None:
-                self.estimator = self.nsb
+                self.estimator = self._nsb
             else:
-                self.estimator = lambda counts, k: self.ww(
+                self.estimator = lambda counts, k: self._ww(
                     counts, k, self.alpha)
 
     @staticmethod
-    def plugin(counts, k):
+    def _plugin(counts, k):
         return ndd._nsb.plugin(counts, k)
 
     @staticmethod
-    def pseudocounts(counts, k, alpha):
+    def _pseudocounts(counts, k, alpha):
         return ndd._nsb.pseudo(counts, k, alpha)
 
     @staticmethod
-    def ww(counts, k, alpha):
+    def _ww(counts, k, alpha):
         return ndd._nsb.dirichlet(counts, k, alpha)
 
     @staticmethod
-    def nsb(counts, k):
+    def _nsb(counts, k):
         return ndd._nsb.nsb(counts, k)
 
     @staticmethod
@@ -129,11 +129,7 @@ class Entropy(object):
 
         """
         self.fit(counts, k)
-
-        if return_std:
-            return self.entropy, self.std
-        else:
-            return self.entropy
+        return self.entropy
 
     def fit(self, counts, k=None):
         """
@@ -339,15 +335,15 @@ def _2darray(ar):
     return numpy.ascontiguousarray(ar)
 
 
-def _combinations(func, ar, ks=None, r=1):
+def _combinations(f, ar, ks=None, r=1):
     """
-    Given a function and a n-by-p array of data, compute the function over all
+    Given an estimator `f` and a n-by-p array of data, apply f over all
     possible p-choose-r combinations of r columns.
 
     Paramaters
     ----------
 
-    func : function
+    f : estimator
         Function taking as input a discrete data array and alphabet size:
         func(data, k=k).
 
@@ -388,5 +384,5 @@ def _combinations(func, ar, ks=None, r=1):
 
     estimates = []
     for k, d in zip(alphabet_sizes, data):
-        estimates.append(func(d, k=k))
+        estimates.append(f(d, k=k))
     return estimates
