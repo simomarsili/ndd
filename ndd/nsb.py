@@ -19,6 +19,8 @@ import numpy
 import ndd
 import ndd._nsb
 
+MAX_LOGK = 150 * numpy.log(2)  # 200 bits
+
 
 class Entropy(object):
     def __init__(self, alpha=None, plugin=False):
@@ -78,10 +80,8 @@ class Entropy(object):
     def check_k(k, n_bins):
         """
         if k is None, set k = number of bins
-        if k is a sequence, set k = prod(k) and check
         if k is an integer, just check
         """
-        MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
         if k is None:
             # set k to the number of observed bins
@@ -91,23 +91,10 @@ class Entropy(object):
                 k = numpy.float64(k)
             except ValueError:
                 raise
-            if k.ndim:
-                if k.ndim > 1:
-                    raise ValueError('k must be a scalar or 1D array')
-                # if k is not a sequence, set k = prod(k)
-                logk = numpy.sum(numpy.log(x) for x in k)
-                if logk > MAX_LOGK:
-                    # too large a number; backoff to n_bins?
-                    # TODO: log warning
-                    raise ValueError('k (%r) larger than %r' %
-                                     (numpy.exp(logk), numpy.exp(MAX_LOGK)))
-                else:
-                    k = numpy.prod(k)
-            else:
-                # if a scalar check size
-                if numpy.log(k) > MAX_LOGK:
-                    raise ValueError('k (%r) larger than %r' %
-                                     (k, numpy.exp(MAX_LOGK)))
+            # if a scalar check size
+            if numpy.log(k) > MAX_LOGK:
+                raise ValueError('k (%r) larger than %r' %
+                                 (k, numpy.exp(MAX_LOGK)))
             # consistency checks
             if k < n_bins:
                 raise ValueError("k (%s) is smaller than the number of bins"
@@ -121,10 +108,9 @@ class Entropy(object):
         counts : array_like
             The number of occurrences of a set of bins.
 
-        k : int or array_like, optional
+        k : int, optional
             Number of bins. k >= len(counts).
-            If array, set k = numpy.prod(k).
-            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Float is valid input for whole numbers (e.g. k=1.e3).
             Defaults to len(counts).
 
         """
@@ -136,9 +122,8 @@ class Entropy(object):
         counts : array_like
             The number of occurrences of a set of bins.
 
-        k : int or array_like, optional
+        k : int, optional
             Number of bins. k >= len(counts).
-            If array, set k = numpy.prod(k).
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to len(counts).
 
@@ -225,9 +210,8 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
         1D samples. Otherwise, data will be treated as an array of n samples
         from p variables.
 
-    k : int or list, optional
-        Number of bins. If a list, set k = numpy.prod(k).
-        Floats are valid input for whole numbers (e.g. k=1.e3).
+    k : int, optional
+        Number of bins. Floats are valid input for whole numbers (e.g. k=1.e3).
         Defaults to the number of unique objects in data (if 1D),
         or to the product of the number of unique elements for each variable.
 
@@ -258,9 +242,9 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
 
     """
 
-    counts, ks = ndd.histogram(data)
+    counts, k1 = ndd.histogram(data)
     if k is None:
-        k = ks
+        k = k1
 
     estimator = Entropy(alpha, plugin)
     estimator.fit(counts, k)
@@ -293,9 +277,9 @@ def histogram(data):
     counts : ndarray
         Bin counts.
 
-    ks : ndarray
-        Number of unique elements along axis 0 for each variable indexed by
-        the remaining axes in `data` array.
+    k : int
+        The number of unique elements along axis 0. If data is p-dimensional,
+        the product of the number of unique elements of each variable.
 
     """
     import inspect
@@ -303,15 +287,24 @@ def histogram(data):
         from collections import Counter
         counter = Counter(data)
         counts = list(counter.values())
-        ks = [len(counts)]
+        k = len(counts)
     else:
         # reshape as a p-by-n array
         data = ndd.nsb._2darray(data)
         # number of unique elements for each of the p variables
         ks = [len(numpy.unique(v)) for v in data]
+        logk = numpy.sum(numpy.log(x) for x in ks)
+        if logk > MAX_LOGK:
+            # too large a number; backoff to n_bins?
+            # TODO: log warning
+            raise ValueError('k (%r) larger than %r' %
+                             (numpy.exp(logk), numpy.exp(MAX_LOGK)))
+        else:
+            k = numpy.prod(ks)
+
         # statistics for the p-dimensional variable
         _, counts = numpy.unique(data, return_counts=True, axis=1)
-    return counts, ks
+    return counts, k
 
 
 def _2darray(ar):
