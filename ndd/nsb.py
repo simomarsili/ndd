@@ -76,6 +76,46 @@ class Entropy(object):
             raise ValueError("Frequency counts can't be negative")
         return a.flatten()
 
+    @staticmethod
+    def check_k(k, n_bins):
+        """
+        if k is None, set k = number of bins
+        if k is a sequence, set k = prod(k) and check
+        if k is an integer, just check
+        """
+        if k is None:
+            # set k to the number of observed bins
+            k = numpy.float64(n_bins)
+        else:
+            try:
+                k = numpy.float64(k)
+            except ValueError:
+                raise
+            if k.ndim:
+                if k.ndim > 1:
+                    raise ValueError('k must be a scalar or 1D array')
+                # if k is not a sequence, set k = prod(k)
+                k = numpy.sum(numpy.log(x) for x in k)
+                if k > MAX_LOGK:
+                    # too large a number; backoff to n_bins?
+                    # TODO: log warning
+                    raise ValueError('k (%r) larger than %r' %
+                                     (numpy.exp(k), numpy.exp(MAX_LOGK)))
+                else:
+                    k = numpy.exp(k)
+            else:
+                # if a scalar check size
+                if numpy.log(k) > MAX_LOGK:
+                    raise ValueError('k (%r) larger than %r' %
+                                     (k, numpy.exp(MAX_LOGK)))
+            # consistency checks
+            if k < n_bins:
+                raise ValueError("k (%s) is smaller than the number of bins (%s)"
+                                 % (k, n_bins))
+            if not k.is_integer():
+                raise ValueError("k (%s) should be a whole number.")
+        return k
+
     def fit(self, counts, k):
         counts = self.check_counts(counts)
         if k == 1:  # single bin
@@ -86,6 +126,8 @@ class Entropy(object):
                 self.entropy, self.std = result
             else:
                 self.entropy = result
+
+    
 
 
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
@@ -131,7 +173,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
 
     """
 
-    k = _check_k(k=k, n_bins=len(counts))
+    k = Entropy.check_k(k=k, n_bins=len(counts))
 
     estimator = Entropy(alpha, plugin)
     estimator.fit(counts, k)
@@ -196,7 +238,7 @@ def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
     counts, ks = ndd.histogram(data)
     if k is None:
         k = ks
-    k = _check_k(k=k, n_bins=len(counts))
+    k = Entropy.check_k(k=k, n_bins=len(counts))
     return entropy(counts, k=k, alpha=alpha, return_std=return_std,
                    plugin=plugin)
 
@@ -311,43 +353,3 @@ def _combinations(func, ar, ks=None, r=1):
     for k, d in zip(alphabet_sizes, data):
         estimates.append(func(d, k=k))
     return estimates
-
-
-def _check_k(k, n_bins):
-    """
-    if k is None, set k = number of bins
-    if k is a sequence, set k = prod(k) and check
-    if k is an integer, just check
-    """
-    if k is None:
-        # set k to the number of observed bins
-        k = numpy.float64(n_bins)
-    else:
-        try:
-            k = numpy.float64(k)
-        except ValueError:
-            raise
-        if k.ndim:
-            if k.ndim > 1:
-                raise ValueError('k must be a scalar or 1D array')
-            # if k is not a sequence, set k = prod(k)
-            k = numpy.sum(numpy.log(x) for x in k)
-            if k > MAX_LOGK:
-                # too large a number; backoff to n_bins?
-                # TODO: log warning
-                raise ValueError('k (%r) larger than %r' %
-                                 (numpy.exp(k), numpy.exp(MAX_LOGK)))
-            else:
-                k = numpy.exp(k)
-        else:
-            # if a scalar check size
-            if numpy.log(k) > MAX_LOGK:
-                raise ValueError('k (%r) larger than %r' %
-                                 (k, numpy.exp(MAX_LOGK)))
-        # consistency checks
-        if k < n_bins:
-            raise ValueError("k (%s) is smaller than the number of bins (%s)"
-                             % (k, n_bins))
-        if not k.is_integer():
-            raise ValueError("k (%s) should be a whole number.")
-    return k
