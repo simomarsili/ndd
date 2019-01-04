@@ -10,6 +10,7 @@ tests/*
 !tests/data.json
 !tests/test_basic.py
 !tests/make_test_ref.py
+!tests/minimal_test.py
 exts/*
 !exts/*.f90
 !exts/*.pyf
