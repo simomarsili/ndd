@@ -19,6 +19,8 @@ import numpy
 import ndd
 import ndd._nsb
 
+MAX_LOGK = 150 * numpy.log(2)  # 200 bits
+
 
 class Entropy(object):
     def __init__(self, alpha=None, plugin=False):
@@ -317,7 +319,6 @@ def _check_k(k, n_bins):
     if k is a sequence, set k = prod(k) and check
     if k is an integer, just check
     """
-    MAX_LOGK = 150 * numpy.log(2)  # 200 bits
     if k is None:
         # set k to the number of observed bins
         k = numpy.float64(n_bins)
