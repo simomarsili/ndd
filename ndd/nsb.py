@@ -37,31 +37,31 @@ class Entropy(object):
         # set estimator
         if plugin:
             if alpha is None:
-                self.estimator = self.plugin
+                self.estimator = self._plugin
             else:
-                self.estimator = lambda counts, k: self.pseudocounts(
+                self.estimator = lambda counts, k: self._pseudocounts(
                     counts, k, self.alpha)
         else:
             if alpha is None:
-                self.estimator = self.nsb
+                self.estimator = self._nsb
             else:
-                self.estimator = lambda counts, k: self.ww(
+                self.estimator = lambda counts, k: self._ww(
                     counts, k, self.alpha)
 
     @staticmethod
-    def plugin(counts, k):
+    def _plugin(counts, k):
         return ndd._nsb.plugin(counts, k)
 
     @staticmethod
-    def pseudocounts(counts, k, alpha):
+    def _pseudocounts(counts, k, alpha):
         return ndd._nsb.pseudo(counts, k, alpha)
 
     @staticmethod
-    def ww(counts, k, alpha):
+    def _ww(counts, k, alpha):
         return ndd._nsb.dirichlet(counts, k, alpha)
 
     @staticmethod
-    def nsb(counts, k):
+    def _nsb(counts, k):
         return ndd._nsb.nsb(counts, k)
 
     @staticmethod
@@ -129,11 +129,7 @@ class Entropy(object):
 
         """
         self.fit(counts, k)
-
-        if return_std:
-            return self.entropy, self.std
-        else:
-            return self.entropy
+        return self.entropy
 
     def fit(self, counts, k=None):
         """
