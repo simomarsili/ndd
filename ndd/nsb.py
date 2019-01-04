@@ -20,6 +20,61 @@ import ndd
 import ndd._nsb
 
 
+class Entropy(object):
+    def __init__(self, alpha=None, plugin=False):
+        self.std = None
+
+        # check alpha value
+        if alpha:
+            try:
+                alpha = numpy.float64(alpha)
+            except ValueError:
+                raise
+            if alpha <= 0:
+                raise ValueError("alpha <= 0")
+        self.alpha = alpha
+
+        # set estimator
+        if plugin:
+            if alpha is None:
+                self.estimator = self.plugin
+            else:
+                self.estimator = lambda counts, k: self.pseudocounts(
+                    counts, k, self.alpha)
+        else:
+            if alpha is None:
+                self.estimator = self.nsb
+            else:
+                self.estimator = lambda counts, k: self.ww(
+                    counts, k, self.alpha)
+
+    @staticmethod
+    def plugin(counts, k):
+        return ndd._nsb.plugin(counts, k)
+
+    @staticmethod
+    def pseudocounts(counts, k, alpha):
+        return ndd._nsb.pseudo(counts, k, alpha)
+
+    @staticmethod
+    def ww(counts, k, alpha):
+        return ndd._nsb.dirichlet(counts, k, alpha)
+
+    @staticmethod
+    def nsb(counts, k):
+        return ndd._nsb.nsb(counts, k)
+
+    def fit(self, counts, k):
+        if k == 1:  # single bin
+            self.entropy = self.std = 0.0
+        else:
+            result = self.estimator(counts, k)
+            if isinstance(result, tuple):
+                self.entropy, self.std = result
+            else:
+                self.entropy = result
+
+
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     """
     Return a Bayesian estimate of the entropy of an unknown discrete
@@ -66,33 +121,13 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     counts = _check_counts(counts)
     k = _check_k(k=k, n_bins=len(counts))
 
-    if k == 1:  # if the total number of classes is one
-        if return_std:
-            return (0.0, 0.0)
-        else:
-            return 0.0
+    estimator = Entropy(alpha, plugin)
+    estimator.fit(counts, k)
 
-    if alpha:
-        try:
-            alpha = numpy.float64(alpha)
-        except ValueError:
-            raise
-        if alpha <= 0:
-            raise ValueError("alpha <= 0")
-
-    if plugin:
-        if alpha is None:
-            result = ndd._nsb.plugin(counts, k)
-        else:
-            result = ndd._nsb.pseudo(counts, k, alpha)
+    if return_std:
+        result = estimator.entropy, estimator.std
     else:
-        if alpha is None:
-            result = ndd._nsb.nsb(counts, k)
-            if not return_std:
-                result = result[0]
-        else:
-            # TODO: compute variance over the posterior at fixed alpha
-            result = ndd._nsb.dirichlet(counts, k, alpha)
+        result = estimator.entropy
 
     if numpy.any(numpy.isnan(numpy.squeeze(result))):
         raise FloatingPointError("NaN value")
