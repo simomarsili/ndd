@@ -335,15 +335,15 @@ def _2darray(ar):
     return numpy.ascontiguousarray(ar)
 
 
-def _combinations(func, ar, ks=None, r=1):
+def _combinations(f, ar, ks=None, r=1):
     """
-    Given a function and a n-by-p array of data, compute the function over all
+    Given an estimator `f` and a n-by-p array of data, apply f over all
     possible p-choose-r combinations of r columns.
 
     Paramaters
     ----------
 
-    func : function
+    f : estimator
         Function taking as input a discrete data array and alphabet size:
         func(data, k=k).
 
@@ -384,5 +384,5 @@ def _combinations(func, ar, ks=None, r=1):
 
     estimates = []
     for k, d in zip(alphabet_sizes, data):
-        estimates.append(func(d, k=k))
+        estimates.append(f(d, k=k))
     return estimates
