@@ -236,9 +236,7 @@ def histogram(data):
         k = len(counts)
     else:
         # reshape as a p-by-n array
-        data = ndd.nsb._2darray(data)
-        # number of unique elements for each of the p variables
-        ks = [len(numpy.unique(v)) for v in data]
+        data, ks = ndd.nsb._2darray(data)
         logk = numpy.sum(numpy.log(x) for x in ks)
         if logk > MAX_LOGK:
             # too large a number; backoff to n_bins?
@@ -270,8 +268,9 @@ def _2darray(ar):
         ar = ar.reshape(n, -1)
 
     ar = ar.T
+    ks = [len(numpy.unique(v)) for v in ar]
 
-    return numpy.ascontiguousarray(ar)
+    return numpy.ascontiguousarray(ar), ks
 
 
 def _combinations(f, ar, ks=None, r=1):
@@ -304,7 +303,7 @@ def _combinations(f, ar, ks=None, r=1):
     """
     from itertools import combinations
 
-    ar = _2darray(ar)
+    ar, ks0 = _2darray(ar)
     p, n = ar.shape
 
     try:
@@ -314,7 +313,7 @@ def _combinations(f, ar, ks=None, r=1):
             raise ValueError("k should have len %s" % p)
     except TypeError:
         if ks is None:
-            ks = numpy.array([numpy.unique(v).size for v in ar])
+            ks = ks0
         else:
             raise
 
