@@ -206,69 +206,6 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     return result
 
 
-def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
-    """
-    Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from data.
-
-    Parameters
-    ----------
-
-    data : array-like or generator
-        If a generator, data must return hashable objects (e.g. tuples) as
-        1D samples. Otherwise, data will be treated as an array of n samples
-        from p variables.
-
-    k : int, optional
-        Number of bins. Floats are valid input for whole numbers (e.g. k=1.e3).
-        Defaults to the number of unique objects in data (if 1D),
-        or to the product of the number of unique elements for each variable.
-
-    alpha : float, optional
-        If alpha is passed, use a single Dirichlet prior with concentration
-        parameter alpha (fixed alpha estimator). alpha > 0.0.
-
-    return_std : boolean, optional
-        If True, also return an approximated value for the standard deviation
-        over the entropy posterior.
-
-    plugin : boolean, optional
-        If True, return a 'plugin' estimate of the entropy. The discrete
-        distribution is estimated from the empirical frequencies over bins
-        and inserted into the entropy definition (plugin estimator).
-        If alpha is passed in combination with plugin=True, add
-        alpha pseudocounts to each frequency count (pseudocount estimator).
-
-    Returns
-    -------
-    entropy : float
-        Entropy estimate.
-
-    std : float, optional
-        Uncertainty in the entropy estimate
-        (approximates the standard deviation over the entropy posterior).
-        Only provided if `return_std` is True.
-
-    """
-
-    counts, k1 = ndd.histogram(data)
-    if k is None:
-        k = k1
-
-    estimator = Entropy(alpha, plugin)
-    estimator.fit(counts, k)
-
-    if return_std:
-        result = estimator.estimate, estimator.std
-    else:
-        result = estimator.estimate
-
-    if numpy.any(numpy.isnan(numpy.squeeze(result))):
-        raise FloatingPointError("NaN value")
-
-    return result
-
-
 def histogram(data):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
