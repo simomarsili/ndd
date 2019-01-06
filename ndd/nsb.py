@@ -22,10 +22,28 @@ import ndd._nsb
 MAX_LOGK = 150 * numpy.log(2)  # 200 bits
 
 
-class Entropy(object):
-    def __init__(self, alpha=None, plugin=False):
+class BaseEstimator(object):
+    def __init__(self):
         self.estimate = None
         self.std = None
+
+    def _check(self):
+        # check input data
+        raise NotImplementedError
+
+    def fit(self):
+        # set self.estimate, self.std
+        raise NotImplementedError
+
+    def __call__(self, *args, **kwargs):
+        """Return estimate from input data. Delegate to fit."""
+        self.fit(*args, **kwargs)
+        return self.estimate
+
+
+class Entropy(BaseEstimator):
+    def __init__(self, alpha=None, plugin=False):
+        super().__init__()
 
         # check alpha value
         if alpha:
@@ -129,11 +147,6 @@ class Entropy(object):
                 self.estimate, self.std = result
             else:
                 self.estimate = result
-
-    def __call__(self, *args, **kwargs):
-        """Return estimate from input data. Delegate to fit."""
-        self.fit(*args, **kwargs)
-        return self.estimate
 
 
 def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
