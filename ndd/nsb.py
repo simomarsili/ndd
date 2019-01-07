@@ -296,7 +296,7 @@ def _combinations(f, ar, ks, r=1):
     ks : 1D p-dimensional array
         Alphabet size for each variable.
 
-    r : int or tuple, optional
+    r : int, optional
         For each possible combination of r columns, return the estimated
         entropy for the corresponding r-dimensional variable.
         See itertools.combinations(range(p), r=r).
