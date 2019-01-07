@@ -278,9 +278,9 @@ def _2darray(ar):
     return numpy.ascontiguousarray(ar)
 
 
-def _combinations(f, ar, ks=None, r=1):
+def _combinations(f, ar, ks, r=1):
     """
-    Given an estimator `f` and a n-by-p array of data, apply f over all
+    Given an estimator `f` and a p-by-n array of data, apply f over all
     possible p-choose-r combinations of r columns.
 
     Paramaters
@@ -293,13 +293,10 @@ def _combinations(f, ar, ks=None, r=1):
     ar : array-like
         Array of n samples from p discrete variables.
 
-    ks : 1D p-dimensional array, optional
+    ks : 1D p-dimensional array
         Alphabet size for each variable.
-        The alphabet sizes for the r-dimensional variable corresponding to the
-        column indices ix is computed as numpy.prod([k[x] for x in ix]).
-        Defaults to the number of unique elements in each column.
 
-    r : int, optional
+    r : int or tuple, optional
         For each possible combination of r columns, return the estimated
         entropy for the corresponding r-dimensional variable.
         See itertools.combinations(range(p), r=r).
@@ -308,8 +305,6 @@ def _combinations(f, ar, ks=None, r=1):
     """
     from itertools import combinations
 
-    ar = _2darray(ar)
-    ks0 = [len(numpy.unique(v)) for v in ar]
     p, n = ar.shape
 
     try:
@@ -318,14 +313,10 @@ def _combinations(f, ar, ks=None, r=1):
         else:
             raise ValueError("k should have len %s" % p)
     except TypeError:
-        if ks is None:
-            ks = ks0
-        else:
-            raise
+        raise
 
     alphabet_sizes = (numpy.prod(x) for x in combinations(ks, r=r))
     data = combinations(ar, r=r)
-
     estimates = []
     for k, d in zip(alphabet_sizes, data):
         estimates.append(f(d, k=k))
