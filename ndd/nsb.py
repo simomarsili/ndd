@@ -19,8 +19,6 @@ import numpy
 import ndd
 import ndd._nsb
 
-MAX_LOGK = 150 * numpy.log(2)  # 200 bits
-
 
 class BaseEstimator(object):
     def __init__(self):
@@ -105,7 +103,9 @@ class Entropy(BaseEstimator):
         """
         if k is None, set k = number of bins
         if k is an integer, just check
+        ik an array set k = prod(k)
         """
+        MAX_LOGK = 150 * numpy.log(2)
 
         if k is None:
             # set k to the number of observed bins
@@ -115,10 +115,23 @@ class Entropy(BaseEstimator):
                 k = numpy.float64(k)
             except ValueError:
                 raise
-            # if a scalar check size
-            if numpy.log(k) > MAX_LOGK:
-                raise ValueError('k (%r) larger than %r' %
-                                 (k, numpy.exp(MAX_LOGK)))
+            if k.ndim:
+                # if k is a sequence, set k = prod(k)
+                if k.ndim > 1:
+                    raise ValueError('k must be a scalar or 1D array')
+                logk = numpy.sum(numpy.log(x) for x in k)
+                if logk > MAX_LOGK:
+                    # too large a number; backoff to n_bins?
+                    # TODO: log warning
+                    raise ValueError('k (%r) larger than %r' %
+                                     (numpy.exp(logk), numpy.exp(MAX_LOGK)))
+                else:
+                    k = numpy.prod(k)
+            else:
+                # if a scalar check size
+                if numpy.log(k) > MAX_LOGK:
+                    raise ValueError('k (%r) larger than %r' %
+                                     (k, numpy.exp(MAX_LOGK)))
             # consistency checks
             if k < n_bins:
                 raise ValueError("k (%s) is smaller than the number of bins"
@@ -160,9 +173,10 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     counts : array_like
         The number of occurrences of a set of bins.
 
-    k : int, optional
+    k : int or array-like, optional
         Number of bins. k >= len(counts).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k).
         Defaults to len(counts).
 
     alpha : float, optional
@@ -225,7 +239,7 @@ def histogram(data):
 
     k : int
         The number of unique elements along axis 0. If data is p-dimensional,
-        the product of the number of unique elements of each variable.
+        the num. of unique elements for each variable.
 
     """
     import inspect
@@ -233,22 +247,13 @@ def histogram(data):
         from collections import Counter
         counter = Counter(data)
         counts = list(counter.values())
-        k = len(counts)
+        ks = len(counts)
     else:
         # reshape as a p-by-n array
         data, ks = ndd.nsb._2darray(data)
-        logk = numpy.sum(numpy.log(x) for x in ks)
-        if logk > MAX_LOGK:
-            # too large a number; backoff to n_bins?
-            # TODO: log warning
-            raise ValueError('k (%r) larger than %r' %
-                             (numpy.exp(logk), numpy.exp(MAX_LOGK)))
-        else:
-            k = numpy.prod(ks)
-
         # statistics for the p-dimensional variable
         _, counts = numpy.unique(data, return_counts=True, axis=1)
-    return counts, k
+    return counts, ks
 
 
 def _2darray(ar):
