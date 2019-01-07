@@ -250,7 +250,8 @@ def histogram(data):
         ks = len(counts)
     else:
         # reshape as a p-by-n array
-        data, ks = ndd.nsb._2darray(data)
+        data = ndd.nsb._2darray(data)
+        ks = [len(numpy.unique(v)) for v in data]
         # statistics for the p-dimensional variable
         _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts, ks
@@ -273,9 +274,8 @@ def _2darray(ar):
         ar = ar.reshape(n, -1)
 
     ar = ar.T
-    ks = [len(numpy.unique(v)) for v in ar]
 
-    return numpy.ascontiguousarray(ar), ks
+    return numpy.ascontiguousarray(ar)
 
 
 def _combinations(f, ar, ks=None, r=1):
@@ -308,7 +308,8 @@ def _combinations(f, ar, ks=None, r=1):
     """
     from itertools import combinations
 
-    ar, ks0 = _2darray(ar)
+    ar = _2darray(ar)
+    ks0 = [len(numpy.unique(v)) for v in ar]
     p, n = ar.shape
 
     try:
