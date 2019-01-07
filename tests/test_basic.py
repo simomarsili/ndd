@@ -65,11 +65,4 @@ def test_entropy(setting, kwargs, result):
 def test_histogram_ndarray():
     N, P = 100, 2
     data = random_ndarray(N, P, SEED)
-    assert ndd.entropy(*ndd.histogram(data)) == 6.412863794582687
-
-
-def test_histogram_generator():
-    N, P = 100, 2
-    data = random_tuple_generator(N, P, SEED)
-    h, k = ndd.histogram(data)
-    assert ndd.entropy(h, k) == 4.554190036710228
+    assert ndd.entropy(ndd.histogram(data), ndd.nsb.n_unique(data)) == 6.412863794582687

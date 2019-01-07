@@ -220,41 +220,35 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     return result
 
 
+def n_unique(data):
+    """
+    The number of unique elements along axis 0. If data is p-dimensional,
+    the num. of unique elements for each variable.
+    """
+    # reshape as a p-by-n array
+    data = ndd.nsb._2darray(data)
+    return [len(numpy.unique(v)) for v in data]
+
+
 def histogram(data):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
     ----------
-
-    data : array-like or generator
-        If a generator, data must return hashable objects (e.g. tuples) as
-        1D samples. Otherwise, data will be treated as an array of n samples
-        from p variables.
+    data : array-like
+        An array of n samples from p variables.
 
     Returns
     -------
-
     counts : ndarray
         Bin counts.
 
-    k : int
-        The number of unique elements along axis 0. If data is p-dimensional,
-        the num. of unique elements for each variable.
-
     """
-    import inspect
-    if inspect.isgenerator(data):
-        from collections import Counter
-        counter = Counter(data)
-        counts = list(counter.values())
-        ks = len(counts)
-    else:
-        # reshape as a p-by-n array
-        data = ndd.nsb._2darray(data)
-        ks = [len(numpy.unique(v)) for v in data]
-        # statistics for the p-dimensional variable
-        _, counts = numpy.unique(data, return_counts=True, axis=1)
-    return counts, ks
+    # reshape as a p-by-n array
+    data = ndd.nsb._2darray(data)
+    # statistics for the p-dimensional variable
+    _, counts = numpy.unique(data, return_counts=True, axis=1)
+    return counts
 
 
 def _2darray(ar):
