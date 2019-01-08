@@ -120,6 +120,7 @@ import os
 import json
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      histogram,
+                     nbins,
                      entropy_combinations)
 
 path_to_version = os.path.join(os.path.dirname(__file__), 'version.json')
@@ -136,4 +137,5 @@ __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simo.marsili@gmail.com)"
 __all__ = ["entropy",
            "histogram",
+           "nbins",
            "entropy_combinations"]

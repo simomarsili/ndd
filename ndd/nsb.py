@@ -220,7 +220,7 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     return result
 
 
-def n_unique(data):
+def nbins(data):
     """
     The number of unique elements along axis 0. If data is p-dimensional,
     the num. of unique elements for each variable.
@@ -314,6 +314,11 @@ def entropy_combinations(ar, ks, r=1):
         See itertools.combinations(range(p), r=r).
         Defaults to 1 (a different estimate for each column/variable).
 
+    Returns
+    -------
+    generator object
+        Entropy estimates for all combinations.
+
     """
     from itertools import combinations
 
@@ -330,7 +335,5 @@ def entropy_combinations(ar, ks, r=1):
     entropy_estimator = Entropy()
     alphabet_size_combinations = (numpy.prod(x) for x in combinations(ks, r=r))
     counts_combinations = histogram(ar, axis=1, r=r)
-    estimates = []
     for k, c in zip(alphabet_size_combinations, counts_combinations):
-        estimates.append(entropy_estimator(c, k=k))
-    return estimates
+        yield entropy_estimator(c, k=k)
