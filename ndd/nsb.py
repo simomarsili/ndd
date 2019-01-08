@@ -230,13 +230,15 @@ def n_unique(data):
     return [len(numpy.unique(v)) for v in data]
 
 
-def histogram(data):
+def histogram(data, axis=0):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
     ----------
     data : array-like
         An array of n samples from p variables.
+    axis : int, optional
+        The sample-indexing axis
 
     Returns
     -------
@@ -245,16 +247,18 @@ def histogram(data):
 
     """
     # reshape as a p-by-n array
-    data = ndd.nsb._2darray(data)
+    data = ndd.nsb._2darray(data, axis=axis)
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts
 
 
-def _2darray(ar):
+def _2darray(ar, axis=0):
     """
     For a 2D n-by-p data array, transpose it.
     For a generic ndarray, flatten the subarrays indexed by axis 0
+    axis : int, optional
+        The sample-indexing axis
     """
 
     ar = numpy.asanyarray(ar)
@@ -263,10 +267,17 @@ def _2darray(ar):
         n = ar.shape[0]
         ar = ar.reshape(n, 1)
 
+    if axis != 0:
+        try:
+            ar = numpy.swapaxes(ar, axis, 0)
+        except ValueError:
+            raise numpy.AxisError(axis, ar.ndim)
+
     if ar.ndim > 2:
         n = ar.shape[0]
         ar = ar.reshape(n, -1)
 
+    # move samples axis to 1
     ar = ar.T
 
     return numpy.ascontiguousarray(ar)
@@ -274,14 +285,14 @@ def _2darray(ar):
 
 def entropy_combinations(ar, ks, r=1):
     """
-    Given an estimator `f` and a p-by-n array of data, apply f over all
-    possible p-choose-r combinations of r columns.
+    Given a p-by-n array of data, return an entropy value for all possible
+    p-choose-r combinations of r columns.
 
     Paramaters
     ----------
 
     ar : array-like
-        Array of n samples from p discrete variables.
+        p-by-n array of n samples from p discrete variables.
 
     ks : 1D p-dimensional array
         Alphabet size for each variable.
@@ -310,8 +321,8 @@ def entropy_combinations(ar, ks, r=1):
     ix = combinations(range(p), r=r)
     estimates = []
     for k, i in zip(alphabet_sizes, ix):
-        d = ar[i]
-        h = ndd.histogram(d)
+        d = ar[list(i)]
+        h = ndd.histogram(d, axis=1)
         print(k,
               d,
               h,)
