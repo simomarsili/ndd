@@ -340,5 +340,5 @@ def from_data(ar, ks=None, axis=0, r=0):
         counts_combinations = histogram(ar, axis=1, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
-        return (entropy_estimator(c, k=k) for k, c in
+        return (entropy_estimator(c, k=k) for c, k in
                 zip(counts_combinations, alphabet_size_combinations))
