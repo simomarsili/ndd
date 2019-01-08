@@ -277,19 +277,18 @@ def _2darray(ar, axis=0):
     if ar.ndim == 1:
         n = ar.shape[0]
         ar = ar.reshape(n, 1)
-
-    if axis != 0:
-        try:
-            ar = numpy.swapaxes(ar, axis, 0)
-        except ValueError:
-            raise numpy.AxisError(axis, ar.ndim)
-
-    if ar.ndim > 2:
+    elif ar.ndim == 2:
+        if axis == 0:
+            ar = ar.T
+    elif ar.ndim > 2:
+        if axis != 0:
+            try:
+                ar = numpy.swapaxes(ar, axis, 0)
+            except ValueError:
+                raise numpy.AxisError(axis, ar.ndim)
         n = ar.shape[0]
         ar = ar.reshape(n, -1)
-
-    # move samples axis to 1
-    ar = ar.T
+        ar = ar.T
 
     return numpy.ascontiguousarray(ar)
 
