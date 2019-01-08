@@ -333,7 +333,7 @@ def entropy_combinations(ar, ks, r=1):
         raise
 
     entropy_estimator = Entropy()
-    alphabet_size_combinations = (numpy.prod(x) for x in combinations(ks, r=r))
     counts_combinations = histogram(ar, axis=1, r=r)
-    for k, c in zip(alphabet_size_combinations, counts_combinations):
+    alphabet_size_combinations = (numpy.prod(x) for x in combinations(ks, r=r))
+    for k, c in zip(counts_combinations, alphabet_size_combinations):
         yield entropy_estimator(c, k=k)
