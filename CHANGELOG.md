@@ -1,12 +1,15 @@
 # Change log
 
 ## [Unreleased]
+
+## [0.8] - 2019-01-08
 ### Added
 - Entropy class. 
 - from_data() returns an estimate from a data samples
 
 ### Changed
 - histogram(): remove unique elements of array as optional output
+- histogram(): takes the `axis` and `r` optional args
 
 ## [0.7.1] - 2018-06-22
 ### Changed
