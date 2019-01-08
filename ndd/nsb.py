@@ -226,7 +226,7 @@ def nbins(data):
     the num. of unique elements for each variable.
     """
     # reshape as a p-by-n array
-    data = ndd.nsb._2darray(data)
+    data = ndd.nsb._as_data_array(data)
     return [len(numpy.unique(v)) for v in data]
 
 
@@ -251,7 +251,7 @@ def histogram(data, axis=0, r=0):
     """
     from itertools import combinations
     # reshape as a p-by-n array
-    data = ndd.nsb._2darray(data, axis=axis)
+    data = ndd.nsb._as_data_array(data, axis=axis)
     p, n = data.shape
     if r > p:
         raise ValueError('r (%r) is larger than the number of variables (%r)'
@@ -264,7 +264,7 @@ def histogram(data, axis=0, r=0):
         return (ndd.histogram(d, axis=1) for d in combinations(data, r=r))
 
 
-def _2darray(ar, axis=0):
+def _as_data_array(ar, axis=0):
     """
     For a 2D n-by-p data array, transpose it.
     For a generic ndarray, flatten the subarrays indexed by axis 0
