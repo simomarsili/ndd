@@ -6,7 +6,7 @@ NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
 VERSION_FILE = 'ndd/version.json'
 SETUP_REQUIRES = ['numpy>=1.9']
-INSTALL_REQUIRES = []
+INSTALL_REQUIRES = ['future']
 EXTRAS_REQUIRES = {'test': ['pytest']}
 
 def get_numpy_status():
@@ -81,7 +81,7 @@ setup(
     version=VERSION,
     description="Bayesian entropy estimation from discrete data",
     long_description=LONG_DESCRIPTION,
-    long_description_content_type='text/markdown',
+    #long_description_content_type="text/markdown",
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
