@@ -230,7 +230,7 @@ def n_unique(data):
     return [len(numpy.unique(v)) for v in data]
 
 
-def histogram(data, axis=0):
+def histogram(data, axis=0, r=0):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
@@ -239,6 +239,9 @@ def histogram(data, axis=0):
         An array of n samples from p variables.
     axis : int, optional
         The sample-indexing axis
+    r : int, optional
+        If r > 0, return a generator that yields bin counts for each possible
+        combination of r variables.
 
     Returns
     -------
@@ -246,11 +249,19 @@ def histogram(data, axis=0):
         Bin counts.
 
     """
+    from itertools import combinations
     # reshape as a p-by-n array
     data = ndd.nsb._2darray(data, axis=axis)
-    # statistics for the p-dimensional variable
-    _, counts = numpy.unique(data, return_counts=True, axis=1)
-    return counts
+    p, n = data.shape
+    if r > p:
+        raise ValueError('r (%r) is larger than the number of variables (%r)'
+                         % (r, p))
+    if r == 0:
+        # statistics for the p-dimensional variable
+        _, counts = numpy.unique(data, return_counts=True, axis=1)
+        return counts
+    else:
+        return (ndd.histogram(d, axis=1) for d in combinations(data, r=r))
 
 
 def _2darray(ar, axis=0):
@@ -317,14 +328,9 @@ def entropy_combinations(ar, ks, r=1):
         raise
 
     entropy_estimator = Entropy()
-    alphabet_sizes = (numpy.prod(x) for x in combinations(ks, r=r))
-    ix = combinations(range(p), r=r)
+    alphabet_size_combinations = (numpy.prod(x) for x in combinations(ks, r=r))
+    counts_combinations = histogram(ar, axis=1, r=r)
     estimates = []
-    for k, i in zip(alphabet_sizes, ix):
-        d = ar[list(i)]
-        h = ndd.histogram(d, axis=1)
-        print(k,
-              d,
-              h,)
-        estimates.append(entropy_estimator(h, k=k))
+    for k, c in zip(alphabet_size_combinations, counts_combinations):
+        estimates.append(entropy_estimator(c, k=k))
     return estimates
