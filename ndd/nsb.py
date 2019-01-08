@@ -272,17 +272,13 @@ def _2darray(ar):
     return numpy.ascontiguousarray(ar)
 
 
-def _combinations(f, ar, ks, r=1):
+def entropy_combinations(ar, ks, r=1):
     """
     Given an estimator `f` and a p-by-n array of data, apply f over all
     possible p-choose-r combinations of r columns.
 
     Paramaters
     ----------
-
-    f : estimator
-        Function taking as input a discrete data array and alphabet size:
-        func(data, k=k).
 
     ar : array-like
         Array of n samples from p discrete variables.
@@ -309,9 +305,15 @@ def _combinations(f, ar, ks, r=1):
     except TypeError:
         raise
 
+    entropy_estimator = Entropy()
     alphabet_sizes = (numpy.prod(x) for x in combinations(ks, r=r))
-    data = combinations(ar, r=r)
+    ix = combinations(range(p), r=r)
     estimates = []
-    for k, d in zip(alphabet_sizes, data):
-        estimates.append(f(d, k=k))
+    for k, i in zip(alphabet_sizes, ix):
+        d = ar[i]
+        h = ndd.histogram(d)
+        print(k,
+              d,
+              h,)
+        estimates.append(entropy_estimator(h, k=k))
     return estimates
