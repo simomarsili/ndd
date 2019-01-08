@@ -276,7 +276,7 @@ def _as_data_array(ar, axis=0):
 
     if ar.ndim == 1:
         n = ar.shape[0]
-        ar = ar.reshape(n, 1)
+        ar = ar.reshape(1, n)
     elif ar.ndim == 2:
         if axis == 0:
             ar = ar.T
@@ -293,7 +293,7 @@ def _as_data_array(ar, axis=0):
     return numpy.ascontiguousarray(ar)
 
 
-def from_data(ar, ks, axis=0, r=0):
+def from_data(ar, ks=None, axis=0, r=0):
     """
     Given an array of data, return an entropy estimate.
 
@@ -301,13 +301,13 @@ def from_data(ar, ks, axis=0, r=0):
     ----------
     ar : array-like
         n-by-p array of n samples from p discrete variables.
-    ks : 1D p-dimensional array
+    ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis.
     r : int, optional
-        If r > 0, return a generator yielding an estimate for each possible
-        combination of r variables.
+        If r > 0, return a generator yielding estimates for the p-choose-r
+        possible combinations of length r from p variables.
 
     Returns
     -------
@@ -320,13 +320,16 @@ def from_data(ar, ks, axis=0, r=0):
     ar = _as_data_array(ar, axis=axis)
     p, n = ar.shape
 
-    try:
-        if len(ks) == p:
-            ks = numpy.array(ks)
-        else:
-            raise ValueError("k should have len %s" % p)
-    except TypeError:
-        raise
+    if ks is None:
+        ks = numpy.array([len(numpy.unique(v)) for v in ar])
+    else:
+        try:
+            if len(ks) == p:
+                ks = numpy.array(ks)
+            else:
+                raise ValueError("k should have len %s" % p)
+        except TypeError:
+            raise
 
     entropy_estimator = Entropy()
     if r == 0:
