@@ -66,3 +66,9 @@ def test_histogram_ndarray():
     N, P = 100, 2
     data = random_ndarray(N, P, SEED)
     assert ndd.entropy(ndd.histogram(data), ndd.nbins(data)) == 6.412863794582687
+
+
+def test_from_data():
+    N, P = 100, 2
+    data = random_ndarray(N, P, SEED)
+    assert ndd.from_data(data, ks=ndd.nbins(data)) == 6.412863794582687

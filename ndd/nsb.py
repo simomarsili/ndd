@@ -13,7 +13,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
 __copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
 __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
-__all__ = ['entropy', 'histogram']
+__all__ = ['entropy', 'histogram', 'from_data', 'nbins']
 
 import numpy
 import ndd
@@ -293,34 +293,31 @@ def _as_data_array(ar, axis=0):
     return numpy.ascontiguousarray(ar)
 
 
-def entropy_combinations(ar, ks, r=1):
+def from_data(ar, ks, axis=0, r=0):
     """
-    Given a p-by-n array of data, return an entropy value for all possible
-    p-choose-r combinations of r columns.
+    Given an array of data, return an entropy estimate.
 
     Paramaters
     ----------
-
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
-
+        n-by-p array of n samples from p discrete variables.
     ks : 1D p-dimensional array
         Alphabet size for each variable.
-
+    axis : int, optional
+        The sample-indexing axis.
     r : int, optional
-        For each possible combination of r columns, return the estimated
-        entropy for the corresponding r-dimensional variable.
-        See itertools.combinations(range(p), r=r).
-        Defaults to 1 (a different estimate for each column/variable).
+        If r > 0, return a generator yielding an estimate for each possible
+        combination of r variables.
 
     Returns
     -------
-    generator object
-        Entropy estimates for all combinations.
+    float
+        Entropy estimate
 
     """
     from itertools import combinations
 
+    ar = _as_data_array(ar, axis=axis)
     p, n = ar.shape
 
     try:
@@ -332,7 +329,13 @@ def entropy_combinations(ar, ks, r=1):
         raise
 
     entropy_estimator = Entropy()
-    counts_combinations = histogram(ar, axis=1, r=r)
-    alphabet_size_combinations = (numpy.prod(x) for x in combinations(ks, r=r))
-    for k, c in zip(counts_combinations, alphabet_size_combinations):
-        yield entropy_estimator(c, k=k)
+    if r == 0:
+        counts = histogram(ar, axis=1)
+        k = numpy.prod(ks)
+        return entropy_estimator(counts, k=k)
+    else:
+        counts_combinations = histogram(ar, axis=1, r=r)
+        alphabet_size_combinations = (numpy.prod(x)
+                                      for x in combinations(ks, r=r))
+        return (entropy_estimator(c, k=k) for k, c in
+                zip(counts_combinations, alphabet_size_combinations))

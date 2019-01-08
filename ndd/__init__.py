@@ -121,7 +121,7 @@ import json
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      histogram,
                      nbins,
-                     entropy_combinations)
+                     from_data)
 
 path_to_version = os.path.join(os.path.dirname(__file__), 'version.json')
 with open(path_to_version, 'r') as f:
@@ -138,4 +138,4 @@ __author__ = "Simone Marsili (simo.marsili@gmail.com)"
 __all__ = ["entropy",
            "histogram",
            "nbins",
-           "entropy_combinations"]
+           "from_data"]
