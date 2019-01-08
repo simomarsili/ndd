@@ -307,7 +307,7 @@ def from_data(ar, ks=None, axis=0, r=0):
         The sample-indexing axis.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from p variables.
+        possible combinations of length r from the op variables.
 
     Returns
     -------

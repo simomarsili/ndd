@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 ### Added
-- data_entropy()
+- Entropy class. 
+- from_data() returns an estimate from a data samples
 
 ### Changed
 - histogram(): remove unique elements of array as optional output
