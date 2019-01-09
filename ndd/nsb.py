@@ -25,7 +25,7 @@ class BaseEstimator(object):
         self.estimate = None
         self.std = None
 
-    def _check(self):
+    def _check_input(self):
         # check input data
         raise NotImplementedError
 
@@ -83,7 +83,7 @@ class Entropy(BaseEstimator):
     def _nsb(counts, k):
         return ndd._nsb.nsb(counts, k)
 
-    def _check(self, counts, k):
+    def _check_input(self, counts, k):
         counts = self._check_counts(a=counts)
         k = self._check_k(k=k, n_bins=len(counts))
         return counts, k
@@ -152,7 +152,7 @@ class Entropy(BaseEstimator):
             Defaults to len(counts).
 
         """
-        counts, k = self._check(counts, k)
+        counts, k = self._check_input(counts, k)
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
@@ -183,7 +183,7 @@ class KLDivergence(Entropy):
             Defaults to len(counts).
 
         """
-        pk, k = self._check(pk, k)
+        pk, k = self._check_input(pk, k)
         if not len(self.log_qk) == len(pk):
             raise ValueError('qk and pk must have the same length.')
 
