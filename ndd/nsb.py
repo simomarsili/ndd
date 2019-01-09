@@ -162,31 +162,38 @@ class Entropy(BaseEstimator):
                 self.estimate = result
 
 
-def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
+def entropy(pk, qk=None, base=None,
+            *, k=None, alpha=None, plugin=False, return_std=False):
     """
-    Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from an input array of counts.
+    Return a Bayesian estimate S' of the entropy of an unknown discrete
+    distribution from an input array of counts pk.
+    If pk is normalized, compute S' as S' = S = -sum(pk * log(pk), axis=0).
+    If qk is not None, then compute the Kullback-Leibler divergence as
+    KL = S' - sum(pk log(qk)).
+    Normalize qk if it doesn't sum to 1.
 
     Parameters
     ----------
 
-    counts : array_like
+    pk : array-like
         The number of occurrences of a set of bins.
-
+        If pk is normalized, compute S' as -sum(pk * log(pk), axis=0).
+    qk : array-like, optional
+        Reference PMF against which the relative entropy is computed.
+        Should be in the same format as pk.
+    base : float, optional
+        The logarithmic base to use, defaults to e (natural logarithm).
     k : int or array-like, optional
-        Number of bins. k >= len(counts).
+        Number of bins; k >= len(pk).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k).
         Defaults to len(counts).
-
     alpha : float, optional
-        If alpha is passed, use a single Dirichlet prior with concentration
+        If alpha is not None, use a single Dirichlet prior with concentration
         parameter alpha (fixed alpha estimator). alpha > 0.0.
-
     return_std : boolean, optional
         If True, also return an approximated value for the standard deviation
         over the entropy posterior.
-
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
         distribution is estimated from the empirical frequencies over bins
@@ -198,16 +205,15 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     -------
     entropy : float
         Entropy estimate.
-
     std : float, optional
         Uncertainty in the entropy estimate
-        (approximates the standard deviation over the entropy posterior).
+        (approximated standard deviation over the entropy posterior).
         Only provided if `return_std` is True.
 
     """
 
     estimator = Entropy(alpha, plugin)
-    estimator.fit(counts, k)
+    estimator.fit(pk, k)
 
     if return_std:
         result = estimator.estimate, estimator.std
