@@ -162,31 +162,74 @@ class Entropy(BaseEstimator):
                 self.estimate = result
 
 
-def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
+class KLDivergence(Entropy):
+    def __init__(self, qk, alpha=None, plugin=False):
+        """qk is a parameter of the estimator; it must be a valid pmf."""
+        super().__init__(alpha, plugin)
+        if is_pmf(qk):
+            self.log_qk = numpy.log(qk)
+        else:
+            raise ValueError('qk must be a valid PMF')
+
+    def fit(self, pk, k=None):
+        """
+        pk : array_like
+            The number of occurrences of a set of bins.
+
+        k : int, optional
+            Number of bins. k >= len(counts).
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to len(counts).
+
+        """
+        pk, k = self._check(pk, k)
+        if not len(self.log_qk) == len(pk):
+            raise ValueError('qk and pk must have the same length.')
+
+        if k == 1:  # single bin
+            self.estimate = self.std = 0.0
+        else:
+            result = self.estimator(pk, k)
+            if isinstance(result, tuple):
+                self.estimate, self.std = result
+            else:
+                self.estimate = result
+        self.estimate -= numpy.sum(pk * self.log_qk)
+
+
+def entropy(pk, qk=None, base=None,
+            # *, k=None, alpha=None, plugin=False, return_std=False):
+            k=None, alpha=None, plugin=False, return_std=False):
     """
-    Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from an input array of counts.
+    Return a Bayesian estimate S' of the entropy of an unknown discrete
+    distribution from an input array of counts pk.
+    If pk is normalized, compute S' as S' = S = -sum(pk * log(pk), axis=0).
+    If qk is not None, then compute the Kullback-Leibler divergence as
+    KL = S' - sum(pk log(qk)).
+    Normalize qk if it doesn't sum to 1.
 
     Parameters
     ----------
 
-    counts : array_like
+    pk : array-like
         The number of occurrences of a set of bins.
-
+        If pk is normalized, compute S' as -sum(pk * log(pk), axis=0).
+    qk : array-like, optional
+        Reference PMF against which the relative entropy is computed.
+        Should be in the same format as pk.
+    base : float, optional
+        The logarithmic base to use, defaults to e (natural logarithm).
     k : int or array-like, optional
-        Number of bins. k >= len(counts).
+        Number of bins; k >= len(pk).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k).
         Defaults to len(counts).
-
     alpha : float, optional
-        If alpha is passed, use a single Dirichlet prior with concentration
+        If alpha is not None, use a single Dirichlet prior with concentration
         parameter alpha (fixed alpha estimator). alpha > 0.0.
-
     return_std : boolean, optional
         If True, also return an approximated value for the standard deviation
         over the entropy posterior.
-
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
         distribution is estimated from the empirical frequencies over bins
@@ -198,26 +241,53 @@ def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
     -------
     entropy : float
         Entropy estimate.
-
     std : float, optional
         Uncertainty in the entropy estimate
-        (approximates the standard deviation over the entropy posterior).
+        (approximated standard deviation over the entropy posterior).
         Only provided if `return_std` is True.
 
     """
 
-    estimator = Entropy(alpha, plugin)
-    estimator.fit(counts, k)
+    def plogq(p, q):
+        x = p * numpy.log(q)
+        return numpy.sum(x[p > 0])
+
+    if qk is not None:
+        # qk is the ref. PMF and must sum to one
+        qk = numpy.float64(qk)
+        nrm = 1.0 / numpy.sum(qk)
+        qk *= nrm
+
+    if is_pmf(pk):
+        # if pk is a PMF plug into the entropy/KL div. definition
+        pk = numpy.float64(pk)
+        if qk is not None:
+            S = plogq(pk, pk) - plogq(pk, qk)
+            err = 0.0
+        else:
+            S = - plogq(pk, pk)
+            err = 0.0
+    else:
+        # pk is an array of counts
+        if qk is not None:
+            estimator = KLDivergence(qk, alpha, plugin)
+        else:
+            estimator = Entropy(alpha, plugin)
+        estimator.fit(pk, k)
+        S, err = estimator.estimate, estimator.std
+
+        if numpy.isnan(S) or (err is not None and numpy.isnan(err)):
+            raise FloatingPointError("NaN value")
+
+    if base is not None:
+        base = numpy.log(base)
+        S /= base
+        err /= base
 
     if return_std:
-        result = estimator.estimate, estimator.std
+        return S, err
     else:
-        result = estimator.estimate
-
-    if numpy.any(numpy.isnan(numpy.squeeze(result))):
-        raise FloatingPointError("NaN value")
-
-    return result
+        return S
 
 
 def nbins(data):
@@ -342,3 +412,17 @@ def from_data(ar, ks=None, axis=0, r=0):
                                       for x in combinations(ks, r=r))
         return (entropy_estimator(c, k=k) for c, k in
                 zip(counts_combinations, alphabet_size_combinations))
+
+
+def are_counts(a):
+    a = numpy.float64(a)
+    are_integers = numpy.all([x.is_integer() for x in a])
+    not_negative = numpy.all([a >= 0])
+    return are_integers and not_negative
+
+
+def is_pmf(a):
+    a = numpy.float64(a)
+    not_negative = numpy.all(a >= 0)
+    normalized = numpy.isclose(sum(a), 1.0)
+    return not_negative and normalized
