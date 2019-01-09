@@ -16,7 +16,7 @@ and returns an entropy estimate (in nats):
 >>> import ndd
 >>> entropy_estimate = ndd.entropy(counts)
 >>> entropy_estimate
-2.623634344902917
+2.623634344888532
 ```
 
 Optionally, the uncertainty in the entropy estimate can be quantified 
@@ -27,6 +27,18 @@ by computing an approximation for the posterior standard deviation:
 >>> std
 0.048675500725595504
 ```
+
+The full signature is:
+```python
+entropy(pk, qk=None, base=None,
+        k=None, alpha=None, plugin=False, return_std=False)
+```
+The `ndd.entropy()` function can be used as a Bayesian drop-in replacement for
+the `scipy.stats.entropy` function:
+```python
+scipy.stats.entropy(pk, qk=None, base=None)
+```
+when `pk` is an array of integer counts from an unkown discrete distribution.
 
 ### Where to get it
 Install using pip:
