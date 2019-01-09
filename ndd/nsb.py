@@ -90,13 +90,14 @@ class Entropy(BaseEstimator):
 
     @staticmethod
     def _check_counts(a):
-        try:
-            a = numpy.asarray(a, dtype=numpy.int32)
-        except ValueError:
-            raise
-        if numpy.any(a < 0):
-            raise ValueError("Frequency counts can't be negative")
-        return a.flatten()
+        a = numpy.float64(a)
+        not_integers = not numpy.all([x.is_integer() for x in a])
+        negative = numpy.any([a < 0])
+        if not_integers:
+            raise ValueError('counts array has non-integer values')
+        if negative:
+            raise ValueError('counts array has negative values')
+        return numpy.int32(a).flatten()
 
     @staticmethod
     def _check_k(k, n_bins):
@@ -412,13 +413,6 @@ def from_data(ar, ks=None, axis=0, r=0):
                                       for x in combinations(ks, r=r))
         return (entropy_estimator(c, k=k) for c, k in
                 zip(counts_combinations, alphabet_size_combinations))
-
-
-def are_counts(a):
-    a = numpy.float64(a)
-    are_integers = numpy.all([x.is_integer() for x in a])
-    not_negative = numpy.all([a >= 0])
-    return are_integers and not_negative
 
 
 def is_pmf(a):
