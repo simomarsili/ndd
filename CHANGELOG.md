@@ -1,6 +1,11 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- entropy() args mimic scipy.stats.entropy(pk, qk=None, base=None):
+  - rename `counts` to `pk`
+  - add `qk`,
+  - add `base` 
 
 ## [0.8] - 2019-01-08
 ### Added
