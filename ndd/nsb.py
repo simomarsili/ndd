@@ -18,25 +18,7 @@ __all__ = ['entropy', 'histogram', 'from_data', 'nbins']
 import numpy
 import ndd
 import ndd._nsb
-
-
-class BaseEstimator(object):
-    def __init__(self):
-        self.estimate = None
-        self.std = None
-
-    def _check_input(self):
-        # check input data
-        raise NotImplementedError
-
-    def fit(self):
-        # set self.estimate, self.std
-        raise NotImplementedError
-
-    def __call__(self, *args, **kwargs):
-        """Return estimate from input data. Delegate to fit."""
-        self.fit(*args, **kwargs)
-        return self.estimate
+from ndd.base import BaseEstimator
 
 
 class Entropy(BaseEstimator):
