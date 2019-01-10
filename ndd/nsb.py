@@ -202,14 +202,12 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
     Return a Bayesian estimate S' of the entropy of an unknown discrete
     distribution from an input array of counts pk.
-    If pk is normalized, return S = -sum(pk * log(pk), axis=0).
 
     Parameters
     ----------
 
     pk : array-like
         The number of occurrences of a set of bins.
-        If pk is normalized, return S = -sum(pk * log(pk), axis=0).
     k : int or array-like, optional
         Number of bins; k >= len(pk).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
@@ -239,19 +237,13 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     """
 
-    if is_pmf(pk):
-        # if pk is a PMF plug into the entropy definition
-        pk = numpy.float64(pk)
-        S = - numpy.sum(pk * numpy.log(pk), axis=0)
-        err = 0.0
-    else:
-        # pk is an array of counts
-        estimator = Entropy(alpha, plugin)
-        estimator.fit(pk, k)
-        S, err = estimator.estimate, estimator.std
+    # pk is an array of counts
+    estimator = Entropy(alpha, plugin)
+    estimator.fit(pk, k)
+    S, err = estimator.estimate, estimator.std
 
-        if numpy.isnan(S) or (err is not None and numpy.isnan(err)):
-            raise FloatingPointError("NaN value")
+    if numpy.isnan(S) or (err is not None and numpy.isnan(err)):
+        raise FloatingPointError("NaN value")
 
     if return_std:
         return S, err
