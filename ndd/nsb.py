@@ -69,15 +69,15 @@ class Entropy(BaseEstimator):
 
     @staticmethod
     def _plugin(counts, k):
-        return ndd._nsb.plugin(counts, k)
+        return ndd._nsb.plugin(counts, k), None
 
     @staticmethod
     def _pseudocounts(counts, k, alpha):
-        return ndd._nsb.pseudo(counts, k, alpha)
+        return ndd._nsb.pseudo(counts, k, alpha), None
 
     @staticmethod
     def _ww(counts, k, alpha):
-        return ndd._nsb.dirichlet(counts, k, alpha)
+        return ndd._nsb.dirichlet(counts, k, alpha), None
 
     @staticmethod
     def _nsb(counts, k):
@@ -90,14 +90,14 @@ class Entropy(BaseEstimator):
 
     @staticmethod
     def _check_counts(a):
-        a = numpy.float64(a)
+        a = numpy.float64(a).flatten()
         not_integers = not numpy.all([x.is_integer() for x in a])
         negative = numpy.any([a < 0])
         if not_integers:
             raise ValueError('counts array has non-integer values')
         if negative:
             raise ValueError('counts array has negative values')
-        return numpy.int32(a).flatten()
+        return numpy.int32(a)
 
     @staticmethod
     def _check_k(k, n_bins):
@@ -156,11 +156,7 @@ class Entropy(BaseEstimator):
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
-            result = self.estimator(counts, k)
-            if isinstance(result, tuple):
-                self.estimate, self.std = result
-            else:
-                self.estimate = result
+            self.estimate, self.std = self.estimator(counts, k)
 
 
 class KLDivergence(Entropy):
@@ -190,12 +186,50 @@ class KLDivergence(Entropy):
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
-            result = self.estimator(pk, k)
-            if isinstance(result, tuple):
-                self.estimate, self.std = result
-            else:
-                self.estimate = result
+            self.estimate, self.std = self.estimator(pk, k)
         self.estimate -= numpy.sum(pk * self.log_qk)
+
+
+class JSDivergence(Entropy):
+    @staticmethod
+    def _check_counts(a):
+        a = numpy.float64(a)
+        if a.ndim != 2:
+            raise ValueError('counts must be 2D.')
+        not_integers = not numpy.all([x.is_integer() for x in a.flatten()])
+        negative = numpy.any([a < 0])
+        if not_integers:
+            raise ValueError('counts array has non-integer values')
+        if negative:
+            raise ValueError('counts array has negative values')
+        return numpy.int32(a)
+
+    def _check_input(self, pk, k):
+        pk = self._check_counts(a=pk)
+        k = self._check_k(k=k, n_bins=pk.shape[1])
+        return pk, k
+
+    def fit(self, pk, k=None):
+        """
+        pk : array_like
+            n-by-p array. Different rows correspond to counts from different
+            distributions with the same discrete sample space.
+
+        k : int, optional
+            Number of bins. k >= p if pk is n-by-p.
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to pk.shape[1].
+
+        """
+        pk, k = self._check_input(pk, k)
+        n, p = pk.shape
+        ws = numpy.float64(pk.sum(axis=1))
+        ws /= ws.sum()
+        if k == 1:  # single bin
+            self.estimate = 0.0
+        else:
+            self.estimate = self.estimator(pk.sum(axis=0), k)[0] - sum(
+                ws[i]*self.estimator(x, k)[0] for i, x in enumerate(pk))
 
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
@@ -380,3 +414,23 @@ def is_pmf(a):
     not_negative = numpy.all(a >= 0)
     normalized = numpy.isclose(sum(a), 1.0)
     return not_negative and normalized
+
+
+def _test_JS(n):
+    alpha = 0.1
+    p = 100
+    p1 = numpy.random.dirichlet([alpha]*p)
+    p2 = numpy.random.dirichlet([alpha]*p)
+    pm = 0.5 * (p1 + p2)
+
+    def ee(x):
+        y = - x * numpy.log(x)
+        return numpy.sum(y[x > 0])
+    js = ee(pm) - 0.5 * (ee(p1) + ee(p2))
+    c1 = numpy.random.multinomial(n, p1)
+    c2 = numpy.random.multinomial(n, p2)
+    pk = numpy.stack([c1, c2])
+    est = JSDivergence()
+    est.fit(pk)
+    js1 = est.estimate
+    return js, js1
