@@ -10,10 +10,12 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     ascii, chr, hex, input, next, oct, open,
     pow, round, super,
     filter, map, zip)
+from inspect import signature
 
 
 class BaseEstimator(object):
-    # TODO: mimic sklearn BaseEstimator
+    # TODO: adapt from sklearn BaseEstimator
+    """Base class for all entropy estimators."""
     def __init__(self):
         self.estimate = None
         self.std = None
@@ -30,3 +32,30 @@ class BaseEstimator(object):
         """Return estimate from input data. Delegate to fit."""
         self.fit(*args, **kwargs)
         return self.estimate
+
+    @classmethod
+    def _get_param_names(cls):
+        """Get parameter names for the estimator"""
+        # fetch the constructor or the original constructor before
+        # deprecation wrapping if any
+        init = getattr(cls.__init__, 'deprecated_original', cls.__init__)
+        if init is object.__init__:
+            # No explicit constructor to introspect
+            return []
+
+        # introspect the constructor arguments to find the model parameters
+        # to represent
+        init_signature = signature(init)
+        # Consider the constructor parameters excluding 'self'
+        parameters = [p for p in init_signature.parameters.values()
+                      if p.name != 'self' and p.kind != p.VAR_KEYWORD]
+        for p in parameters:
+            if p.kind == p.VAR_POSITIONAL:
+                raise RuntimeError("scikit-learn estimators should always "
+                                   "specify their parameters in the signature"
+                                   " of their __init__ (no varargs)."
+                                   " %s with constructor %s doesn't "
+                                   " follow this convention."
+                                   % (cls, init_signature))
+        # Extract and sort argument names excluding 'self'
+        return sorted([p.name for p in parameters])
