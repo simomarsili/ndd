@@ -15,8 +15,40 @@ from ndd.base import BaseEstimator
 import ndd._nsb
 
 
+class EntropyEstimatorMixin(object):
+    @staticmethod
+    def _plugin_estimator(pk, k):
+        return ndd._nsb.plugin(pk, k), None
+
+    @staticmethod
+    def _pseudocounts_estimator(pk, k, alpha):
+        return ndd._nsb.pseudo(pk, k, alpha), None
+
+    @staticmethod
+    def _ww_estimator(pk, k, alpha):
+        return ndd._nsb.dirichlet(pk, k, alpha), None
+
+    @staticmethod
+    def _nsb_estimator(pk, k):
+        return ndd._nsb.nsb(pk, k)
+
+    def select_estimator(self):
+        if self.plugin:
+            if self.alpha is None:
+                self.estimator = self._plugin_estimator
+            else:
+                self.estimator = lambda pk, k: self._pseudocounts_estimator(
+                    pk, k, self.alpha)
+        else:
+            if self.alpha is None:
+                self.estimator = self._nsb_estimator
+            else:
+                self.estimator = lambda pk, k: self._ww_estimator(
+                    pk, k, self.alpha)
+
+
 # TODO: docstrings
-class Entropy(BaseEstimator):
+class Entropy(EntropyEstimatorMixin, BaseEstimator):
     def __init__(self, alpha=None, plugin=False):
 
         self.estimate = None
@@ -31,36 +63,8 @@ class Entropy(BaseEstimator):
             if alpha <= 0:
                 raise ValueError("alpha <= 0")
         self.alpha = alpha
-
-        # set estimator
-        if plugin:
-            if alpha is None:
-                self.estimator = self._plugin
-            else:
-                self.estimator = lambda pk, k: self._pseudocounts(
-                    pk, k, self.alpha)
-        else:
-            if alpha is None:
-                self.estimator = self._nsb
-            else:
-                self.estimator = lambda pk, k: self._ww(
-                    pk, k, self.alpha)
-
-    @staticmethod
-    def _plugin(pk, k):
-        return ndd._nsb.plugin(pk, k), None
-
-    @staticmethod
-    def _pseudocounts(pk, k, alpha):
-        return ndd._nsb.pseudo(pk, k, alpha), None
-
-    @staticmethod
-    def _ww(pk, k, alpha):
-        return ndd._nsb.dirichlet(pk, k, alpha), None
-
-    @staticmethod
-    def _nsb(pk, k):
-        return ndd._nsb.nsb(pk, k)
+        self.plugin = plugin
+        self.select_estimator()
 
     def _check_input(self, pk, k):
         pk = self._check_counts(a=pk)
