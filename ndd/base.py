@@ -11,7 +11,10 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     pow, round, super,
     filter, map, zip)
 import numpy
-from inspect import signature
+try:
+    from inspect import signature
+except ImportError:
+    from ndd.funcsigs import signature
 from collections import defaultdict
 
 
