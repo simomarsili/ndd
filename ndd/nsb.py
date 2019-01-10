@@ -198,28 +198,18 @@ class KLDivergence(Entropy):
         self.estimate -= numpy.sum(pk * self.log_qk)
 
 
-def entropy(pk, qk=None, base=None,
-            # *, k=None, alpha=None, plugin=False, return_std=False):
-            k=None, alpha=None, plugin=False, return_std=False):
+def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
     Return a Bayesian estimate S' of the entropy of an unknown discrete
     distribution from an input array of counts pk.
-    If pk is normalized, compute S' as S' = S = -sum(pk * log(pk), axis=0).
-    If qk is not None, then compute the Kullback-Leibler divergence as
-    KL = S' - sum(pk log(qk)).
-    Normalize qk if it doesn't sum to 1.
+    If pk is normalized, return S = -sum(pk * log(pk), axis=0).
 
     Parameters
     ----------
 
     pk : array-like
         The number of occurrences of a set of bins.
-        If pk is normalized, compute S' as -sum(pk * log(pk), axis=0).
-    qk : array-like, optional
-        Reference PMF against which the relative entropy is computed.
-        Should be in the same format as pk.
-    base : float, optional
-        The logarithmic base to use, defaults to e (natural logarithm).
+        If pk is normalized, return S = -sum(pk * log(pk), axis=0).
     k : int or array-like, optional
         Number of bins; k >= len(pk).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
@@ -249,41 +239,19 @@ def entropy(pk, qk=None, base=None,
 
     """
 
-    def plogq(p, q):
-        x = p * numpy.log(q)
-        return numpy.sum(x[p > 0])
-
-    if qk is not None:
-        # qk is the ref. PMF and must sum to one
-        qk = numpy.float64(qk)
-        nrm = 1.0 / numpy.sum(qk)
-        qk *= nrm
-
     if is_pmf(pk):
-        # if pk is a PMF plug into the entropy/KL div. definition
+        # if pk is a PMF plug into the entropy definition
         pk = numpy.float64(pk)
-        if qk is not None:
-            S = plogq(pk, pk) - plogq(pk, qk)
-            err = 0.0
-        else:
-            S = - plogq(pk, pk)
-            err = 0.0
+        S = - numpy.sum(pk * numpy.log(pk), axis=0)
+        err = 0.0
     else:
         # pk is an array of counts
-        if qk is not None:
-            estimator = KLDivergence(qk, alpha, plugin)
-        else:
-            estimator = Entropy(alpha, plugin)
+        estimator = Entropy(alpha, plugin)
         estimator.fit(pk, k)
         S, err = estimator.estimate, estimator.std
 
         if numpy.isnan(S) or (err is not None and numpy.isnan(err)):
             raise FloatingPointError("NaN value")
-
-    if base is not None:
-        base = numpy.log(base)
-        S /= base
-        err /= base
 
     if return_std:
         return S, err
