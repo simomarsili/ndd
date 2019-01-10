@@ -195,10 +195,3 @@ def from_data(ar, ks=None, axis=0, r=0):
                                       for x in combinations(ks, r=r))
         return (entropy_estimator(c, k=k) for c, k in
                 zip(counts_combinations, alphabet_size_combinations))
-
-
-def is_pmf(a):
-    a = numpy.float64(a)
-    not_negative = numpy.all(a >= 0)
-    normalized = numpy.isclose(sum(a), 1.0)
-    return not_negative and normalized

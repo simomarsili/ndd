@@ -234,3 +234,10 @@ def _test_JS(n):
     est.fit(pk)
     js1 = est.estimate
     return js, js1
+
+
+def is_pmf(a):
+    a = numpy.float64(a)
+    not_negative = numpy.all(a >= 0)
+    normalized = numpy.isclose(sum(a), 1.0)
+    return not_negative and normalized
