@@ -37,35 +37,35 @@ class Entropy(BaseEstimator):
             if alpha is None:
                 self.estimator = self._plugin
             else:
-                self.estimator = lambda counts, k: self._pseudocounts(
-                    counts, k, self.alpha)
+                self.estimator = lambda pk, k: self._pseudocounts(
+                    pk, k, self.alpha)
         else:
             if alpha is None:
                 self.estimator = self._nsb
             else:
-                self.estimator = lambda counts, k: self._ww(
-                    counts, k, self.alpha)
+                self.estimator = lambda pk, k: self._ww(
+                    pk, k, self.alpha)
 
     @staticmethod
-    def _plugin(counts, k):
-        return ndd._nsb.plugin(counts, k), None
+    def _plugin(pk, k):
+        return ndd._nsb.plugin(pk, k), None
 
     @staticmethod
-    def _pseudocounts(counts, k, alpha):
-        return ndd._nsb.pseudo(counts, k, alpha), None
+    def _pseudocounts(pk, k, alpha):
+        return ndd._nsb.pseudo(pk, k, alpha), None
 
     @staticmethod
-    def _ww(counts, k, alpha):
-        return ndd._nsb.dirichlet(counts, k, alpha), None
+    def _ww(pk, k, alpha):
+        return ndd._nsb.dirichlet(pk, k, alpha), None
 
     @staticmethod
-    def _nsb(counts, k):
-        return ndd._nsb.nsb(counts, k)
+    def _nsb(pk, k):
+        return ndd._nsb.nsb(pk, k)
 
-    def _check_input(self, counts, k):
-        counts = self._check_counts(a=counts)
-        k = self._check_k(k=k, n_bins=len(counts))
-        return counts, k
+    def _check_input(self, pk, k):
+        pk = self._check_counts(a=pk)
+        k = self._check_k(k=k, n_bins=len(pk))
+        return pk, k
 
     @staticmethod
     def _check_counts(a):
@@ -120,22 +120,22 @@ class Entropy(BaseEstimator):
                 raise ValueError("k (%s) should be a whole number." % k)
         return k
 
-    def fit(self, counts, k=None):
+    def fit(self, pk, k=None):
         """
-        counts : array_like
+        pk : array_like
             The number of occurrences of a set of bins.
 
         k : int, optional
-            Number of bins. k >= len(counts).
+            Number of bins. k >= len(pk).
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to len(counts).
+            Defaults to len(pk).
 
         """
-        counts, k = self._check_input(counts, k)
+        pk, k = self._check_input(pk, k)
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
-            self.estimate, self.std = self.estimator(counts, k)
+            self.estimate, self.std = self.estimator(pk, k)
 
     def __call__(self, *args, **kwargs):
         """Return estimate from input data. Delegate to fit."""
@@ -158,9 +158,9 @@ class KLDivergence(Entropy):
             The number of occurrences of a set of bins.
 
         k : int, optional
-            Number of bins. k >= len(counts).
+            Number of bins. k >= len(pk).
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to len(counts).
+            Defaults to len(pk).
 
         """
         pk, k = self._check_input(pk, k)
