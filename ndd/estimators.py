@@ -18,7 +18,9 @@ import ndd._nsb
 # TODO: docstrings
 class Entropy(BaseEstimator):
     def __init__(self, alpha=None, plugin=False):
-        super().__init__()
+
+        self.estimate = None
+        self.std = None
 
         # check alpha value
         if alpha:
@@ -134,6 +136,11 @@ class Entropy(BaseEstimator):
             self.estimate = self.std = 0.0
         else:
             self.estimate, self.std = self.estimator(counts, k)
+
+    def __call__(self, *args, **kwargs):
+        """Return estimate from input data. Delegate to fit."""
+        self.fit(*args, **kwargs)
+        return self.estimate
 
 
 class KLDivergence(Entropy):

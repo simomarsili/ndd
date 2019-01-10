@@ -16,24 +16,9 @@ from collections import defaultdict
 
 
 class BaseEstimator(object):
-    # TODO: adapt from sklearn BaseEstimator
-    """Base class for all entropy estimators."""
-    def __init__(self):
-        self.estimate = None
-        self.std = None
-
-    def _check_input(self):
-        # check input data
-        raise NotImplementedError
-
-    def fit(self):
-        # set self.estimate, self.std
-        raise NotImplementedError
-
-    def __call__(self, *args, **kwargs):
-        """Return estimate from input data. Delegate to fit."""
-        self.fit(*args, **kwargs)
-        return self.estimate
+    """Base class for entropy estimators.
+    Methods from sklearn BaseEstimator (only).
+    """
 
     @classmethod
     def _get_param_names(cls):
