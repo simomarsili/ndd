@@ -34,7 +34,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         Number of bins; k >= len(pk).
         A float value is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k).
-        Defaults to len(counts).
+        Defaults to len(pk).
     alpha : float, optional
         If alpha is not None, use a single Dirichlet prior with concentration
         parameter alpha (fixed alpha estimator). alpha > 0.0.
