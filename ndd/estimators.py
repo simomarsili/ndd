@@ -15,6 +15,7 @@ from ndd.base import BaseEstimator
 import ndd._nsb
 
 
+# TODO: docstrings
 class Entropy(BaseEstimator):
     def __init__(self, alpha=None, plugin=False):
         super().__init__()
