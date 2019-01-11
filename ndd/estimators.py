@@ -46,42 +46,6 @@ class EntropyEstimatorMixin(object):
                     self._estimator = lambda pk, k: self._ww_estimator(pk, k, self.alpha)
         return self._estimator(pk, k)
 
-
-# TODO: docstrings
-class Entropy(EntropyEstimatorMixin, BaseEstimator):
-    def __init__(self, alpha=None, plugin=False):
-
-        self.estimate = None
-        self.std = None
-        self._estimator = None
-
-        # check alpha value
-        if alpha:
-            try:
-                alpha = numpy.float64(alpha)
-            except ValueError:
-                raise
-            if alpha <= 0:
-                raise ValueError("alpha <= 0")
-        self.alpha = alpha
-        self.plugin = plugin
-
-    def _check_input(self, pk, k):
-        pk = self._check_counts(a=pk)
-        k = self._check_k(k=k, n_bins=len(pk))
-        return pk, k
-
-    @staticmethod
-    def _check_counts(a):
-        a = numpy.float64(a).flatten()
-        not_integers = not numpy.all([x.is_integer() for x in a])
-        negative = numpy.any([a < 0])
-        if not_integers:
-            raise ValueError('counts array has non-integer values')
-        if negative:
-            raise ValueError('counts array has negative values')
-        return numpy.int32(a)
-
     @staticmethod
     def _check_k(k, n_bins):
         """
@@ -123,6 +87,42 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
             if not k.is_integer():
                 raise ValueError("k (%s) should be a whole number." % k)
         return k
+
+
+# TODO: docstrings
+class Entropy(EntropyEstimatorMixin, BaseEstimator):
+    def __init__(self, alpha=None, plugin=False):
+
+        self.estimate = None
+        self.std = None
+        self._estimator = None
+
+        # check alpha value
+        if alpha:
+            try:
+                alpha = numpy.float64(alpha)
+            except ValueError:
+                raise
+            if alpha <= 0:
+                raise ValueError("alpha <= 0")
+        self.alpha = alpha
+        self.plugin = plugin
+
+    def _check_input(self, pk, k):
+        pk = self._check_counts(a=pk)
+        k = self._check_k(k=k, n_bins=len(pk))
+        return pk, k
+
+    @staticmethod
+    def _check_counts(a):
+        a = numpy.float64(a).flatten()
+        not_integers = not numpy.all([x.is_integer() for x in a])
+        negative = numpy.any([a < 0])
+        if not_integers:
+            raise ValueError('counts array has non-integer values')
+        if negative:
+            raise ValueError('counts array has negative values')
+        return numpy.int32(a)
 
     def fit(self, pk, k=None):
         """
