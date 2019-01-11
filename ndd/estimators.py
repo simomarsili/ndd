@@ -38,7 +38,7 @@ class EntropyEstimatorMixin(object):
                 if self.alpha is None:
                     self._estimator = self._plugin_estimator
                 else:
-                    self._estimator = lambda pk, k: self._pseudocounts_estimator(pk, k, self.alpha)
+                    self._estimator = lambda pk, k: self._pseudocounts_estimator(pk, k, self.alpha)  # pylint: disable=redefined-variable-type
             else:
                 if self.alpha is None:
                     self._estimator = self._nsb_estimator
@@ -168,7 +168,7 @@ class KLDivergence(Entropy):
 
         """
         pk, k = self._check_input(pk, k)
-        if not len(self.log_qk) == len(pk):
+        if len(self.log_qk) != len(pk):
             raise ValueError('qk and pk must have the same length.')
 
         if k == 1:  # single bin
