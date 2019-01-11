@@ -210,7 +210,6 @@ class JSDivergence(Entropy):
 
         """
         pk, k = self._check_input(pk, k)
-        n, p = pk.shape
         ws = numpy.float64(pk.sum(axis=1))
         ws /= ws.sum()
         if k == 1:  # single bin
