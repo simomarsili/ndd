@@ -112,7 +112,7 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
         self.alpha = alpha
         self.plugin = plugin
 
-    def _check_input(self, pk, k):
+    def check_input(self, pk, k):
         pk = self._check_counts(a=pk)
         k = self._check_k(k=k, n_bins=len(pk))
         return pk, k
@@ -139,7 +139,7 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
             Defaults to len(pk).
 
         """
-        pk, k = self._check_input(pk, k)
+        pk, k = self.check_input(pk, k)
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
@@ -171,7 +171,7 @@ class KLDivergence(Entropy):
             Defaults to len(pk).
 
         """
-        pk, k = self._check_input(pk, k)
+        pk, k = self.check_input(pk, k)
         if len(self.log_qk) != len(pk):
             raise ValueError('qk and pk must have the same length.')
 
@@ -196,7 +196,7 @@ class JSDivergence(Entropy):
             raise ValueError('counts array has negative values')
         return numpy.int32(a)
 
-    def _check_input(self, pk, k):
+    def check_input(self, pk, k):
         pk = self._check_counts(a=pk)
         k = self._check_k(k=k, n_bins=pk.shape[1])
         return pk, k
@@ -213,7 +213,7 @@ class JSDivergence(Entropy):
             Defaults to pk.shape[1].
 
         """
-        pk, k = self._check_input(pk, k)
+        pk, k = self.check_input(pk, k)
         ws = numpy.float64(pk.sum(axis=1))
         ws /= ws.sum()
         if k == 1:  # single bin
