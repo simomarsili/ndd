@@ -2,6 +2,7 @@
 # Copyright (C) 2016,2017 Simone Marsili
 # All rights reserved.
 # License: BSD 3 clause
+"""Functions module."""
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from builtins import (  # pylint: disable=redefined-builtin, unused-import
@@ -9,15 +10,14 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     ascii, chr, hex, input, next, oct, open,
     pow, round, super,
     filter, map, zip)
+import numpy
+import ndd
+from ndd.estimators import Entropy
 
 __copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
 __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy', 'histogram', 'from_data', 'nbins']
-
-import numpy
-import ndd
-from ndd.estimators import Entropy
 
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
@@ -79,7 +79,7 @@ def nbins(data):
     the num. of unique elements for each variable.
     """
     # reshape as a p-by-n array
-    data = ndd.nsb._as_data_array(data)
+    data = ndd.nsb.as_data_array(data)
     return [len(numpy.unique(v)) for v in data]
 
 
@@ -104,8 +104,8 @@ def histogram(data, axis=0, r=0):
     """
     from itertools import combinations
     # reshape as a p-by-n array
-    data = ndd.nsb._as_data_array(data, axis=axis)
-    p, n = data.shape
+    data = ndd.nsb.as_data_array(data, axis=axis)
+    p = data.shape[0]
     if r > p:
         raise ValueError('r (%r) is larger than the number of variables (%r)'
                          % (r, p))
@@ -117,7 +117,7 @@ def histogram(data, axis=0, r=0):
         return (ndd.histogram(d, axis=1) for d in combinations(data, r=r))
 
 
-def _as_data_array(ar, axis=0):
+def as_data_array(ar, axis=0):
     """
     For a 2D n-by-p data array, transpose it.
     For a generic ndarray, flatten the subarrays indexed by axis 0
@@ -170,8 +170,8 @@ def from_data(ar, ks=None, axis=0, r=0):
     """
     from itertools import combinations
 
-    ar = _as_data_array(ar, axis=axis)
-    p, n = ar.shape
+    ar = as_data_array(ar, axis=axis)
+    p = ar.shape[0]
 
     if ks is None:
         ks = numpy.array([len(numpy.unique(v)) for v in ar])

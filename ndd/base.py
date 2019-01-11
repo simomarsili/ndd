@@ -12,10 +12,10 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     filter, map, zip)
 import numpy
 try:
-    from inspect import signature
+    from inspect import signature  # pylint: disable=wrong-import-order
 except ImportError:
     from ndd.funcsigs import signature
-from collections import defaultdict
+from collections import defaultdict  # pylint: disable=wrong-import-order
 
 
 class BaseEstimator(object):
@@ -144,7 +144,7 @@ def _pprint(params, offset=0, printer=repr):
     this_line_length = offset
     line_sep = ',\n' + (1 + offset // 2) * ' '
     for i, (k, v) in enumerate(sorted(params.items())):
-        if type(v) is float:
+        if isinstance(v, float):
             # use str for representing floating point numbers
             # this way we get consistent representation across
             # architectures and versions.
@@ -155,7 +155,7 @@ def _pprint(params, offset=0, printer=repr):
         if len(this_repr) > 500:
             this_repr = this_repr[:300] + '...' + this_repr[-100:]
         if i > 0:
-            if (this_line_length + len(this_repr) >= 75 or '\n' in this_repr):
+            if this_line_length + len(this_repr) >= 75 or '\n' in this_repr:
                 params_list.append(line_sep)
                 this_line_length = len(line_sep)
             else:
