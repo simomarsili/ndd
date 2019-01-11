@@ -59,7 +59,7 @@ class EntropyEstimatorMixin(object):
         return self._estimator(pk, k)
 
     @staticmethod
-    def _check_k(k, n_bins):
+    def check_k(k, n_bins):
         """
         if k is None, set k = number of bins
         if k is an integer, just check
@@ -113,12 +113,12 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
         self.plugin = plugin
 
     def check_input(self, pk, k):
-        pk = self._check_counts(a=pk)
-        k = self._check_k(k=k, n_bins=len(pk))
+        pk = self.check_pk(a=pk)
+        k = self.check_k(k=k, n_bins=len(pk))
         return pk, k
 
     @staticmethod
-    def _check_counts(a):
+    def check_pk(a):
         a = numpy.float64(a).flatten()
         not_integers = not numpy.all([x.is_integer() for x in a])
         negative = numpy.any([a < 0])
@@ -184,7 +184,7 @@ class KLDivergence(Entropy):
 
 class JSDivergence(Entropy):
     @staticmethod
-    def _check_counts(a):
+    def check_pk(a):
         a = numpy.float64(a)
         if a.ndim != 2:
             raise ValueError('counts must be 2D.')
@@ -197,8 +197,8 @@ class JSDivergence(Entropy):
         return numpy.int32(a)
 
     def check_input(self, pk, k):
-        pk = self._check_counts(a=pk)
-        k = self._check_k(k=k, n_bins=pk.shape[1])
+        pk = self.check_pk(a=pk)
+        k = self.check_k(k=k, n_bins=pk.shape[1])
         return pk, k
 
     def fit(self, pk, k=None):
