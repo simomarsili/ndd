@@ -40,11 +40,11 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
             self.estimate = self.std = 0.0
         else:
             self.estimate, self.std = self.estimator(pk, k)
+        return self
 
     def __call__(self, *args, **kwargs):
         """Return estimate from input data. Delegate to fit."""
-        self.fit(*args, **kwargs)
-        return self.estimate
+        return self.fit(*args, **kwargs).estimate
 
 
 class KLDivergence(Entropy):
@@ -75,6 +75,7 @@ class KLDivergence(Entropy):
         else:
             self.estimate, self.std = self.estimator(pk, k)
         self.estimate -= numpy.sum(pk * self.log_qk)
+        return self
 
 
 class JSDivergence(Entropy):
@@ -100,6 +101,7 @@ class JSDivergence(Entropy):
         else:
             self.estimate = self.estimator(pk.sum(axis=0), k)[0] - sum(
                 ws[i]*self.estimator(x, k)[0] for i, x in enumerate(pk))
+        return self
 
 
 def _test_JS(n):
