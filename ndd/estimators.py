@@ -16,28 +16,28 @@ import ndd.fnsb
 
 
 class EntropyEstimatorMixin(object):
-    @staticmethod
-    def check_alpha(alpha):
-        try:
-            alpha = numpy.float64(alpha)
-        except ValueError:
-            raise ValueError('alpha (%r) should be numeric.' % alpha)
-        if alpha < 0:
-            raise ValueError('Negative alpha value: %r' % alpha)
-        return alpha
-
+    """Implements the estimator method and interfaces to Fortran routines.
+    """
     def _plugin_estimator(self, pk, k):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
         return ndd.fnsb.plugin(pk, k), None
 
     def _pseudocounts_estimator(self, pk, k, alpha):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
         alpha = self.check_alpha(alpha)
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
     def _ww_estimator(self, pk, k, alpha):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
         alpha = self.check_alpha(alpha)
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
     def _nsb_estimator(self, pk, k):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
         return ndd.fnsb.nsb(pk, k)
 
     def estimator(self, pk, k):
@@ -55,7 +55,28 @@ class EntropyEstimatorMixin(object):
         return self._estimator(pk, k)
 
     @staticmethod
-    def check_k(k, n_bins):
+    def check_alpha(alpha):
+        try:
+            alpha = numpy.float64(alpha)
+        except ValueError:
+            raise ValueError('alpha (%r) should be numeric.' % alpha)
+        if alpha < 0:
+            raise ValueError('Negative alpha value: %r' % alpha)
+        return alpha
+
+    @staticmethod
+    def check_pk(a):
+        a = numpy.float64(a).flatten()
+        not_integers = not numpy.all([x.is_integer() for x in a])
+        negative = numpy.any([a < 0])
+        if not_integers:
+            raise ValueError('counts array has non-integer values')
+        if negative:
+            raise ValueError('counts array has negative values')
+        return numpy.int32(a)
+
+    @staticmethod
+    def check_k(k):
         """
         if k is None, set k = number of bins
         if k is an integer, just check
@@ -63,37 +84,29 @@ class EntropyEstimatorMixin(object):
         """
         MAX_LOGK = 150 * numpy.log(2)
 
-        if k is None:
-            # set k to the number of observed bins
-            k = numpy.float64(n_bins)
-        else:
-            try:
-                k = numpy.float64(k)
-            except ValueError:
-                raise
-            if k.ndim:
-                # if k is a sequence, set k = prod(k)
-                if k.ndim > 1:
-                    raise ValueError('k must be a scalar or 1D array')
-                logk = numpy.sum(numpy.log(x) for x in k)
-                if logk > MAX_LOGK:
-                    # too large a number; backoff to n_bins?
-                    # TODO: log warning
-                    raise ValueError('k (%r) larger than %r' %
-                                     (numpy.exp(logk), numpy.exp(MAX_LOGK)))
-                else:
-                    k = numpy.prod(k)
+        try:
+            k = numpy.float64(k)
+        except ValueError:
+            raise
+        if k.ndim:
+            # if k is a sequence, set k = prod(k)
+            if k.ndim > 1:
+                raise ValueError('k must be a scalar or 1D array')
+            logk = numpy.sum(numpy.log(x) for x in k)
+            if logk > MAX_LOGK:
+                # too large a number; backoff to n_bins?
+                # TODO: log warning
+                raise ValueError('k (%r) larger than %r' %
+                                 (numpy.exp(logk), numpy.exp(MAX_LOGK)))
             else:
-                # if a scalar check size
-                if numpy.log(k) > MAX_LOGK:
-                    raise ValueError('k (%r) larger than %r' %
-                                     (k, numpy.exp(MAX_LOGK)))
-            # consistency checks
-            if k < n_bins:
-                raise ValueError("k (%s) is smaller than the number of bins"
-                                 "(%s)" % (k, n_bins))
-            if not k.is_integer():
-                raise ValueError("k (%s) should be a whole number." % k)
+                k = numpy.prod(k)
+        else:
+            # if a scalar check size
+            if numpy.log(k) > MAX_LOGK:
+                raise ValueError('k (%r) larger than %r' %
+                                 (k, numpy.exp(MAX_LOGK)))
+        if not k.is_integer():
+            raise ValueError("k (%s) should be a whole number." % k)
         return k
 
 
@@ -108,22 +121,6 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
         self.alpha = alpha
         self.plugin = plugin
 
-    def check_input(self, pk, k):
-        pk = self.check_pk(a=pk)
-        k = self.check_k(k=k, n_bins=len(pk))
-        return pk, k
-
-    @staticmethod
-    def check_pk(a):
-        a = numpy.float64(a).flatten()
-        not_integers = not numpy.all([x.is_integer() for x in a])
-        negative = numpy.any([a < 0])
-        if not_integers:
-            raise ValueError('counts array has non-integer values')
-        if negative:
-            raise ValueError('counts array has negative values')
-        return numpy.int32(a)
-
     def fit(self, pk, k=None):
         """
         pk : array_like
@@ -135,7 +132,6 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
             Defaults to len(pk).
 
         """
-        pk, k = self.check_input(pk, k)
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
@@ -167,7 +163,6 @@ class KLDivergence(Entropy):
             Defaults to len(pk).
 
         """
-        pk, k = self.check_input(pk, k)
         if len(self.log_qk) != len(pk):
             raise ValueError('qk and pk must have the same length.')
 
@@ -179,24 +174,6 @@ class KLDivergence(Entropy):
 
 
 class JSDivergence(Entropy):
-    @staticmethod
-    def check_pk(a):
-        a = numpy.float64(a)
-        if a.ndim != 2:
-            raise ValueError('counts must be 2D.')
-        not_integers = not numpy.all([x.is_integer() for x in a.flatten()])
-        negative = numpy.any([a < 0])
-        if not_integers:
-            raise ValueError('counts array has non-integer values')
-        if negative:
-            raise ValueError('counts array has negative values')
-        return numpy.int32(a)
-
-    def check_input(self, pk, k):
-        pk = self.check_pk(a=pk)
-        k = self.check_k(k=k, n_bins=pk.shape[1])
-        return pk, k
-
     def fit(self, pk, k=None):
         """
         pk : array_like
@@ -209,7 +186,9 @@ class JSDivergence(Entropy):
             Defaults to pk.shape[1].
 
         """
-        pk, k = self.check_input(pk, k)
+        pk = numpy.int32(pk)
+        if pk.ndim != 2:
+            raise ValueError('counts must be 2D.')
         ws = numpy.float64(pk.sum(axis=1))
         ws /= ws.sum()
         if k == 1:  # single bin
