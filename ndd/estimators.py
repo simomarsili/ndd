@@ -12,39 +12,39 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     filter, map, zip)
 import numpy
 from ndd.base import BaseEstimator
-import ndd._nsb
+import ndd.fnsb
 
 
 class EntropyEstimatorMixin(object):
     @staticmethod
     def _plugin_estimator(pk, k):
-        return ndd._nsb.plugin(pk, k), None
+        return ndd.fnsb.plugin(pk, k), None
 
     @staticmethod
     def _pseudocounts_estimator(pk, k, alpha):
-        return ndd._nsb.pseudo(pk, k, alpha), None
+        return ndd.fnsb.pseudo(pk, k, alpha), None
 
     @staticmethod
     def _ww_estimator(pk, k, alpha):
-        return ndd._nsb.dirichlet(pk, k, alpha), None
+        return ndd.fnsb.dirichlet(pk, k, alpha), None
 
     @staticmethod
     def _nsb_estimator(pk, k):
-        return ndd._nsb.nsb(pk, k)
+        return ndd.fnsb.nsb(pk, k)
 
-    def select_estimator(self):
-        if self.plugin:
-            if self.alpha is None:
-                self.estimator = self._plugin_estimator
+    def estimator(self, pk, k):
+        if self._estimator is None:
+            if self.plugin:
+                if self.alpha is None:
+                    self._estimator = self._plugin_estimator
+                else:
+                    self._estimator = lambda pk, k: self._pseudocounts_estimator(pk, k, self.alpha)
             else:
-                self.estimator = lambda pk, k: self._pseudocounts_estimator(
-                    pk, k, self.alpha)
-        else:
-            if self.alpha is None:
-                self.estimator = self._nsb_estimator
-            else:
-                self.estimator = lambda pk, k: self._ww_estimator(
-                    pk, k, self.alpha)
+                if self.alpha is None:
+                    self._estimator = self._nsb_estimator
+                else:
+                    self._estimator = lambda pk, k: self._ww_estimator(pk, k, self.alpha)
+        return self._estimator(pk, k)
 
 
 # TODO: docstrings
@@ -53,6 +53,7 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
 
         self.estimate = None
         self.std = None
+        self._estimator = None
 
         # check alpha value
         if alpha:
@@ -64,7 +65,6 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
                 raise ValueError("alpha <= 0")
         self.alpha = alpha
         self.plugin = plugin
-        self.select_estimator()
 
     def _check_input(self, pk, k):
         pk = self._check_counts(a=pk)
