@@ -147,7 +147,7 @@ class BaseEstimator(object):
 
 
 class EntropyEstimatorMixin(object):
-    """Implements the estimator method and interfaces to Fortran routines.
+    """Estimator method (interface to Fortran routines).
     """
     def _plugin_estimator(self, pk, k):
         return ndd.fnsb.plugin(pk, k), None
@@ -225,7 +225,7 @@ class EntropyEstimatorMixin(object):
         return k
 
 
-class BaseEntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
+class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     """Specialize to estimates of entropy-derived quantities."""
     def __init__(self, alpha=None, plugin=False):
         self.alpha = self.check_alpha(alpha)

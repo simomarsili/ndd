@@ -11,11 +11,12 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     pow, round, super,
     filter, map, zip)
 import numpy
-from ndd.base import BaseEntropyEstimator, EntropyEstimatorMixin
+from ndd.base import EntropyEstimator
 
 
 # TODO: docstrings
-class Entropy(BaseEntropyEstimator):
+class Entropy(EntropyEstimator):
+    """Entropy estimator class."""
     def fit(self, pk, k=None):
         """
         pk : array_like
@@ -34,7 +35,8 @@ class Entropy(BaseEntropyEstimator):
         return self
 
 
-class KLDivergence(BaseEntropyEstimator):
+class KLDivergence(EntropyEstimator):
+    """Kullback-Leibler divergence estimator class."""
     def __init__(self, qk, alpha=None, plugin=False):
         """qk is a parameter of the estimator; it must be a valid pmf."""
         super().__init__(alpha, plugin)
@@ -65,7 +67,8 @@ class KLDivergence(BaseEntropyEstimator):
         return self
 
 
-class JSDivergence(BaseEntropyEstimator):
+class JSDivergence(EntropyEstimator):
+    """Jensen-Shannon divergence estimator class."""
     def fit(self, pk, k=None):
         """
         pk : array_like
