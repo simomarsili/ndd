@@ -17,31 +17,27 @@ import ndd.fnsb
 
 class EntropyEstimatorMixin(object):
     @staticmethod
-    def _plugin_estimator(pk, k):
+    def check_alpha(alpha):
+        try:
+            alpha = numpy.float64(alpha)
+        except ValueError:
+            raise ValueError('alpha (%r) should be numeric.' % alpha)
+        if alpha < 0:
+            raise ValueError('Negative alpha value: %r' % alpha)
+        return alpha
+
+    def _plugin_estimator(self, pk, k):
         return ndd.fnsb.plugin(pk, k), None
 
-    @staticmethod
-    def _pseudocounts_estimator(pk, k, alpha):
-        try:
-            alpha = numpy.float64(alpha)
-        except ValueError:
-            raise ValueError('alpha (%r) should be numeric.' % alpha)
-        if alpha < 0:
-            raise ValueError('Negative alpha value: %r' % alpha)
+    def _pseudocounts_estimator(self, pk, k, alpha):
+        alpha = self.check_alpha(alpha)
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
-    @staticmethod
-    def _ww_estimator(pk, k, alpha):
-        try:
-            alpha = numpy.float64(alpha)
-        except ValueError:
-            raise ValueError('alpha (%r) should be numeric.' % alpha)
-        if alpha < 0:
-            raise ValueError('Negative alpha value: %r' % alpha)
+    def _ww_estimator(self, pk, k, alpha):
+        alpha = self.check_alpha(alpha)
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
-    @staticmethod
-    def _nsb_estimator(pk, k):
+    def _nsb_estimator(self, pk, k):
         return ndd.fnsb.nsb(pk, k)
 
     def estimator(self, pk, k):
