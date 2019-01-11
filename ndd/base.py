@@ -150,28 +150,22 @@ class EntropyEstimatorMixin(object):
     """Implements the estimator method and interfaces to Fortran routines.
     """
     def _plugin_estimator(self, pk, k):
-        pk = self.check_pk(pk)
-        k = self.check_k(k or len(pk))
         return ndd.fnsb.plugin(pk, k), None
 
     def _pseudocounts_estimator(self, pk, k, alpha):
-        pk = self.check_pk(pk)
-        k = self.check_k(k or len(pk))
-        alpha = self.check_alpha(alpha)
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
     def _ww_estimator(self, pk, k, alpha):
-        pk = self.check_pk(pk)
-        k = self.check_k(k or len(pk))
-        alpha = self.check_alpha(alpha)
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
     def _nsb_estimator(self, pk, k):
-        pk = self.check_pk(pk)
-        k = self.check_k(k or len(pk))
         return ndd.fnsb.nsb(pk, k)
 
     def estimator(self, pk, k):
+        pk = self.check_pk(pk)
+        if k is None:
+            k = len(pk)
+        k = self.check_k(k)
         if self._estimator is None:
             if self.plugin:
                 if self.alpha is None:
@@ -184,16 +178,6 @@ class EntropyEstimatorMixin(object):
                 else:
                     self._estimator = lambda pk, k: self._ww_estimator(pk, k, self.alpha)
         return self._estimator(pk, k)
-
-    @staticmethod
-    def check_alpha(alpha):
-        try:
-            alpha = numpy.float64(alpha)
-        except ValueError:
-            raise ValueError('alpha (%r) should be numeric.' % alpha)
-        if alpha < 0:
-            raise ValueError('Negative alpha value: %r' % alpha)
-        return alpha
 
     @staticmethod
     def check_pk(a):
@@ -244,7 +228,7 @@ class EntropyEstimatorMixin(object):
 class BaseEntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     """Specialize to estimates of entropy-derived quantities."""
     def __init__(self, alpha=None, plugin=False):
-        self.alpha = alpha
+        self.alpha = self.check_alpha(alpha)
         self.plugin = plugin
 
         self.estimate = None
@@ -254,6 +238,17 @@ class BaseEntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     def __call__(self, *args, **kwargs):
         """Fit and return the estimated value."""
         return self.fit(*args, **kwargs).estimate
+
+    def check_alpha(self, a):
+        if a is None:
+            return a
+        try:
+            a = numpy.float64(a)
+        except ValueError:
+            raise ValueError('alpha (%r) should be numeric.' % a)
+        if a < 0:
+            raise ValueError('Negative alpha value: %r' % a)
+        return a
 
 
 def _pprint(params, offset=0, printer=repr):
