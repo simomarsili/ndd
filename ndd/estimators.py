@@ -22,10 +22,22 @@ class EntropyEstimatorMixin(object):
 
     @staticmethod
     def _pseudocounts_estimator(pk, k, alpha):
+        try:
+            alpha = numpy.float64(alpha)
+        except ValueError:
+            raise ValueError('alpha (%r) should be numeric.' % alpha)
+        if alpha < 0:
+            raise ValueError('Negative alpha value: %r' % alpha)
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
     @staticmethod
     def _ww_estimator(pk, k, alpha):
+        try:
+            alpha = numpy.float64(alpha)
+        except ValueError:
+            raise ValueError('alpha (%r) should be numeric.' % alpha)
+        if alpha < 0:
+            raise ValueError('Negative alpha value: %r' % alpha)
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
     @staticmethod
@@ -97,14 +109,6 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
         self.std = None
         self._estimator = None
 
-        # check alpha value
-        if alpha:
-            try:
-                alpha = numpy.float64(alpha)
-            except ValueError:
-                raise
-            if alpha <= 0:
-                raise ValueError("alpha <= 0")
         self.alpha = alpha
         self.plugin = plugin
 
