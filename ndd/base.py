@@ -44,7 +44,6 @@ class BaseEstimator(object):
 
     >>> estimator.estimated_param_ #doctest: +SKIP
     """
-
     @classmethod
     def _get_param_names(cls):
         """Get parameter names for the estimator"""
@@ -240,6 +239,21 @@ class EntropyEstimatorMixin(object):
         if not k.is_integer():
             raise ValueError("k (%s) should be a whole number." % k)
         return k
+
+
+class BaseEntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
+    """Specialize to estimates of entropy-derived quantities."""
+    def __init__(self, alpha=None, plugin=False):
+        self.alpha = alpha
+        self.plugin = plugin
+
+        self.estimate = None
+        self.std = None
+        self._estimator = None
+
+    def __call__(self, *args, **kwargs):
+        """Fit and return the estimated value."""
+        return self.fit(*args, **kwargs).estimate
 
 
 def _pprint(params, offset=0, printer=repr):

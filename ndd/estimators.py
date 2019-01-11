@@ -11,20 +11,11 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     pow, round, super,
     filter, map, zip)
 import numpy
-from ndd.base import BaseEstimator, EntropyEstimatorMixin
+from ndd.base import BaseEntropyEstimator, EntropyEstimatorMixin
 
 
 # TODO: docstrings
-class Entropy(EntropyEstimatorMixin, BaseEstimator):
-    def __init__(self, alpha=None, plugin=False):
-
-        self.estimate = None
-        self.std = None
-        self._estimator = None
-
-        self.alpha = alpha
-        self.plugin = plugin
-
+class Entropy(BaseEntropyEstimator):
     def fit(self, pk, k=None):
         """
         pk : array_like
@@ -42,12 +33,8 @@ class Entropy(EntropyEstimatorMixin, BaseEstimator):
             self.estimate, self.std = self.estimator(pk, k)
         return self
 
-    def __call__(self, *args, **kwargs):
-        """Return estimate from input data. Delegate to fit."""
-        return self.fit(*args, **kwargs).estimate
 
-
-class KLDivergence(Entropy):
+class KLDivergence(BaseEntropyEstimator):
     def __init__(self, qk, alpha=None, plugin=False):
         """qk is a parameter of the estimator; it must be a valid pmf."""
         super().__init__(alpha, plugin)
@@ -78,7 +65,7 @@ class KLDivergence(Entropy):
         return self
 
 
-class JSDivergence(Entropy):
+class JSDivergence(BaseEntropyEstimator):
     def fit(self, pk, k=None):
         """
         pk : array_like
