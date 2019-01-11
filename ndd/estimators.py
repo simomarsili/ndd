@@ -37,18 +37,14 @@ class Entropy(EntropyEstimator):
 
 class KLDivergence(EntropyEstimator):
     """Kullback-Leibler divergence estimator class."""
-    def __init__(self, qk, alpha=None, plugin=False):
-        """qk is a parameter of the estimator; it must be a valid pmf."""
-        super().__init__(alpha, plugin)
-        if is_pmf(qk):
-            self.log_qk = numpy.log(qk)
-        else:
-            raise ValueError('qk must be a valid PMF')
-
-    def fit(self, pk, k=None):
+    def fit(self, pk, qk, k=None):
         """
         pk : array_like
             The number of occurrences of a set of bins.
+
+        qk : array_like
+            Reference PMF in sum(pk log(pk/qk).
+            Must be a valid PMF (non-negative, normalized).
 
         k : int, optional
             Number of bins. k >= len(pk).
@@ -56,14 +52,19 @@ class KLDivergence(EntropyEstimator):
             Defaults to len(pk).
 
         """
-        if len(self.log_qk) != len(pk):
+        if is_pmf(qk):
+            log_qk = numpy.log(qk)
+        else:
+            raise ValueError('qk must be a valid PMF')
+
+        if len(log_qk) != len(pk):
             raise ValueError('qk and pk must have the same length.')
 
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
         else:
             self.estimate, self.std = self.estimator(pk, k)
-        self.estimate -= numpy.sum(pk * self.log_qk)
+        self.estimate -= numpy.sum(pk * log_qk)
         return self
 
 
