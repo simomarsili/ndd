@@ -16,11 +16,33 @@ try:
 except ImportError:
     from ndd.funcsigs import signature
 from collections import defaultdict  # pylint: disable=wrong-import-order
+import ndd.fnsb
 
 
 class BaseEstimator(object):
     """Base class for entropy estimators.
     Methods from sklearn BaseEstimator (only).
+
+    The class is consistent with sklearn estimator API:
+
+    All estimator objects expose a ``fit`` method that takes a dataset
+    (usually a 2-d array):
+
+    >>> estimator.fit(data)
+
+    **Estimator parameters**: All the parameters of an estimator can be set
+    when it is instantiated or by modifying the corresponding attribute::
+
+    >>> estimator = Estimator(param1=1, param2=2)
+    >>> estimator.param1
+    1
+
+    **Estimated parameters**: When data is fitted with an estimator,
+    parameters are estimated from the data at hand. All the estimated
+    parameters are attributes of the estimator object ending by an
+    underscore::
+
+    >>> estimator.estimated_param_ #doctest: +SKIP
     """
 
     @classmethod
@@ -123,6 +145,101 @@ class BaseEstimator(object):
             super().__setstate__(state)
         except AttributeError:
             self.__dict__.update(state)
+
+
+class EntropyEstimatorMixin(object):
+    """Implements the estimator method and interfaces to Fortran routines.
+    """
+    def _plugin_estimator(self, pk, k):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
+        return ndd.fnsb.plugin(pk, k), None
+
+    def _pseudocounts_estimator(self, pk, k, alpha):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
+        alpha = self.check_alpha(alpha)
+        return ndd.fnsb.pseudo(pk, k, alpha), None
+
+    def _ww_estimator(self, pk, k, alpha):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
+        alpha = self.check_alpha(alpha)
+        return ndd.fnsb.dirichlet(pk, k, alpha), None
+
+    def _nsb_estimator(self, pk, k):
+        pk = self.check_pk(pk)
+        k = self.check_k(k or len(pk))
+        return ndd.fnsb.nsb(pk, k)
+
+    def estimator(self, pk, k):
+        if self._estimator is None:
+            if self.plugin:
+                if self.alpha is None:
+                    self._estimator = self._plugin_estimator
+                else:
+                    self._estimator = lambda pk, k: self._pseudocounts_estimator(pk, k, self.alpha)  # pylint: disable=redefined-variable-type
+            else:
+                if self.alpha is None:
+                    self._estimator = self._nsb_estimator
+                else:
+                    self._estimator = lambda pk, k: self._ww_estimator(pk, k, self.alpha)
+        return self._estimator(pk, k)
+
+    @staticmethod
+    def check_alpha(alpha):
+        try:
+            alpha = numpy.float64(alpha)
+        except ValueError:
+            raise ValueError('alpha (%r) should be numeric.' % alpha)
+        if alpha < 0:
+            raise ValueError('Negative alpha value: %r' % alpha)
+        return alpha
+
+    @staticmethod
+    def check_pk(a):
+        a = numpy.float64(a).flatten()
+        not_integers = not numpy.all([x.is_integer() for x in a])
+        negative = numpy.any([a < 0])
+        if not_integers:
+            raise ValueError('counts array has non-integer values')
+        if negative:
+            raise ValueError('counts array has negative values')
+        return numpy.int32(a)
+
+    @staticmethod
+    def check_k(k):
+        """
+        if k is None, set k = number of bins
+        if k is an integer, just check
+        ik an array set k = prod(k)
+        """
+        MAX_LOGK = 150 * numpy.log(2)
+
+        try:
+            k = numpy.float64(k)
+        except ValueError:
+            raise
+        if k.ndim:
+            # if k is a sequence, set k = prod(k)
+            if k.ndim > 1:
+                raise ValueError('k must be a scalar or 1D array')
+            logk = numpy.sum(numpy.log(x) for x in k)
+            if logk > MAX_LOGK:
+                # too large a number; backoff to n_bins?
+                # TODO: log warning
+                raise ValueError('k (%r) larger than %r' %
+                                 (numpy.exp(logk), numpy.exp(MAX_LOGK)))
+            else:
+                k = numpy.prod(k)
+        else:
+            # if a scalar check size
+            if numpy.log(k) > MAX_LOGK:
+                raise ValueError('k (%r) larger than %r' %
+                                 (k, numpy.exp(MAX_LOGK)))
+        if not k.is_integer():
+            raise ValueError("k (%s) should be a whole number." % k)
+        return k
 
 
 def _pprint(params, offset=0, printer=repr):
