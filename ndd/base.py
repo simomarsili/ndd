@@ -3,13 +3,11 @@
 # All rights reserved.
 # License: BSD 3 clause
 """Base classes module."""
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import (  # pylint: disable=redefined-builtin, unused-import
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super,
-    filter, map, zip)
+    bytes, dict, int, list, object, range, str, ascii, chr, hex, input, next,
+    oct, open, pow, round, super, filter, map, zip)
 import numpy
 try:
     from inspect import signature  # pylint: disable=wrong-import-order
@@ -44,6 +42,7 @@ class BaseEstimator(object):
 
     >>> estimator.estimated_param_ #doctest: +SKIP
     """
+
     @classmethod
     def _get_param_names(cls):
         """Get parameter names for the estimator"""
@@ -58,16 +57,18 @@ class BaseEstimator(object):
         # to represent
         init_signature = signature(init)
         # Consider the constructor parameters excluding 'self'
-        parameters = [p for p in init_signature.parameters.values()
-                      if p.name != 'self' and p.kind != p.VAR_KEYWORD]
+        parameters = [
+            p for p in init_signature.parameters.values()
+            if p.name != 'self' and p.kind != p.VAR_KEYWORD
+        ]
         for p in parameters:
             if p.kind == p.VAR_POSITIONAL:
-                raise RuntimeError("scikit-learn estimators should always "
-                                   "specify their parameters in the signature"
-                                   " of their __init__ (no varargs)."
-                                   " %s with constructor %s doesn't "
-                                   " follow this convention."
-                                   % (cls, init_signature))
+                raise RuntimeError(
+                    "scikit-learn estimators should always "
+                    "specify their parameters in the signature"
+                    " of their __init__ (no varargs)."
+                    " %s with constructor %s doesn't "
+                    " follow this convention." % (cls, init_signature))
         # Extract and sort argument names excluding 'self'
         return sorted([p.name for p in parameters])
 
@@ -111,10 +112,10 @@ class BaseEstimator(object):
         for key, value in params.items():
             key, delim, sub_key = key.partition('__')
             if key not in valid_params:
-                raise ValueError('Invalid parameter %s for estimator %s. '
-                                 'Check the list of available parameters '
-                                 'with `estimator.get_params().keys()`.' %
-                                 (key, self))
+                raise ValueError(
+                    'Invalid parameter %s for estimator %s. '
+                    'Check the list of available parameters '
+                    'with `estimator.get_params().keys()`.' % (key, self))
 
             if delim:
                 nested_params[key][sub_key] = value
@@ -129,8 +130,13 @@ class BaseEstimator(object):
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        return '%s(%s)' % (class_name, _pprint(self.get_params(deep=False),
-                                               offset=len(class_name),),)
+        return '%s(%s)' % (
+            class_name,
+            _pprint(
+                self.get_params(deep=False),
+                offset=len(class_name),
+            ),
+        )
 
     def __getstate__(self):
         try:
@@ -149,6 +155,7 @@ class BaseEstimator(object):
 class EntropyEstimatorMixin(object):
     """Estimator method (interface to Fortran routines).
     """
+
     def _plugin_estimator(self, pk, k):
         return ndd.fnsb.plugin(pk, k), None
 
@@ -218,8 +225,8 @@ class EntropyEstimatorMixin(object):
         else:
             # if a scalar check size
             if numpy.log(k) > MAX_LOGK:
-                raise ValueError('k (%r) larger than %r' %
-                                 (k, numpy.exp(MAX_LOGK)))
+                raise ValueError(
+                    'k (%r) larger than %r' % (k, numpy.exp(MAX_LOGK)))
         if not k.is_integer():
             raise ValueError("k (%s) should be a whole number." % k)
         return k
@@ -227,6 +234,7 @@ class EntropyEstimatorMixin(object):
 
 class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     """Specialize to estimates of entropy-derived quantities."""
+
     def __init__(self, alpha=None, plugin=False):
         self.alpha = self.check_alpha(alpha)
         self.plugin = plugin

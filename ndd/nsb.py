@@ -3,13 +3,11 @@
 # All rights reserved.
 # License: BSD 3 clause
 """Functions module."""
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import (  # pylint: disable=redefined-builtin, unused-import
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super,
-    filter, map, zip)
+    bytes, dict, int, list, object, range, str, ascii, chr, hex, input, next,
+    oct, open, pow, round, super, filter, map, zip)
 import numpy
 import ndd
 from ndd.estimators import Entropy
@@ -106,8 +104,8 @@ def histogram(data, axis=0, r=0):
     data = ndd.nsb.as_data_array(data, axis=axis)
     p = data.shape[0]
     if r > p:
-        raise ValueError('r (%r) is larger than the number of variables (%r)'
-                         % (r, p))
+        raise ValueError(
+            'r (%r) is larger than the number of variables (%r)' % (r, p))
     if r == 0:
         # statistics for the p-dimensional variable
         _, counts = numpy.unique(data, return_counts=True, axis=1)
@@ -192,5 +190,6 @@ def from_data(ar, ks=None, axis=0, r=0):
         counts_combinations = histogram(ar, axis=1, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
-        return (entropy_estimator(c, k=k) for c, k in
-                zip(counts_combinations, alphabet_size_combinations))
+        return (
+            entropy_estimator(c, k=k)
+            for c, k in zip(counts_combinations, alphabet_size_combinations))

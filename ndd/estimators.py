@@ -3,13 +3,11 @@
 # All rights reserved.
 # License: BSD 3 clause
 """Base classes module."""
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 from builtins import (  # pylint: disable=redefined-builtin, unused-import
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super,
-    filter, map, zip)
+    bytes, dict, int, list, object, range, str, ascii, chr, hex, input, next,
+    oct, open, pow, round, super, filter, map, zip)
 import numpy
 from ndd.base import EntropyEstimator
 
@@ -17,6 +15,7 @@ from ndd.base import EntropyEstimator
 # TODO: docstrings
 class Entropy(EntropyEstimator):
     """Entropy estimator class."""
+
     def fit(self, pk, k=None):
         """
         pk : array_like
@@ -37,6 +36,7 @@ class Entropy(EntropyEstimator):
 
 class KLDivergence(EntropyEstimator):
     """Kullback-Leibler divergence estimator class."""
+
     def fit(self, pk, qk, k=None):
         """
         pk : array_like
@@ -70,6 +70,7 @@ class KLDivergence(EntropyEstimator):
 
 class JSDivergence(EntropyEstimator):
     """Jensen-Shannon divergence estimator class."""
+
     def fit(self, pk, k=None):
         """
         pk : array_like
@@ -91,20 +92,21 @@ class JSDivergence(EntropyEstimator):
             self.estimate = 0.0
         else:
             self.estimate = self.estimator(pk.sum(axis=0), k)[0] - sum(
-                ws[i]*self.estimator(x, k)[0] for i, x in enumerate(pk))
+                ws[i] * self.estimator(x, k)[0] for i, x in enumerate(pk))
         return self
 
 
 def _test_JS(n):
     alpha = 0.1
     p = 100
-    p1 = numpy.random.dirichlet([alpha]*p)
-    p2 = numpy.random.dirichlet([alpha]*p)
+    p1 = numpy.random.dirichlet([alpha] * p)
+    p2 = numpy.random.dirichlet([alpha] * p)
     pm = 0.5 * (p1 + p2)
 
     def ee(x):
-        y = - x * numpy.log(x)
+        y = -x * numpy.log(x)
         return numpy.sum(y[x > 0])
+
     js = ee(pm) - 0.5 * (ee(p1) + ee(p2))
     c1 = numpy.random.multinomial(n, p1)
     c2 = numpy.random.multinomial(n, p2)
