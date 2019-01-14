@@ -14,18 +14,48 @@ from ndd.base import EntropyEstimator
 
 # TODO: docstrings
 class Entropy(EntropyEstimator):
-    """Entropy estimator class."""
+    """Entropy estimator class.
+
+    Default: use the NSB estimator function.
+
+    Parameters
+    ----------
+    alpha : float, optional
+        If alpha is not None: Wolpert-Wolf estimator (fixed alpha).
+        A single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
+    plugin : boolean, optional
+        If True: 'plugin' estimator.
+        The discrete distribution is estimated from the empirical frequencies
+        over bins and inserted into the entropy definition (plugin estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
+
+    Attributes
+    ----------
+    estimator : estimator function
+        The four possible entropy estimator functions are: plugin, plugin with
+        pseudocounts, Wolpert-Wolf (WW) and Nemenman-Shafee-Bialek (NSB).
+
+    """
 
     def fit(self, pk, k=None):
         """
-        pk : array_like
-            The number of occurrences of a set of bins.
+        Compute an entropy estimate from pk.
 
+        Parameters
+        ----------
+        pk : array_like, shape (n_bins,)
+            The number of occurrences of a set of bins.
         k : int, optional
             Number of bins. k >= len(pk).
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to len(pk).
 
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
         """
         if k == 1:  # single bin
             self.estimate = self.std = 0.0
@@ -35,6 +65,30 @@ class Entropy(EntropyEstimator):
 
 
 class KLDivergence(EntropyEstimator):
+    """Kullback-Leibler divergence estimator class.
+
+    Default: use the NSB estimator function.
+
+    Parameters
+    ----------
+    alpha : float, optional
+        If alpha is not None: Wolpert-Wolf estimator (fixed alpha).
+        A single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
+    plugin : boolean, optional
+        If True: 'plugin' estimator.
+        The discrete distribution is estimated from the empirical frequencies
+        over bins and inserted into the entropy definition (plugin estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
+
+    Attributes
+    ----------
+    estimator : estimator function
+        The four possible entropy estimator functions are: plugin, plugin with
+        pseudocounts, Wolpert-Wolf (WW) and Nemenman-Shafee-Bialek (NSB).
+
+    """
     """Kullback-Leibler divergence estimator class."""
 
     def fit(self, pk, qk, k=None):
@@ -70,7 +124,30 @@ class KLDivergence(EntropyEstimator):
 
 
 class JSDivergence(EntropyEstimator):
-    """Jensen-Shannon divergence estimator class."""
+    """Jensen-Shannon divergence estimator class.
+
+    Default: use the NSB estimator function.
+
+    Parameters
+    ----------
+    alpha : float, optional
+        If alpha is not None: Wolpert-Wolf estimator (fixed alpha).
+        A single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
+    plugin : boolean, optional
+        If True: 'plugin' estimator.
+        The discrete distribution is estimated from the empirical frequencies
+        over bins and inserted into the entropy definition (plugin estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
+
+    Attributes
+    ----------
+    estimator : estimator function
+        The four possible entropy estimator functions are: plugin, plugin with
+        pseudocounts, Wolpert-Wolf (WW) and Nemenman-Shafee-Bialek (NSB).
+
+    """
 
     def fit(self, pk, k=None):
         """
