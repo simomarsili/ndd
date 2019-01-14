@@ -64,7 +64,8 @@ class KLDivergence(EntropyEstimator):
             self.estimate = self.std = 0.0
         else:
             self.estimate, self.std = self.estimator(pk, k)
-        self.estimate -= numpy.sum(pk * log_qk)
+        self.estimate += numpy.sum(pk * log_qk) / float(sum(pk))
+        self.estimate = - self.estimate
         return self
 
 
