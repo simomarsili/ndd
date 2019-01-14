@@ -1,5 +1,5 @@
 # ndd - Bayesian entropy estimation from discrete data
-[![Build Status](https://travis-ci.com/simomarsili/ndd.svg?branch=develop)](https://travis-ci.com/simomarsili/ndd)
+[![Build Status](https://travis-ci.com/simomarsili/ndd.svg?branch=master)](https://travis-ci.com/simomarsili/ndd)
 
 The **ndd** module provides a simple Python interface to an efficient 
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
