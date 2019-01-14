@@ -174,27 +174,6 @@ class JSDivergence(EntropyEstimator):
         return self
 
 
-def _test_JS(n):
-    alpha = 0.1
-    p = 100
-    p1 = numpy.random.dirichlet([alpha] * p)
-    p2 = numpy.random.dirichlet([alpha] * p)
-    pm = 0.5 * (p1 + p2)
-
-    def ee(x):
-        y = -x * numpy.log(x)
-        return numpy.sum(y[x > 0])
-
-    js = ee(pm) - 0.5 * (ee(p1) + ee(p2))
-    c1 = numpy.random.multinomial(n, p1)
-    c2 = numpy.random.multinomial(n, p2)
-    pk = numpy.stack([c1, c2])
-    est = JSDivergence()
-    est.fit(pk)
-    js1 = est.estimate
-    return js, js1
-
-
 def is_pmf(a):
     a = numpy.float64(a)
     not_negative = numpy.all(a >= 0)
