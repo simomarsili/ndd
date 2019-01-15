@@ -10,7 +10,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     oct, open, pow, round, super, filter, map, zip)
 import numpy
 import ndd
-from ndd.estimators import Entropy
+from ndd.estimators import Entropy, JSDivergence
 
 __copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
 __license__ = "BSD 3 clause"
@@ -68,6 +68,63 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         return S, err
     else:
         return S
+
+
+def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
+    """
+    Estimate the Jensen-Shannon divergence from a matrix of counts.
+
+    Return a "quasi-Bayesian" estimate of the Jensen-Shannon divergence between
+    two or more unknown discrete distributions from an input array of counts.
+    The estimate is computed as a combination of Bayesian entropy estimates.
+
+    Parameters
+    ----------
+
+    pk : array-like, shape (n_distributions, p)
+        Different rows correspond to counts from different distributions with
+        the same discrete sample space.
+    k : int or array-like, optional
+        Number of bins; k >= len(pk).
+        A float value is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k).
+        Defaults to pk.shape[1].
+    alpha : float, optional
+        If not None, the entropy estimator uses a single Dirichlet prior with
+        concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
+    plugin : boolean, optional
+        If True, use a 'plugin' estimator for the entropy.
+        If alpha is passed in combination with plugin == True, add alpha
+        pseudoconts to the frequency counts in the plugin estimate.
+
+    Returns
+    -------
+    float
+        JS divergence estimate.
+
+    Notes
+    -----
+    The JS divergence between weighted distributions is decomposed using:
+
+    .. math:: JS_{w_1, \ldots, w_n}(p_1, \ldots, p_n) = H(m_i) - \sum_i w_i H(p_i)
+
+    where:
+
+    .. math:: m_i = \sum_i w_i p_i
+
+    is the average distribution. The weights are proportional to the total
+    number of counts in each row of the counts matrix pk.
+
+    """
+
+    # pk is an array of counts
+    estimator = JSDivergence(alpha, plugin).fit(pk, k)
+    js_div = estimator.estimate_
+
+    if numpy.isnan(js_div):
+        raise FloatingPointError("NaN value")
+
+    return js_div
 
 
 def nbins(data):
