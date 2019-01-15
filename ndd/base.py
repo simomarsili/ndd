@@ -215,8 +215,6 @@ class EntropyEstimatorMixin(object):
         if k is None:
             k = len(pk)
         k = self.check_k(k)
-        if self.estimator_function is None:
-            self.estimator_function = self.select_estimator()
 
         return self.estimator_function(pk, k)
 
@@ -275,7 +273,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
 
         self.estimate_ = None
         self.err_ = None
-        self.estimator_function = None
+        self._estimator_function = None
 
     def __call__(self, *args, **kwargs):
         """Fit and return the estimated value."""
@@ -291,6 +289,12 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         if a < 0:
             raise ValueError('Negative alpha value: %r' % a)
         return a
+
+    @property
+    def estimator_function(self):
+        if self._estimator_function is None:
+            self._estimator_function = self.select_estimator()
+        return self._estimator_function
 
 
 def _pprint(params, offset=0, printer=repr):
