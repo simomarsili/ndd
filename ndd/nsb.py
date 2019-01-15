@@ -76,7 +76,8 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
 
     Return a "quasi-Bayesian" estimate of the Jensen-Shannon divergence between
     two or more unknown discrete distributions from an input array of counts.
-    The estimate is computed as a combination of Bayesian entropy estimates.
+    The estimate is computed as a combination of single Bayesian entropy
+    estimates.
 
     Parameters
     ----------
@@ -101,19 +102,6 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     -------
     float
         JS divergence estimate.
-
-    Notes
-    -----
-    The JS divergence between weighted distributions is decomposed using:
-
-    .. math:: JS_{w_1, \ldots, w_n}(p_1, \ldots, p_n) = H(m_i) - \sum_i w_i H(p_i)
-
-    where:
-
-    .. math:: m_i = \sum_i w_i p_i
-
-    is the average distribution. The weights are proportional to the total
-    number of counts in each row of the counts matrix pk.
 
     """
 
