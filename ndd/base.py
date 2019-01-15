@@ -18,11 +18,9 @@ import ndd.fnsb
 
 
 class BaseEstimator(object):
-    """Base class for estimators.
-    Methods from sklearn BaseEstimator (only).
+    """Base class for estimators from sklearn.
 
-    The class (and its subclass EntropyEstimator) is consistent with sklearn
-    estimator API:
+    The class is consistent with sklearn estimator API:
 
     All estimator objects expose a ``fit`` method that takes a dataset
     (usually a 2-d array):
@@ -156,7 +154,7 @@ class BaseEstimator(object):
 class EntropyEstimatorMixin(object):
     """Mixin class for EntropyEstimator.
 
-    Methods: estimator (dispatch to the Fortran implementation).
+    Contains methods to select an estimator and compute an estimates from data.
     """
 
     def plugin_estimator(self, pk, k):
@@ -173,7 +171,7 @@ class EntropyEstimatorMixin(object):
 
     def select_estimator(self):
         """
-        Return the correct entropy estimator function for the object.
+        Return an estimator function for the object.
         Possible estimators are:
         - NSB (Nemenman-Shafee-Bialek)
         - WW (Wolper-Wolf)
@@ -271,7 +269,12 @@ class EntropyEstimatorMixin(object):
 
 
 class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
-    """Specialize to estimates of entropy-derived quantities."""
+    """Extend the BaseEstimator to estimators of entropy-derived quantities.
+
+    Specific estimators should extend the EntropyEstimator class with a fit()
+    method. The fit() method must set the estimator object attributes
+    estimate and err using estimator_function().
+    """
 
     def __init__(self, alpha=None, plugin=False):
         self.alpha = self.check_alpha(alpha)
