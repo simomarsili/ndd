@@ -119,6 +119,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
 import os
 import json
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
+                     jensen_shannon_divergence,
                      histogram,
                      nbins,
                      from_data)

@@ -13,4 +13,4 @@ try:
 except AssertionError:
     raise AssertionError('estimate %r /= %r' % (h, href))
 else:
-    print('Abs. error is %r. Test ok!' % absolute_error)
+    print('%r. Abs. error is %r. Test ok!' % (h, absolute_error))

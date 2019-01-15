@@ -65,10 +65,28 @@ def test_entropy(setting, kwargs, result):
 def test_histogram_ndarray():
     N, P = 100, 2
     data = random_ndarray(N, P, SEED)
-    assert ndd.entropy(ndd.histogram(data), ndd.nbins(data)) == 6.412863794582687
+    assert ndd.entropy(ndd.histogram(data), k=ndd.nbins(data)) == 6.412863794582687
 
 
 def test_from_data():
     N, P = 100, 2
     data = random_ndarray(N, P, SEED)
     assert ndd.from_data(data, ks=ndd.nbins(data)) == 6.412863794582687
+
+
+def test_KLD():
+    ALPHA, N, P = 1.0, 100, 20
+    random.seed(SEED)
+    qk = random.dirichlet([ALPHA]*P)
+    pk = random.multinomial(N, qk)
+    estimator = ndd.estimators.KLDivergence()
+    assert estimator(pk, qk) == -0.04299973796573253
+
+
+def test_JSD():
+    ALPHA, N, P = 1.0, 100, 20
+    random.seed(SEED)
+    pk = random.dirichlet([ALPHA]*P)
+    counts = random.multinomial(N, pk, size=4)
+    estimator = ndd.estimators.JSDivergence()
+    assert estimator(counts) == -0.01804523405829217

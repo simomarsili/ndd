@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.9] - 2019-01-15
+### Added
+- `jensen_shannnon_divergence()` function.
+- `estimators` module.
+- Entropy, KLDivergence and JSDivergence estimators.
+### Changed
+- entropy() signature is now:
+  `entropy(pk, k=None, alpha=None, plugin=False, return_std=False)`
+
 ## [0.8] - 2019-01-08
 ### Added
 - Entropy class. 

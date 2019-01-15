@@ -43,7 +43,7 @@ def get_long_description():
     from os import path
     import codecs
     here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as _rf:
+    with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as _rf:
         return _rf.read()
 
 # check numpy first
@@ -66,8 +66,8 @@ from numpy.distutils.core import Extension # pylint: disable=wrong-import-positi
 VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
 
-_NSB = Extension(
-    name='ndd._nsb',
+FNSB = Extension(
+    name='ndd.fnsb',
     sources=['ndd/nsb.pyf',
              'ndd/exts/gamma.f90',
              'ndd/exts/quad.f90',
@@ -92,7 +92,7 @@ setup(
                   ['LICENSE.txt',
                    'README.rst',
                    'requirements.txt']},
-    ext_modules=[_NSB],
+    ext_modules=[FNSB],
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={
