@@ -3,8 +3,8 @@ ndd - Bayesian entropy estimation from discrete data
 ====================================================
 .. image:: https://badge.fury.io/py/ndd.svg
     :target: https://badge.fury.io/py/ndd
-.. image:: https://travis-ci.org/simomarsili/ndd.svg?branch=master
-    :target: https://travis-ci.org/simomarsili/ndd
+.. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
+    :target: https://travis-ci.com/simomarsili/ndd
 
 The **ndd** package provides a simple Python interface to an efficient 
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
@@ -57,11 +57,11 @@ Where to get it
 ===============
 Install using pip::
 
-  pip install -U ndd
+  pip3 install -U ndd
 
 or directly from sources in github for the latest version of the code::
 
-  pip install git+https://github.com/simomarsili/ndd.git
+  pip3 install git+https://github.com/simomarsili/ndd.git
 
 In order to compile **ndd**, you will need **numpy** (>= 1.9) and a
 **Fortran compiler**  installed on your machine.
