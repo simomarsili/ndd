@@ -31,6 +31,21 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
+The `ndd.jensen_shannon_divergence()` function takes as input a n-by-p matrix
+of frequency counts, with different rows corresponding to counts from different
+distributions with the same sample space.
+
+  >>> counts
+  [[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0], [2, 5, 7,
+  10, 6, 7, 2, 4, 1, 15, 14, 6, 8, 3, 0, 1, 0, 5, 1, 3]]
+  >>> import ndd
+  >>> js_estimate = ndd.jensen_shannon_divergence(counts)
+  >>> js_estimate
+  0.21016241597404228  
+
+The estimate (in nats) is computed as a combination of single Bayesian entropy
+estimates (see: https://en.wikipedia.org/wiki/Jensen-Shannon_divergence)
+
 Where to get it
 ===============
 Install using pip::

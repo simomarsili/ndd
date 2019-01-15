@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+
+## [0.9] - 2019-01-15
 ### Added
 - `jensen_shannnon_divergence()` function.
 - `estimators` module.
