@@ -59,7 +59,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     # pk is an array of counts
     estimator = Entropy(alpha, plugin).fit(pk, k)
-    S, err = estimator.estimate_, estimator.std
+    S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S) or (err is not None and numpy.isnan(err)):
         raise FloatingPointError("NaN value")

@@ -58,9 +58,9 @@ class Entropy(EntropyEstimator):
             Returns the instance itself.
         """
         if k == 1:  # single bin
-            self.estimate_ = self.std = 0.0
+            self.estimate_ = self.err_ = 0.0
         else:
-            self.estimate_, self.std = self.estimator(pk, k)
+            self.estimate_, self.err_ = self.estimator(pk, k)
         return self
 
 
@@ -115,9 +115,9 @@ class KLDivergence(EntropyEstimator):
             raise ValueError('qk and pk must have the same length.')
 
         if k == 1:  # single bin
-            self.estimate_ = self.std = 0.0
+            self.estimate_ = self.err_ = 0.0
         else:
-            self.estimate_, self.std = self.estimator(pk, k)
+            self.estimate_, self.err_ = self.estimator(pk, k)
         self.estimate_ += numpy.sum(pk * log_qk) / float(sum(pk))
         self.estimate_ = - self.estimate_
         return self

@@ -240,7 +240,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         self.plugin = plugin
 
         self.estimate_ = None
-        self.std = None
+        self.err_ = None
         self._estimator = None
 
     def __call__(self, *args, **kwargs):
