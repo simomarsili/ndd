@@ -8,7 +8,7 @@ matrix:
     - python: 2.7
       env: TOXENV=py27
 before_install:
-  - sudo apt install gfortran
+  - sudo apt-get install gfortran
 install:
   - pip install tox
 script:
