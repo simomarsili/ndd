@@ -21,7 +21,8 @@ class BaseEstimator(object):
     """Base class for estimators.
     Methods from sklearn BaseEstimator (only).
 
-    The class is consistent with sklearn estimator API:
+    The class (and its subclass EntropyEstimator) is consistent with sklearn
+    estimator API:
 
     All estimator objects expose a ``fit`` method that takes a dataset
     (usually a 2-d array):
@@ -153,7 +154,9 @@ class BaseEstimator(object):
 
 
 class EntropyEstimatorMixin(object):
-    """Estimator method (interface to Fortran routines).
+    """Mixin class for EntropyEstimator.
+
+    Add the estimator method (dispatching to the Fortran implementation).
     """
 
     def _plugin_estimator(self, pk, k):
@@ -169,6 +172,32 @@ class EntropyEstimatorMixin(object):
         return ndd.fnsb.nsb(pk, k)
 
     def estimator(self, pk, k):
+        """
+        Return an entropy estimate from counts and the size of sample space.
+
+        Given alpha, plugin values, select the entropy estimator method among:
+        - NSB (Nemenman-Shafee-Bialek)
+        - WW (Wolper-Wolf)
+        - "plugin" estimator
+        - pseudocounts-regularized plugin
+
+        Parameters
+        ----------
+        pk : array-like
+            An array of non-negative integers (counts array).
+        k  : int or sequence
+            Size of the sample space.
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            If a sequence, set k = numpy.prod(k).
+
+        Returns
+        -------
+        estimate : float
+            Entropy estimate
+        err : float or None
+            A measure of uncertainty in the estimate. None if not available.
+
+        """
         pk = self.check_pk(pk)
         if k is None:
             k = len(pk)
