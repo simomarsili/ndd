@@ -57,7 +57,8 @@ Clone the repo, install tests requirements and run the tests with `make`::
   pip install .[test]
   make test
 
-### References
+References
+==========
 
 Some refs::
 
