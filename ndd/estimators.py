@@ -21,7 +21,7 @@ class Entropy(EntropyEstimator):
     Parameters
     ----------
     alpha : float, optional
-        If alpha is not None: Wolpert-Wolf estimator (fixed alpha).
+        If not None: Wolpert-Wolf estimator (fixed alpha).
         A single Dirichlet prior with concentration parameter alpha.
         alpha > 0.0.
     plugin : boolean, optional

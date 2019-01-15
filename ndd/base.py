@@ -273,7 +273,28 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
 
     Specific estimators should extend the EntropyEstimator class with a fit()
     method. The fit() method must set the estimator object attributes
-    estimate and err using estimator_function().
+    estimate and err (using the estimator_function method).
+
+    Parameters
+    ----------
+    alpha : float, optional
+        If not None: Wolpert-Wolf estimator function (fixed alpha).
+        A single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
+    plugin : boolean, optional
+        If True: 'plugin' estimator function.
+        The discrete distribution is estimated from the empirical frequencies
+        over bins and inserted into the entropy definition (plugin estimator).
+        If alpha is passed in combination with plugin=True, add
+        alpha pseudocounts to each frequency count (pseudocount estimator).
+
+    Attributes
+    ----------
+    estimate_ : float
+        Entropy estimate
+    err_ : float or None
+        A measure of uncertainty in the estimate. None if not available.
+
     """
 
     def __init__(self, alpha=None, plugin=False):
@@ -302,15 +323,18 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
 
     @property
     def estimator_function(self):
+        """Entropy estimator function."""
         if self._estimator_function is None:
             self._estimator_function = self.select_estimator()
         return self._estimator_function
 
     @property
     def algorithm(self):
+        """Estimator function name."""
         return self.estimator_function.__name__.split('_')[0]
 
     def fit(self):
+        """Set the estimated parameters."""
         raise NotImplemented
 
 
