@@ -6,16 +6,17 @@ ndd - Bayesian entropy estimation from discrete data
 .. image:: https://travis-ci.org/simomarsili/ndd.svg?branch=master
     :target: https://travis-ci.org/simomarsili/ndd
 
-The **ndd** module provides a simple Python interface to an efficient 
+The **ndd** package provides a simple Python interface to an efficient 
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
 a parameter-free, Bayesian entropy estimator for discrete data.
+
 
 Basic usage
 ===========
 
-The `ndd.entropy()` function takes as input a vector of frequency counts 
+The **ndd.entropy** function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
-and returns an entropy estimate (in nats)::
+and returns an **entropy** estimate (in nats)::
 
   >>> counts
   [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
@@ -31,9 +32,14 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
-The `ndd.jensen_shannon_divergence()` function takes as input a n-by-p matrix
+------------------------------------------
+new in v0.9: ndd.jensen_shannon_divergence
+------------------------------------------
+
+The **ndd.jensen_shannon_divergence** function takes as input a n-by-p matrix
 of frequency counts, with different rows corresponding to counts from different
-distributions with the same sample space.
+distributions with the same sample space, and returns an estimate of the
+**Jensen-Shannon divergence**::
 
   >>> counts
   [[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0], [2, 5, 7,
@@ -44,7 +50,8 @@ distributions with the same sample space.
   0.21016241597404228  
 
 The estimate (in nats) is computed as a combination of single Bayesian entropy
-estimates (see: https://en.wikipedia.org/wiki/Jensen-Shannon_divergence)
+estimates
+(see: https://en.wikipedia.org/wiki/Jensen-Shannon_divergence)
 
 Where to get it
 ===============
