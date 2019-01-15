@@ -18,7 +18,7 @@ import ndd.fnsb
 
 
 class BaseEstimator(object):
-    """Base class for entropy estimators.
+    """Base class for estimators.
     Methods from sklearn BaseEstimator (only).
 
     The class is consistent with sklearn estimator API:
@@ -239,13 +239,13 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         self.alpha = self.check_alpha(alpha)
         self.plugin = plugin
 
-        self.estimate = None
+        self.estimate_ = None
         self.std = None
         self._estimator = None
 
     def __call__(self, *args, **kwargs):
         """Fit and return the estimated value."""
-        return self.fit(*args, **kwargs).estimate
+        return self.fit(*args, **kwargs).estimate_
 
     def check_alpha(self, a):
         if a is None:
