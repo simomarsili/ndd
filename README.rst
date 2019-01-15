@@ -1,3 +1,4 @@
+====================================================
 ndd - Bayesian entropy estimation from discrete data
 ====================================================
 .. image:: https://badge.fury.io/py/ndd.svg
@@ -9,7 +10,8 @@ The **ndd** module provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
 a parameter-free, Bayesian entropy estimator for discrete data.
 
-## Basic usage 
+Basic usage
+===========
 
 The `ndd.entropy()` function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
