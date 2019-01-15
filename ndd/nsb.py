@@ -74,10 +74,12 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     """
     Estimate the Jensen-Shannon divergence from a matrix of counts.
 
-    Return a "quasi-Bayesian" estimate of the Jensen-Shannon divergence between
-    two or more unknown discrete distributions from an input array of counts.
-    The estimate is computed as a combination of single Bayesian entropy
-    estimates.
+    Return an estimate of the Jensen-Shannon divergence between
+    n unknown discrete distributions from a n-by=p input array of
+    counts. The estimate is computed as a combination of single Bayesian
+    entropy estimates, and is bounded by ln(n). The combination is weighted by
+    the total number of samples for each distribution, see:
+    https://en.wikipedia.org/wiki/Jensen-Shannon_divergence
 
     Parameters
     ----------
