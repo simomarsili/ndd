@@ -171,6 +171,19 @@ class EntropyEstimatorMixin(object):
     def _nsb_estimator(self, pk, k):
         return ndd.fnsb.nsb(pk, k)
 
+    def select_estimator(self):
+        if self.plugin:
+            if self.alpha is None:
+                return self._plugin_estimator
+            else:
+                return lambda pk, k: self._pseudocounts_estimator(pk, k,
+                                                                  self.alpha)
+        else:
+            if self.alpha is None:
+                return self._nsb_estimator
+            else:
+                return lambda pk, k: self._ww_estimator(pk, k, self.alpha)
+
     def estimator(self, pk, k):
         """
         Return an entropy estimate from counts and the size of sample space.
@@ -202,18 +215,10 @@ class EntropyEstimatorMixin(object):
         if k is None:
             k = len(pk)
         k = self.check_k(k)
-        if self._estimator is None:
-            if self.plugin:
-                if self.alpha is None:
-                    self._estimator = self._plugin_estimator
-                else:
-                    self._estimator = lambda pk, k: self._pseudocounts_estimator(pk, k, self.alpha)  # pylint: disable=redefined-variable-type
-            else:
-                if self.alpha is None:
-                    self._estimator = self._nsb_estimator
-                else:
-                    self._estimator = lambda pk, k: self._ww_estimator(pk, k, self.alpha)
-        return self._estimator(pk, k)
+        if self.estimator_function is None:
+            self.estimator_function = self.select_estimator()
+
+        return self.estimator_function(pk, k)
 
     @staticmethod
     def check_pk(a):
@@ -270,7 +275,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
 
         self.estimate_ = None
         self.err_ = None
-        self._estimator = None
+        self.estimator_function = None
 
     def __call__(self, *args, **kwargs):
         """Fit and return the estimated value."""
