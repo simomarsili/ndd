@@ -310,6 +310,9 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     def algorithm(self):
         return self.estimator_function.__name__.split('_')[0]
 
+    def fit(self):
+        raise NotImplemented
+
 
 def _pprint(params, offset=0, printer=repr):
     """Pretty print the dictionary 'params'
