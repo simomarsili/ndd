@@ -156,43 +156,49 @@ class BaseEstimator(object):
 class EntropyEstimatorMixin(object):
     """Mixin class for EntropyEstimator.
 
-    Add the estimator method (dispatching to the Fortran implementation).
+    Methods: estimator (dispatch to the Fortran implementation).
     """
 
-    def _plugin_estimator(self, pk, k):
+    def plugin_estimator(self, pk, k):
         return ndd.fnsb.plugin(pk, k), None
 
-    def _pseudocounts_estimator(self, pk, k, alpha):
+    def pseudocounts_estimator(self, pk, k, alpha):
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
-    def _ww_estimator(self, pk, k, alpha):
+    def ww_estimator(self, pk, k, alpha):
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
-    def _nsb_estimator(self, pk, k):
+    def nsb_estimator(self, pk, k):
         return ndd.fnsb.nsb(pk, k)
 
     def select_estimator(self):
+        """
+        Return the correct entropy estimator function for the object.
+        Possible estimators are:
+        - NSB (Nemenman-Shafee-Bialek)
+        - WW (Wolper-Wolf)
+        - "plugin"
+        - pseudocounts-regularized plugin
+        """
+
         if self.plugin:
             if self.alpha is None:
-                return self._plugin_estimator
+                return self.plugin_estimator
             else:
-                return lambda pk, k: self._pseudocounts_estimator(pk, k,
-                                                                  self.alpha)
+                def pseudocounts_estimator(pk, k):
+                    return self.pseudocounts_estimator(pk, k, self.alpha)
+                return pseudocounts_estimator
         else:
             if self.alpha is None:
-                return self._nsb_estimator
+                return self.nsb_estimator
             else:
-                return lambda pk, k: self._ww_estimator(pk, k, self.alpha)
+                def ww_estimator(pk, k):
+                    return self.ww_estimator(pk, k, self.alpha)
+                return ww_estimator
 
     def estimator(self, pk, k):
         """
         Return an entropy estimate from counts and the size of sample space.
-
-        Given alpha, plugin values, select the entropy estimator method among:
-        - NSB (Nemenman-Shafee-Bialek)
-        - WW (Wolper-Wolf)
-        - "plugin" estimator
-        - pseudocounts-regularized plugin
 
         Parameters
         ----------
@@ -270,10 +276,11 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     def __init__(self, alpha=None, plugin=False):
         self.alpha = self.check_alpha(alpha)
         self.plugin = plugin
+        self._estimator_function = None
+        self._algorithm = None
 
         self.estimate_ = None
         self.err_ = None
-        self._estimator_function = None
 
     def __call__(self, *args, **kwargs):
         """Fit and return the estimated value."""
@@ -295,6 +302,10 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         if self._estimator_function is None:
             self._estimator_function = self.select_estimator()
         return self._estimator_function
+
+    @property
+    def algorithm(self):
+        return self.estimator_function.__name__.split('_')[0]
 
 
 def _pprint(params, offset=0, printer=repr):
