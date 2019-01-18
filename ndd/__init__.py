@@ -116,23 +116,15 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     ascii, chr, hex, input, next, oct, open,
     pow, round, super,
     filter, map, zip)
-import os
-import json
+import pkg_resources
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      jensen_shannon_divergence,
                      histogram,
                      nbins,
                      from_data)
 
-path_to_version = os.path.join(os.path.dirname(__file__), 'version.json')
-with open(path_to_version, 'r') as f:
-    version_data = json.load(f)
-    try:
-        __version__ = version_data['version']
-    except KeyError:
-        # no version number in version.json
-        raise KeyError("check version file: no version number")
-
+project_name = 'ndd'
+__version__ = pkg_resources.require(project_name)[0].version
 __copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
 __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simo.marsili@gmail.com)"
