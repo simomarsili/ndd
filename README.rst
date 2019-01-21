@@ -35,12 +35,12 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
------------
-new in v0.9
------------
 
-ndd.jensen_shannon_divergence function
---------------------------------------
+new in v0.9
+===========
+
+`jensen_shannon_divergence` function
+------------------------------------
 
 The **ndd.jensen_shannon_divergence** function takes as input a n-by-p matrix
 of frequency counts, with different rows corresponding to different
