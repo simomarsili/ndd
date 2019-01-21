@@ -75,23 +75,26 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     Estimate the Jensen-Shannon divergence from a matrix of counts.
 
     Return an estimate of the Jensen-Shannon divergence between
-    n unknown discrete distributions from a n-by=p input array of
-    counts. The estimate is computed as a combination of single Bayesian
-    entropy estimates, and is bounded by ln(n). The combination is weighted by
-    the total number of samples for each distribution, see:
-    https://en.wikipedia.org/wiki/Jensen-Shannon_divergence
+    n_distributions unknown discrete distributions from a
+    n_distributions-by-n_bins input array of counts.
+    The estimate (in nats) is computed as a combination of single Bayesian
+    entropy estimates. If the total number of samples varies among the
+    distributions, the function returns the divergence between the
+    distributions with weights proportional to the total number of samples in
+    each row (see the general definition of Jensen-Shannon divergence:
+    https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
 
     Parameters
     ----------
 
-    pk : array-like, shape (n_distributions, p)
-        Different rows correspond to counts from different distributions with
-        the same discrete sample space.
+    pk : array-like, shape (n_distributions, n_bins)
+        Matrix of frequency counts. Each row corresponds to the number of
+        occurrences of a set of bins from a a different distribution.
     k : int or array-like, optional
-        Number of bins; k >= len(pk).
+        Number of bins; k >= n_bins.
         A float value is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k).
-        Defaults to pk.shape[1].
+        Defaults to n_bins.
     alpha : float, optional
         If not None, the entropy estimator uses a single Dirichlet prior with
         concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
@@ -103,18 +106,17 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     Returns
     -------
     float
-        JS divergence estimate.
+        Jensen-Shannon divergence.
 
     """
 
-    # pk is an array of counts
     estimator = JSDivergence(alpha, plugin).fit(pk, k)
-    js_div = estimator.estimate_
+    js = estimator.estimate_
 
-    if numpy.isnan(js_div):
+    if numpy.isnan(js):
         raise FloatingPointError("NaN value")
 
-    return js_div
+    return js
 
 
 def nbins(data):
