@@ -43,7 +43,13 @@ jensen_shannon_divergence function
 ----------------------------------
 
 The **ndd.jensen_shannon_divergence** computes an estimate of the
-**Jensen-Shannon divergence** `D[{p}]` between two (or more) probability
+**Jensen-Shannon divergence** `D[{w}, {p}]` between two (or more) probability
+distributions. Given `m` probability distributions `p_1, p_2, ... p_m` and the
+corresponding weights `w_1, w_2, ... w_m`, `D` is calculated as a combination
+of Bayesian entropy estimates: `D[{p}] = H[sum(w p)] - sum(w H[p])`.
+
+
+between two (or more) probability
 distributions `{p}={p_1, p_2, ..., p_n}`.
 
 
