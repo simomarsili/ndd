@@ -15,12 +15,18 @@ from ndd.estimators import Entropy, JSDivergence
 __copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
 __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
-__all__ = ['entropy', 'histogram', 'from_data', 'nbins']
+__all__ = ['entropy',
+           'jensen_shannon_divergence',
+           'histogram',
+           'from_data',
+           'nbins', ]
 
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
-    Return a Bayesian estimate S' of the entropy of an unknown discrete
+    Return a Bayesian estimate of the entropy from an array of counts.
+
+    Return a Bayesian estimate of the entropy of an unknown discrete
     distribution from an input array of counts pk.
 
     Parameters
@@ -29,22 +35,22 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     pk : array-like
         The number of occurrences of a set of bins.
     k : int or array-like, optional
-        Number of bins; k >= len(pk).
-        A float value is a valid input for whole numbers (e.g. k=1.e3).
+        Total number of bins (taking into account unobserved bins);
+        k >= len(pk). A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k).
-        Defaults to len(pk).
+        Defaults to n_bins.
     alpha : float, optional
         If alpha is not None, use a single Dirichlet prior with concentration
         parameter alpha (fixed alpha estimator). alpha > 0.0.
-    return_std : boolean, optional
-        If True, also return an approximated value for the standard deviation
-        over the entropy posterior.
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
         distribution is estimated from the empirical frequencies over bins
         and inserted into the entropy definition (plugin estimator).
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
+    return_std : boolean, optional
+        If True, also return an approximated value for the standard deviation
+        over the entropy posterior.
 
     Returns
     -------
@@ -53,7 +59,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     std : float, optional
         Uncertainty in the entropy estimate
         (approximated standard deviation over the entropy posterior).
-        Only provided if `return_std` is True.
+        Only if `return_std` is True.
 
     """
 
@@ -72,7 +78,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     """
-    Estimate the Jensen-Shannon divergence from a matrix of counts.
+    Return the Jensen-Shannon divergence from a matrix of counts.
 
     Return an estimate of the Jensen-Shannon divergence between
     n_distributions unknown discrete distributions from a
@@ -89,10 +95,10 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
 
     pk : array-like, shape (n_distributions, n_bins)
         Matrix of frequency counts. Each row corresponds to the number of
-        occurrences of a set of bins from a a different distribution.
+        occurrences of a set of bins from a different distribution.
     k : int or array-like, optional
-        Number of bins; k >= n_bins.
-        A float value is a valid input for whole numbers (e.g. k=1.e3).
+        Total number of bins (taking into account unobserved bins); k >= n_bins
+        A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k).
         Defaults to n_bins.
     alpha : float, optional
