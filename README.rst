@@ -43,8 +43,8 @@ jensen_shannon_divergence function
 ----------------------------------
 
 The **ndd.jensen_shannon_divergence** computes an estimate of the
-**Jensen-Shannon divergence**
-:math:`D[\{p_i\}]` between two (or more) probability distributions.
+**Jensen-Shannon divergence** `D[{p}]` between two (or more) probability
+distributions `{p}={p_1, p_2, ..., p_n}`.
 
 
 function takes as input a n-by-p matrix
