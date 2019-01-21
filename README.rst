@@ -14,8 +14,8 @@ a parameter-free, Bayesian entropy estimator for discrete data.
 Basic usage
 ===========
 
-ndd.entropy function
---------------------
+entropy function
+----------------
 
 The **ndd.entropy** function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
@@ -39,8 +39,18 @@ by computing an approximation for the posterior standard deviation::
 new in v0.9
 ===========
 
-`jensen_shannon_divergence` function
-------------------------------------
+jensen_shannon_divergence function
+----------------------------------
+
+The **ndd.jensen_shannon_divergence** computes an estimate of the
+**Jensen-Shannon divergence**
+:math:`D[\{p_i\}]` between two (or more) probability distributions.
+
+
+function takes as input a n-by-p matrix
+of frequency counts, with different rows corresponding to different
+distributions with the same sample space, and returns an estimate of the
+**Jensen-Shannon divergence**::
 
 The **ndd.jensen_shannon_divergence** function takes as input a n-by-p matrix
 of frequency counts, with different rows corresponding to different
