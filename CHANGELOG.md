@@ -1,11 +1,15 @@
 # Change log
 
 ## [Unreleased]
+
+## [0.9] - 2019-01-15
+### Added
+- `jensen_shannnon_divergence()` function.
+- `estimators` module.
+- Entropy, KLDivergence and JSDivergence estimators.
 ### Changed
-- entropy() args mimic scipy.stats.entropy(pk, qk=None, base=None):
-  - rename `counts` to `pk`
-  - add `qk`,
-  - add `base` 
+- entropy() signature is now:
+  `entropy(pk, k=None, alpha=None, plugin=False, return_std=False)`
 
 ## [0.8] - 2019-01-08
 ### Added

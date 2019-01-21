@@ -11,6 +11,8 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
 import numpy
 from ndd.base import EntropyEstimator
 
+__all__ = ['Entropy', 'KLDivergence', 'JSDivergence']
+
 
 # TODO: docstrings
 class Entropy(EntropyEstimator):

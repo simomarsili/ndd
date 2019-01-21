@@ -3,19 +3,23 @@ ndd - Bayesian entropy estimation from discrete data
 ====================================================
 .. image:: https://badge.fury.io/py/ndd.svg
     :target: https://badge.fury.io/py/ndd
-.. image:: https://travis-ci.org/simomarsili/ndd.svg?branch=master
-    :target: https://travis-ci.org/simomarsili/ndd
+.. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
+    :target: https://travis-ci.com/simomarsili/ndd
 
-The **ndd** module provides a simple Python interface to an efficient 
+The **ndd** package provides a simple Python interface to an efficient 
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
 a parameter-free, Bayesian entropy estimator for discrete data.
+
 
 Basic usage
 ===========
 
-The `ndd.entropy()` function takes as input a vector of frequency counts 
+entropy function
+----------------
+
+The **ndd.entropy** function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
-and returns an entropy estimate (in nats)::
+and returns an **entropy** estimate (in nats)::
 
   >>> counts
   [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
@@ -31,15 +35,49 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
+
+new in v0.9
+===========
+
+jensen_shannon_divergence function
+----------------------------------
+
+The **ndd.jensen_shannon_divergence** computes an estimate of the
+**Jensen-Shannon divergence**
+:math:`D[\{p_i\}]` between two (or more) probability distributions.
+
+
+function takes as input a n-by-p matrix
+of frequency counts, with different rows corresponding to different
+distributions with the same sample space, and returns an estimate of the
+**Jensen-Shannon divergence**::
+
+The **ndd.jensen_shannon_divergence** function takes as input a n-by-p matrix
+of frequency counts, with different rows corresponding to different
+distributions with the same sample space, and returns an estimate of the
+**Jensen-Shannon divergence**::
+
+  >>> counts
+  [[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0], [2, 5, 7,
+  10, 6, 7, 2, 4, 1, 15, 14, 6, 8, 3, 0, 1, 0, 5, 1, 3]]
+  >>> import ndd
+  >>> js_estimate = ndd.jensen_shannon_divergence(counts)
+  >>> js_estimate
+  0.21016241597404228  
+
+The estimate (in nats) is computed as a combination of single Bayesian entropy
+estimates
+(see: https://en.wikipedia.org/wiki/Jensen-Shannon_divergence)
+
 Where to get it
 ===============
 Install using pip::
 
-  pip install -U ndd
+  pip3 install -U ndd
 
 or directly from sources in github for the latest version of the code::
 
-  pip install git+https://github.com/simomarsili/ndd.git
+  pip3 install git+https://github.com/simomarsili/ndd.git
 
 In order to compile **ndd**, you will need **numpy** (>= 1.9) and a
 **Fortran compiler**  installed on your machine.
