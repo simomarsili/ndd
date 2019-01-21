@@ -17,9 +17,7 @@ __license__ = "BSD 3 clause"
 __author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy',
            'jensen_shannon_divergence',
-           'histogram',
-           'from_data',
-           'nbins', ]
+           'histogram', ]
 
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
@@ -125,7 +123,7 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     return js
 
 
-def nbins(data):
+def _nbins(data):
     """
     The number of unique elements along axis 0. If data is p-dimensional,
     the num. of unique elements for each variable.
@@ -198,7 +196,7 @@ def as_data_array(ar, axis=0):
     return numpy.ascontiguousarray(ar)
 
 
-def from_data(ar, ks=None, axis=0, r=0):
+def _from_data(ar, ks=None, axis=0, r=0):
     """
     Given an array of data, return an entropy estimate.
 
