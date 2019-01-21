@@ -4,7 +4,7 @@ from pkg_resources import parse_version
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
-VERSION_FILE = 'ndd/version.json'
+VERSION_FILE = 'version.json'
 SETUP_REQUIRES = ['numpy>=1.9']
 INSTALL_REQUIRES = ['future']
 EXTRAS_REQUIRES = {'test': ['pytest']}

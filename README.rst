@@ -14,6 +14,9 @@ a parameter-free, Bayesian entropy estimator for discrete data.
 Basic usage
 ===========
 
+entropy function
+----------------
+
 The **ndd.entropy** function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
 and returns an **entropy** estimate (in nats)::
@@ -32,26 +35,32 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
-------------------------------------------
-new in v0.9: ndd.jensen_shannon_divergence
-------------------------------------------
 
-The **ndd.jensen_shannon_divergence** function takes as input a n-by-p matrix
-of frequency counts, with different rows corresponding to counts from different
-distributions with the same sample space, and returns an estimate of the
-**Jensen-Shannon divergence**::
+new in v0.9
+===========
+
+jensen_shannon_divergence function
+----------------------------------
+
+The **ndd.jensen_shannon_divergence** returns an estimate of the
+**Jensen-Shannon divergence** between two (or more) probability
+distributions. The function takes as input a n-by-p matrix of frequency
+counts with each row corresponding to a different distribution of a random
+variable taking on p different values.::
 
   >>> counts
-  [[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0], [2, 5, 7,
-  10, 6, 7, 2, 4, 1, 15, 14, 6, 8, 3, 0, 1, 0, 5, 1, 3]]
+  [[11, 5, 0, 3, 8, 16, 43, 4, 7, 3], [1, 38, 8, 15, 1, 0, 23, 0, 3, 11]]
   >>> import ndd
   >>> js_estimate = ndd.jensen_shannon_divergence(counts)
   >>> js_estimate
-  0.21016241597404228  
+  0.24166914358658187
 
 The estimate (in nats) is computed as a combination of single Bayesian entropy
-estimates
-(see: https://en.wikipedia.org/wiki/Jensen-Shannon_divergence)
+estimates. If the total number of samples varies among the distributions,
+the function returns the divergence between the n distributions with weights
+proportional to the total number of samples
+(see the general definition of Jensen-Shannon divergence:
+https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
 
 Where to get it
 ===============
