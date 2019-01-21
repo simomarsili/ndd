@@ -44,9 +44,9 @@ jensen_shannon_divergence function
 
 The **ndd.jensen_shannon_divergence** computes an estimate of the
 **Jensen-Shannon divergence** between two (or more) probability
-distributions. The function takes as input a `n-by-p` matrix of frequency
-counts from `n` different distributions of a random variable taking on
-`p` different values.::
+distributions. The function takes as input a n-by-p matrix of frequency
+counts with each row corresponding to a different distribution of a random
+variable taking on p different values.::
 
   >>> counts
   [[11, 5, 0, 3, 8, 16, 43, 4, 7, 3], [1, 38, 8, 15, 1, 0, 23, 0, 3, 11]]
@@ -56,8 +56,11 @@ counts from `n` different distributions of a random variable taking on
   0.24166914358658187
 
 The estimate (in nats) is computed as a combination of single Bayesian entropy
-estimates
-(see: https://en.wikipedia.org/wiki/Jensen-Shannon_divergence)
+estimates. If the total number of samples varies among the distributions, the function
+returns the divergence between the n distributions with weights
+proportional to the total number of samples
+(see the general definition of Jensen-Shannon divergence:
+https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
 
 Where to get it
 ===============
