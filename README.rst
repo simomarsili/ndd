@@ -43,33 +43,17 @@ jensen_shannon_divergence function
 ----------------------------------
 
 The **ndd.jensen_shannon_divergence** computes an estimate of the
-**Jensen-Shannon divergence** `D[{w}, {p}]` between two (or more) probability
-distributions. Given `m` probability distributions `p_1, p_2, ... p_m` and the
-corresponding weights `w_1, w_2, ... w_m`, `D` is calculated as a combination
-of Bayesian entropy estimates: `D[{p}] = H[sum(w p)] - sum(w H[p])`.
-
-
-between two (or more) probability
-distributions `{p}={p_1, p_2, ..., p_n}`.
-
-
-function takes as input a n-by-p matrix
-of frequency counts, with different rows corresponding to different
-distributions with the same sample space, and returns an estimate of the
-**Jensen-Shannon divergence**::
-
-The **ndd.jensen_shannon_divergence** function takes as input a n-by-p matrix
-of frequency counts, with different rows corresponding to different
-distributions with the same sample space, and returns an estimate of the
-**Jensen-Shannon divergence**::
+**Jensen-Shannon divergence** between two (or more) probability
+distributions. The function takes as input a `n-by-p` matrix of frequency
+counts from `n` different distributions of a random variable taking on
+`p` different values.::
 
   >>> counts
-  [[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0], [2, 5, 7,
-  10, 6, 7, 2, 4, 1, 15, 14, 6, 8, 3, 0, 1, 0, 5, 1, 3]]
+  [[11, 5, 0, 3, 8, 16, 43, 4, 7, 3], [1, 38, 8, 15, 1, 0, 23, 0, 3, 11]]
   >>> import ndd
   >>> js_estimate = ndd.jensen_shannon_divergence(counts)
   >>> js_estimate
-  0.21016241597404228  
+  0.24166914358658187
 
 The estimate (in nats) is computed as a combination of single Bayesian entropy
 estimates
