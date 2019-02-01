@@ -65,13 +65,13 @@ def test_entropy(setting, kwargs, result):
 def test_histogram_ndarray():
     N, P = 100, 2
     data = random_ndarray(N, P, SEED)
-    assert ndd.entropy(ndd.histogram(data), k=ndd.nbins(data)) == 6.412863794582687
+    assert ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)) == 6.412863794582687
 
 
 def test_from_data():
     N, P = 100, 2
     data = random_ndarray(N, P, SEED)
-    assert ndd.from_data(data, ks=ndd.nbins(data)) == 6.412863794582687
+    assert ndd.nsb._from_data(data, ks=ndd.nsb._nbins(data)) == 6.412863794582687
 
 
 def test_KLD():

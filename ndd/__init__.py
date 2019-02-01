@@ -119,9 +119,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
 import pkg_resources
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      jensen_shannon_divergence,
-                     histogram,
-                     nbins,
-                     from_data)
+                     histogram, )
 
 project_name = 'ndd'
 __version__ = pkg_resources.require(project_name)[0].version
