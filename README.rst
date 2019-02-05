@@ -49,7 +49,8 @@ counts with each row corresponding to a different distribution of a random
 variable taking on p different values.::
 
   >>> counts
-  [[11, 5, 0, 3, 8, 16, 43, 4, 7, 3], [1, 38, 8, 15, 1, 0, 23, 0, 3, 11]]
+  [[11, 5, 0, 3, 8, 16, 43, 4, 7, 3],
+   [1, 38, 8, 15, 1, 0, 23, 0, 3, 11]]
   >>> import ndd
   >>> js_estimate = ndd.jensen_shannon_divergence(counts)
   >>> js_estimate
