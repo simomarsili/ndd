@@ -29,7 +29,6 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     Parameters
     ----------
-
     pk : array-like
         The number of occurrences of a set of bins.
     k : int or array-like, optional
