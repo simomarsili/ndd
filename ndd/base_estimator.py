@@ -43,6 +43,9 @@ except ImportError:
     from ndd.funcsigs import signature
 from collections import defaultdict  # pylint: disable=wrong-import-order
 import numpy
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BaseEstimator(object):

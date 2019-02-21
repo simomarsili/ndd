@@ -8,9 +8,12 @@ from __future__ import (absolute_import, division, print_function,
 from builtins import (  # pylint: disable=redefined-builtin, unused-import
     bytes, dict, int, list, object, range, str, ascii, chr, hex, input, next,
     oct, open, pow, round, super, filter, map, zip)
+import logging
 import numpy
 from ndd.base_estimator import BaseEstimator
 import ndd.fnsb
+
+logger = logging.getLogger(__name__)
 
 
 class EntropyEstimatorMixin(object):

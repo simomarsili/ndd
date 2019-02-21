@@ -8,16 +8,16 @@ from __future__ import (absolute_import, division, print_function,
 from builtins import (  # pylint: disable=redefined-builtin, unused-import
     bytes, dict, int, list, object, range, str, ascii, chr, hex, input, next,
     oct, open, pow, round, super, filter, map, zip)
+import logging
 import numpy
 import ndd
 from ndd.estimators import Entropy, JSDivergence
 
-__copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
-__license__ = "BSD 3 clause"
-__author__ = "Simone Marsili (simomarsili@gmail.com)"
 __all__ = ['entropy',
            'jensen_shannon_divergence',
            'histogram', ]
+
+logger = logging.getLogger(__name__)
 
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
