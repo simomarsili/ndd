@@ -11,6 +11,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
 import logging
 import numpy
 from ndd.base import EntropyEstimator
+from ndd.exceptions import PMFError, CountsError
 
 logger = logging.getLogger(__name__)
 
@@ -110,14 +111,19 @@ class KLDivergence(EntropyEstimator):
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to len(pk).
 
+        Raises
+        ------
+        PMFError
+            If qk is not a valid PMF.
+
         """
         if is_pmf(qk):
             log_qk = numpy.log(qk)
         else:
-            raise ValueError('qk must be a valid PMF')
+            raise PMFError('qk must be a valid PMF')
 
         if len(log_qk) != len(pk):
-            raise ValueError('qk and pk must have the same length.')
+            raise PMFError('qk and pk must have the same length.')
 
         if k == 1:  # single bin
             self.estimate_ = self.err_ = 0.0
@@ -165,10 +171,15 @@ class JSDivergence(EntropyEstimator):
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to pk.shape[1].
 
+        Raises
+        ------
+        CountsError
+            If pk is not a 2D array.
+
         """
         pk = numpy.int32(pk)
         if pk.ndim != 2:
-            raise ValueError('counts must be 2D.')
+            raise CountsError('counts array must be 2D.')
         ws = numpy.float64(pk.sum(axis=1))
         ws /= ws.sum()
         if k == 1:  # single bin
