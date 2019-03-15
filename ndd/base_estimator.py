@@ -44,6 +44,7 @@ except ImportError:
 from collections import defaultdict  # pylint: disable=wrong-import-order
 import numpy
 import logging
+from ndd.exceptions import EstimatorParameterError
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,13 @@ class BaseEstimator(object):
 
     @classmethod
     def _get_param_names(cls):
-        """Get parameter names for the estimator"""
+        """Get parameter names for the estimator.
+
+        Raises
+        ------
+        EstimatorParameterError
+            If the estimator parameters are not specified in the signature.
+        """
         # fetch the constructor or the original constructor before
         # deprecation wrapping if any
         init = getattr(cls.__init__, 'deprecated_original', cls.__init__)
@@ -93,7 +100,7 @@ class BaseEstimator(object):
         ]
         for p in parameters:
             if p.kind == p.VAR_POSITIONAL:
-                raise RuntimeError(
+                raise EstimatorParameterError(
                     "scikit-learn estimators should always "
                     "specify their parameters in the signature"
                     " of their __init__ (no varargs)."
@@ -129,9 +136,15 @@ class BaseEstimator(object):
         (such as pipelines). The latter have parameters of the form
         ``<component>__<parameter>`` so that it's possible to update each
         component of a nested object.
+
         Returns
         -------
         self
+
+        Raises
+        ------
+        EstimatorParameterError
+            When setting an invalid parameter
         """
         if not params:
             # Simple optimization to gain speed (inspect is slow)
@@ -142,7 +155,7 @@ class BaseEstimator(object):
         for key, value in params.items():
             key, delim, sub_key = key.partition('__')
             if key not in valid_params:
-                raise ValueError(
+                raise EstimatorParameterError(
                     'Invalid parameter %s for estimator %s. '
                     'Check the list of available parameters '
                     'with `estimator.get_params().keys()`.' % (key, self))

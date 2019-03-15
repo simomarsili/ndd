@@ -12,6 +12,7 @@ import logging
 import numpy
 from ndd.base_estimator import BaseEstimator
 import ndd.fnsb
+from ndd.exceptions import CountsError, CardinalityError, AlphaError
 
 logger = logging.getLogger(__name__)
 
@@ -89,13 +90,21 @@ class EntropyEstimatorMixin(object):
 
     @staticmethod
     def check_pk(a):
+        """
+        Raises
+        ------
+        CountsError
+            If pk is not a valid array of counts.
+
+        """
+
         a = numpy.float64(a).flatten()
         not_integers = not numpy.all([x.is_integer() for x in a])
         negative = numpy.any([a < 0])
         if not_integers:
-            raise ValueError('counts array has non-integer values')
+            raise CountsError('counts array has non-integer values')
         if negative:
-            raise ValueError('counts array has negative values')
+            raise CountsError('counts array has negative values')
         return numpy.int32(a)
 
     @staticmethod
@@ -104,32 +113,37 @@ class EntropyEstimatorMixin(object):
         if k is None, set k = number of bins
         if k is an integer, just check
         ik an array set k = prod(k)
+
+        Raises
+        ------
+        CardinalityError
+            If k is not valid (wrong type, negative, too large...)
         """
         MAX_LOGK = 150 * numpy.log(2)
 
         try:
             k = numpy.float64(k)
         except ValueError:
-            raise
+            raise CardinalityError('%s: not a valid cardinality')
         if k.ndim:
             # if k is a sequence, set k = prod(k)
             if k.ndim > 1:
-                raise ValueError('k must be a scalar or 1D array')
+                raise CardinalityError('k must be a scalar or 1D array')
             logk = numpy.sum(numpy.log(x) for x in k)
             if logk > MAX_LOGK:
                 # too large a number; backoff to n_bins?
                 # TODO: log warning
-                raise ValueError('k (%r) larger than %r' %
-                                 (numpy.exp(logk), numpy.exp(MAX_LOGK)))
+                raise CardinalityError('k (%r) larger than %r' %
+                                       (numpy.exp(logk), numpy.exp(MAX_LOGK)))
             else:
                 k = numpy.prod(k)
         else:
             # if a scalar check size
             if numpy.log(k) > MAX_LOGK:
-                raise ValueError(
+                raise CardinalityError(
                     'k (%r) larger than %r' % (k, numpy.exp(MAX_LOGK)))
         if not k.is_integer():
-            raise ValueError("k (%s) should be a whole number." % k)
+            raise CardinalityError("k (%s) should be a whole number." % k)
         return k
 
 
@@ -181,9 +195,9 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         try:
             a = numpy.float64(a)
         except ValueError:
-            raise ValueError('alpha (%r) should be numeric.' % a)
+            raise AlphaError('alpha (%r) should be numeric.' % a)
         if a < 0:
-            raise ValueError('Negative alpha value: %r' % a)
+            raise AlphaError('Negative alpha value: %r' % a)
         return a
 
     @property
@@ -200,4 +214,4 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
 
     def fit(self):
         """Set the estimated parameters."""
-        raise NotImplemented
+        raise NotImplementedError
