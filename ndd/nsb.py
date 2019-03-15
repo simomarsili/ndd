@@ -12,6 +12,8 @@ import logging
 import numpy
 import ndd
 from ndd.estimators import Entropy, JSDivergence
+from ndd.exceptions import (NumericError, HistogramError, AxisError,
+                            CardinalityError)
 
 __all__ = ['entropy',
            'jensen_shannon_divergence',
@@ -58,6 +60,11 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         (approximated standard deviation over the entropy posterior).
         Only if `return_std` is True.
 
+    Raises
+    ------
+    NumericError
+        If result is NaN
+
     """
 
     # pk is an array of counts
@@ -65,7 +72,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S) or (err is not None and numpy.isnan(err)):
-        raise FloatingPointError("NaN value")
+        raise NumericError("NaN value")
 
     if return_std:
         return S, err
@@ -111,13 +118,18 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     float
         Jensen-Shannon divergence.
 
+    Raises
+    ------
+    NumericError
+        If result is NaN
+
     """
 
     estimator = JSDivergence(alpha, plugin).fit(pk, k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
-        raise FloatingPointError("NaN value")
+        raise NumericError("NaN value")
 
     return js
 
@@ -142,13 +154,18 @@ def histogram(data, axis=0, r=0):
     axis : int, optional
         The sample-indexing axis
     r : int, optional
-        If r > 0, return a generator that yields bin counts for each possible
-        combination of r variables.
+        If r > 0, return a generator that yields a bin counts array
+        for each possible combination of r variables.
 
     Returns
     -------
     counts : ndarray
         Bin counts.
+
+    Raises
+    ------
+    HistogramError
+        If r > p.
 
     """
     from itertools import combinations
@@ -156,7 +173,7 @@ def histogram(data, axis=0, r=0):
     data = ndd.nsb.as_data_array(data, axis=axis)
     p = data.shape[0]
     if r > p:
-        raise ValueError(
+        raise HistogramError(
             'r (%r) is larger than the number of variables (%r)' % (r, p))
     if r == 0:
         # statistics for the p-dimensional variable
@@ -172,6 +189,12 @@ def as_data_array(ar, axis=0):
     For a generic ndarray, flatten the subarrays indexed by axis 0
     axis : int, optional
         The sample-indexing axis
+
+    Raises
+    ------
+    AxisError
+        axis is invalid
+
     """
 
     ar = numpy.asanyarray(ar)
@@ -187,7 +210,7 @@ def as_data_array(ar, axis=0):
             try:
                 ar = numpy.swapaxes(ar, axis, 0)
             except ValueError:
-                raise numpy.AxisError(axis, ar.ndim)
+                raise AxisError(axis, ar.ndim)
         n = ar.shape[0]
         ar = ar.reshape(n, -1)
         ar = ar.T
@@ -216,6 +239,11 @@ def _from_data(ar, ks=None, axis=0, r=0):
     float
         Entropy estimate
 
+    Raises
+    ------
+    CardinalityError
+        len(ks) != p
+
     """
     from itertools import combinations
 
@@ -229,9 +257,9 @@ def _from_data(ar, ks=None, axis=0, r=0):
             if len(ks) == p:
                 ks = numpy.array(ks)
             else:
-                raise ValueError("k should have len %s" % p)
-        except TypeError:
-            raise
+                raise CardinalityError("k should have len %s" % p)
+        except TypeError as e:
+            raise CardinalityError(e)
 
     entropy_estimator = Entropy()
     if r == 0:
