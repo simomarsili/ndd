@@ -34,7 +34,7 @@ class CountsError(EstimatorInputError):
     """Invalid counts array."""
 
 
-class PMFError(EstimatorInputError):
+class PmfError(EstimatorInputError):
     """Invalid PMF."""
 
 

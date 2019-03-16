@@ -11,7 +11,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
 import logging
 import numpy
 from ndd.base import EntropyEstimator
-from ndd.exceptions import PMFError, CountsError
+from ndd.exceptions import PmfError, CountsError
 
 logger = logging.getLogger(__name__)
 
@@ -113,17 +113,17 @@ class KLDivergence(EntropyEstimator):
 
         Raises
         ------
-        PMFError
+        PmfError
             If qk is not a valid PMF.
 
         """
         if is_pmf(qk):
             log_qk = numpy.log(qk)
         else:
-            raise PMFError('qk must be a valid PMF')
+            raise PmfError('qk must be a valid PMF')
 
         if len(log_qk) != len(pk):
-            raise PMFError('qk and pk must have the same length.')
+            raise PmfError('qk and pk must have the same length.')
 
         if k == 1:  # single bin
             self.estimate_ = self.err_ = 0.0
