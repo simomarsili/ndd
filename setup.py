@@ -6,7 +6,7 @@ NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
 VERSION_FILE = 'version.json'
 SETUP_REQUIRES = ['numpy>=1.9']
-INSTALL_REQUIRES = ['future']
+INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 
 def get_numpy_status():
@@ -107,9 +107,8 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 )

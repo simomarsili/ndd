@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- Python3 only
 
 ## [0.9] - 2019-01-15
 ### Added
