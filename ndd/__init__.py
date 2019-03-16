@@ -123,10 +123,8 @@ from ndd.nsb import (entropy,  # pylint: disable=unused-import
 
 project_name = 'ndd'
 __version__ = pkg_resources.require(project_name)[0].version
-__copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
-__license__ = "BSD 3 clause"
-__author__ = "Simone Marsili (simo.marsili@gmail.com)"
 __all__ = ["entropy",
            "histogram",
            "nbins",
-           "from_data"]
+           "from_data",
+           "jensen_shannon_divergence"]
