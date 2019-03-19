@@ -21,18 +21,19 @@ class EntropyEstimatorMixin(object):
     """Mixin class for EntropyEstimator.
 
     Methods for estimator selection and estimation.
+
     """
 
-    def plugin_estimator(self, pk, k):
+    def _plugin_estimator(self, pk, k):
         return ndd.fnsb.plugin(pk, k), None
 
-    def pseudocounts_estimator(self, pk, k, alpha):
+    def _pseudocounts_estimator(self, pk, k, alpha):
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
-    def ww_estimator(self, pk, k, alpha):
+    def _ww_estimator(self, pk, k, alpha):
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
-    def nsb_estimator(self, pk, k):
+    def _nsb_estimator(self, pk, k):
         return ndd.fnsb.nsb(pk, k)
 
     @property
@@ -52,17 +53,17 @@ class EntropyEstimatorMixin(object):
         if self._estimator is None:
             if self.plugin:
                 if self.alpha is None:
-                    self._estimator = self.plugin_estimator
+                    self._estimator = self._plugin_estimator
                 else:
                     def pseudocounts_estimator(pk, k):
-                        return self.pseudocounts_estimator(pk, k, self.alpha)
+                        return self._pseudocounts_estimator(pk, k, self.alpha)
                     self._estimator = pseudocounts_estimator
             else:
                 if self.alpha is None:
-                    self._estimator = self.nsb_estimator
+                    self._estimator = self._nsb_estimator
                 else:
                     def ww_estimator(pk, k):
-                        return self.ww_estimator(pk, k, self.alpha)
+                        return self._ww_estimator(pk, k, self.alpha)
                     self._estimator = ww_estimator
         return self._estimator
 
