@@ -88,15 +88,15 @@ class EntropyEstimatorMixin(object):
             A measure of uncertainty in the estimate. None if not available.
 
         """
-        pk = self.check_pk(pk)
+        pk = self._check_pk(pk)
         if k is None:
             k = len(pk)
-        k = self.check_k(k)
+        k = self._check_k(k)
 
         return self.estimator(pk, k)
 
     @staticmethod
-    def check_pk(a):
+    def _check_pk(a):
         """
         Raises
         ------
@@ -115,7 +115,7 @@ class EntropyEstimatorMixin(object):
         return numpy.int32(a)
 
     @staticmethod
-    def check_k(k):
+    def _check_k(k):
         """
         if k is None, set k = number of bins
         if k is an integer, just check
