@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class EntropyEstimatorMixin(object):
     """Mixin class for EntropyEstimator.
 
-    Contains methods to select an estimator and compute an estimates from data.
+    Methods for estimator selection and estimation.
     """
 
     def plugin_estimator(self, pk, k):
@@ -29,34 +29,40 @@ class EntropyEstimatorMixin(object):
     def nsb_estimator(self, pk, k):
         return ndd.fnsb.nsb(pk, k)
 
-    def select_estimator(self):
+    @property
+    def estimator(self):
         """
-        Return an estimator function for the object.
+        Entropy estimator function.
+
+        Return the object estimator.
         Possible estimators are:
         - NSB (Nemenman-Shafee-Bialek)
         - WW (Wolper-Wolf)
         - "plugin"
         - pseudocounts-regularized plugin
+
         """
 
-        if self.plugin:
-            if self.alpha is None:
-                return self.plugin_estimator
+        if self._estimator is None:
+            if self.plugin:
+                if self.alpha is None:
+                    self._estimator = self.plugin_estimator
+                else:
+                    def pseudocounts_estimator(pk, k):
+                        return self.pseudocounts_estimator(pk, k, self.alpha)
+                    self._estimator = pseudocounts_estimator
             else:
-                def pseudocounts_estimator(pk, k):
-                    return self.pseudocounts_estimator(pk, k, self.alpha)
-                return pseudocounts_estimator
-        else:
-            if self.alpha is None:
-                return self.nsb_estimator
-            else:
-                def ww_estimator(pk, k):
-                    return self.ww_estimator(pk, k, self.alpha)
-                return ww_estimator
+                if self.alpha is None:
+                    self._estimator = self.nsb_estimator
+                else:
+                    def ww_estimator(pk, k):
+                        return self.ww_estimator(pk, k, self.alpha)
+                    self._estimator = ww_estimator
+        return self._estimator
 
-    def estimator(self, pk, k):
+    def entropy_estimate(self, pk, k):
         """
-        Return an entropy estimate from counts and the size of sample space.
+        Return an entropy estimate given counts and the sample space size.
 
         Parameters
         ----------
@@ -80,7 +86,7 @@ class EntropyEstimatorMixin(object):
             k = len(pk)
         k = self.check_k(k)
 
-        return self.estimator_function(pk, k)
+        return self.estimator(pk, k)
 
     @staticmethod
     def check_pk(a):
@@ -112,6 +118,7 @@ class EntropyEstimatorMixin(object):
         ------
         CardinalityError
             If k is not valid (wrong type, negative, too large...)
+
         """
         MAX_LOGK = 150 * numpy.log(2)
 
@@ -141,12 +148,12 @@ class EntropyEstimatorMixin(object):
         return k
 
 
-class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
+class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
     """Extend the BaseEstimator to estimators of entropy-derived quantities.
 
-    Specific estimators should extend the EntropyEstimator class with a fit()
-    method. The fit() method must set the estimator object attributes
-    estimate and err (using the estimator_function method).
+    Specific estimators should extend the EntropyBasedEstimator class with
+    a fit() method. The fit() method must set the estimator object attributes
+    estimate_ and err_ (using the entropy_estimate method).
 
     Parameters
     ----------
@@ -173,7 +180,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     def __init__(self, alpha=None, plugin=False):
         self.alpha = self.check_alpha(alpha)
         self.plugin = plugin
-        self._estimator_function = None
+        self._estimator = None
         self._algorithm = None
 
         self.estimate_ = None
@@ -184,6 +191,23 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         return self.fit(*args, **kwargs).estimate_
 
     def check_alpha(self, a):
+        """Check concentration parameter/#pseudocount.
+
+        Parameters
+        ----------
+        a : positive number
+            Concentration parameter or num. pseudocounts
+
+        Returns
+        -------
+        a : float64
+
+        Raises
+        ------
+        AlphaError
+            If a is not numeric or negative.
+
+        """
         if a is None:
             return a
         try:
@@ -195,16 +219,9 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         return a
 
     @property
-    def estimator_function(self):
-        """Entropy estimator function."""
-        if self._estimator_function is None:
-            self._estimator_function = self.select_estimator()
-        return self._estimator_function
-
-    @property
     def algorithm(self):
         """Estimator function name."""
-        return self.estimator_function.__name__.split('_')[0]
+        return self.estimator.__name__.split('_')[0]
 
     def fit(self):
         """Set the estimated parameters."""

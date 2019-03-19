@@ -4,7 +4,7 @@
 """Base classes module."""
 import logging
 import numpy
-from ndd.base import EntropyEstimator
+from ndd.base import EntropyBasedEstimator
 from ndd.exceptions import PmfError, CountsError
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ __all__ = ['Entropy', 'KLDivergence', 'JSDivergence']
 
 
 # TODO: docstrings
-class Entropy(EntropyEstimator):
+class Entropy(EntropyBasedEstimator):
     """Entropy estimator class.
 
     Default: use the NSB estimator function.
@@ -60,11 +60,11 @@ class Entropy(EntropyEstimator):
         if k == 1:  # single bin
             self.estimate_ = self.err_ = 0.0
         else:
-            self.estimate_, self.err_ = self.estimator(pk, k)
+            self.estimate_, self.err_ = self.entropy_estimate(pk, k)
         return self
 
 
-class KLDivergence(EntropyEstimator):
+class KLDivergence(EntropyBasedEstimator):
     """Kullback-Leibler divergence estimator class.
 
     Default: use the NSB estimator function.
@@ -122,13 +122,13 @@ class KLDivergence(EntropyEstimator):
         if k == 1:  # single bin
             self.estimate_ = self.err_ = 0.0
         else:
-            self.estimate_, self.err_ = self.estimator(pk, k)
+            self.estimate_, self.err_ = self.entropy_estimate(pk, k)
         self.estimate_ += numpy.sum(pk * log_qk) / float(sum(pk))
         self.estimate_ = - self.estimate_
         return self
 
 
-class JSDivergence(EntropyEstimator):
+class JSDivergence(EntropyBasedEstimator):
     """Jensen-Shannon divergence estimator class.
 
     Default: use the NSB estimator function.
@@ -179,8 +179,8 @@ class JSDivergence(EntropyEstimator):
         if k == 1:  # single bin
             self.estimate_ = 0.0
         else:
-            self.estimate_ = self.estimator(pk.sum(axis=0), k)[0] - sum(
-                ws[i] * self.estimator(x, k)[0] for i, x in enumerate(pk))
+            self.estimate_ = self.entropy_estimate(pk.sum(axis=0), k)[0] - sum(
+                ws[i] * self.entropy_estimate(x, k)[0] for i, x in enumerate(pk))
         return self
 
 
