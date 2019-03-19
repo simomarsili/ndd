@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class EntropyEstimatorMixin(object):
     """Mixin class for EntropyEstimator.
 
-    Methods for estimator selection and estimation from data.
+    Methods for estimator selection and estimation.
     """
 
     def plugin_estimator(self, pk, k):
@@ -36,7 +36,7 @@ class EntropyEstimatorMixin(object):
         return ndd.fnsb.nsb(pk, k)
 
     @property
-    def estimator_function(self):
+    def estimator(self):
         """
         Entropy estimator function.
 
@@ -48,22 +48,22 @@ class EntropyEstimatorMixin(object):
         - pseudocounts-regularized plugin
         """
 
-        if self._estimator_function is None:
+        if self._estimator is None:
             if self.plugin:
                 if self.alpha is None:
-                    self._estimator_function = self.plugin_estimator
+                    self._estimator = self.plugin_estimator
                 else:
                     def pseudocounts_estimator(pk, k):
                         return self.pseudocounts_estimator(pk, k, self.alpha)
-                    self._estimator_function = pseudocounts_estimator
+                    self._estimator = pseudocounts_estimator
             else:
                 if self.alpha is None:
-                    self._estimator_function = self.nsb_estimator
+                    self._estimator = self.nsb_estimator
                 else:
                     def ww_estimator(pk, k):
                         return self.ww_estimator(pk, k, self.alpha)
-                    self._estimator_function = ww_estimator
-        return self._estimator_function
+                    self._estimator = ww_estimator
+        return self._estimator
 
     def compute_estimate(self, pk, k):
         """
@@ -91,7 +91,7 @@ class EntropyEstimatorMixin(object):
             k = len(pk)
         k = self.check_k(k)
 
-        return self.estimator_function(pk, k)
+        return self.estimator(pk, k)
 
     @staticmethod
     def check_pk(a):
@@ -157,7 +157,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
 
     Specific estimators should extend the EntropyEstimator class with a fit()
     method. The fit() method must set the estimator object attributes
-    estimate and err (using the estimator_function method).
+    estimate and err (using the estimator method).
 
     Parameters
     ----------
@@ -184,7 +184,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     def __init__(self, alpha=None, plugin=False):
         self.alpha = self.check_alpha(alpha)
         self.plugin = plugin
-        self._estimator_function = None
+        self._estimator = None
         self._algorithm = None
 
         self.estimate_ = None
@@ -208,7 +208,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
     @property
     def algorithm(self):
         """Estimator function name."""
-        return self.estimator_function.__name__.split('_')[0]
+        return self.estimator.__name__.split('_')[0]
 
     def fit(self):
         """Set the estimated parameters."""
