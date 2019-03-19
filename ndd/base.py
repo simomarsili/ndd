@@ -65,7 +65,7 @@ class EntropyEstimatorMixin(object):
                     self._estimator = ww_estimator
         return self._estimator
 
-    def compute_estimate(self, pk, k):
+    def entropy_estimate(self, pk, k):
         """
         Return an entropy estimate from counts and the size of sample space.
 
@@ -158,7 +158,7 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
 
     Specific estimators should extend the EntropyEstimator class with a fit()
     method. The fit() method must set the estimator object attributes
-    estimate and err (using the estimator method).
+    estimate_ and err_ (using the entropy_estimate method).
 
     Parameters
     ----------

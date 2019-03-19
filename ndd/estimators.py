@@ -66,7 +66,7 @@ class Entropy(EntropyEstimator):
         if k == 1:  # single bin
             self.estimate_ = self.err_ = 0.0
         else:
-            self.estimate_, self.err_ = self.compute_estimate(pk, k)
+            self.estimate_, self.err_ = self.entropy_estimate(pk, k)
         return self
 
 
@@ -128,7 +128,7 @@ class KLDivergence(EntropyEstimator):
         if k == 1:  # single bin
             self.estimate_ = self.err_ = 0.0
         else:
-            self.estimate_, self.err_ = self.compute_estimate(pk, k)
+            self.estimate_, self.err_ = self.entropy_estimate(pk, k)
         self.estimate_ += numpy.sum(pk * log_qk) / float(sum(pk))
         self.estimate_ = - self.estimate_
         return self
@@ -185,8 +185,8 @@ class JSDivergence(EntropyEstimator):
         if k == 1:  # single bin
             self.estimate_ = 0.0
         else:
-            self.estimate_ = self.compute_estimate(pk.sum(axis=0), k)[0] - sum(
-                ws[i] * self.compute_estimate(x, k)[0] for i, x in enumerate(pk))
+            self.estimate_ = self.entropy_estimate(pk.sum(axis=0), k)[0] - sum(
+                ws[i] * self.entropy_estimate(x, k)[0] for i, x in enumerate(pk))
         return self
 
 
