@@ -185,10 +185,20 @@ def histogram(data, axis=0, r=0):
 
 def as_data_array(ar, axis=0):
     """
-    For a 2D n-by-p data array, transpose it.
-    For a generic ndarray, flatten the subarrays indexed by axis 0
+    For a generic ndarray, flatten the subarrays indexed by axis `axis`
+    before transposing.
+
+    Attributes
+    ----------
+    ar : array-like
+        Data array.
     axis : int, optional
         The sample-indexing axis
+
+    Returns
+    -------
+    transpesed_array
+        2D data array with different samples in different columns.
 
     Raises
     ------
