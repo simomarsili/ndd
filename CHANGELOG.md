@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.0] - 2019-03-19
+### Changed
+- Python3 only
+- fixed NumericError for valid entropy estimation
+
 ## [0.9] - 2019-01-15
 ### Added
 - `jensen_shannnon_divergence()` function.
