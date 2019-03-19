@@ -153,10 +153,10 @@ class EntropyEstimatorMixin(object):
         return k
 
 
-class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
+class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
     """Extend the BaseEstimator to estimators of entropy-derived quantities.
 
-    Specific estimators should extend the EntropyEstimator class with a fit()
+    Specific estimators should extend the EntropyBasedEstimator class with a fit()
     method. The fit() method must set the estimator object attributes
     estimate_ and err_ (using the entropy_estimate method).
 

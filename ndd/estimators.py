@@ -10,7 +10,7 @@ from builtins import (  # pylint: disable=redefined-builtin, unused-import
     oct, open, pow, round, super, filter, map, zip)
 import logging
 import numpy
-from ndd.base import EntropyEstimator
+from ndd.base import EntropyBasedEstimator
 from ndd.exceptions import PmfError, CountsError
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ __all__ = ['Entropy', 'KLDivergence', 'JSDivergence']
 
 
 # TODO: docstrings
-class Entropy(EntropyEstimator):
+class Entropy(EntropyBasedEstimator):
     """Entropy estimator class.
 
     Default: use the NSB estimator function.
@@ -70,7 +70,7 @@ class Entropy(EntropyEstimator):
         return self
 
 
-class KLDivergence(EntropyEstimator):
+class KLDivergence(EntropyBasedEstimator):
     """Kullback-Leibler divergence estimator class.
 
     Default: use the NSB estimator function.
@@ -134,7 +134,7 @@ class KLDivergence(EntropyEstimator):
         return self
 
 
-class JSDivergence(EntropyEstimator):
+class JSDivergence(EntropyBasedEstimator):
     """Jensen-Shannon divergence estimator class.
 
     Default: use the NSB estimator function.
