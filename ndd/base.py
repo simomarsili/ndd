@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class EntropyEstimatorMixin(object):
     """Mixin class for EntropyEstimator.
 
-    Contains methods to select an estimator and compute an estimates from data.
+    Methods for estimator selection and estimation from data.
     """
 
     def plugin_estimator(self, pk, k):
