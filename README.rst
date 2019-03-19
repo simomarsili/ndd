@@ -12,7 +12,7 @@ a parameter-free, Bayesian entropy estimator for discrete data.
 
 News
 ====
-Starting from `v1.0`, **ndd** requires Python3.
+Starting from `v1.0`, **ndd** requires Python3.4 or later.
 
 
 Basic usage
