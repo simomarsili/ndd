@@ -42,11 +42,9 @@ class EntropyEstimatorMixin(object):
         Entropy estimator function.
 
         Return the object estimator.
-        Possible estimators are:
-        - NSB (Nemenman-Shafee-Bialek)
-        - WW (Wolper-Wolf)
-        - "plugin"
-        - pseudocounts-regularized plugin
+        The four possible entropy estimator functions are:
+        plugin, plugin with pseudocounts, Wolpert-Wolf (WW) and
+        Nemenman-Shafee-Bialek (NSB).
 
         """
 

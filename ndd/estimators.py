@@ -37,12 +37,6 @@ class Entropy(EntropyBasedEstimator):
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
-    Attributes
-    ----------
-    estimator : estimator function
-        The four possible entropy estimator functions are: plugin, plugin with
-        pseudocounts, Wolpert-Wolf (WW) and Nemenman-Shafee-Bialek (NSB).
-
     """
 
     def fit(self, pk, k=None):
@@ -62,6 +56,7 @@ class Entropy(EntropyBasedEstimator):
         -------
         self : object
             Returns the instance itself.
+
         """
         if k == 1:  # single bin
             self.estimate_ = self.err_ = 0.0
@@ -95,21 +90,25 @@ class KLDivergence(EntropyBasedEstimator):
         pseudocounts, Wolpert-Wolf (WW) and Nemenman-Shafee-Bialek (NSB).
 
     """
-    """Kullback-Leibler divergence estimator class."""
 
     def fit(self, pk, qk, k=None):
         """
+        Attributes
+        ----------
         pk : array_like
             The number of occurrences of a set of bins.
-
         qk : array_like
             Reference PMF in sum(pk log(pk/qk).
             Must be a valid PMF (non-negative, normalized).
-
         k : int, optional
             Number of bins. k >= len(pk).
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to len(pk).
+
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
 
         Raises
         ------
@@ -152,16 +151,12 @@ class JSDivergence(EntropyBasedEstimator):
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
 
-    Attributes
-    ----------
-    estimator : estimator function
-        The four possible entropy estimator functions are: plugin, plugin with
-        pseudocounts, Wolpert-Wolf (WW) and Nemenman-Shafee-Bialek (NSB).
-
     """
 
     def fit(self, pk, k=None):
         """
+        Attributes
+        ----------
         pk : array_like
             n-by-p array. Different rows correspond to counts from different
             distributions with the same discrete sample space.
@@ -170,6 +165,11 @@ class JSDivergence(EntropyBasedEstimator):
             Number of bins. k >= p if pk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to pk.shape[1].
+        
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
 
         Raises
         ------
@@ -185,8 +185,10 @@ class JSDivergence(EntropyBasedEstimator):
         if k == 1:  # single bin
             self.estimate_ = 0.0
         else:
-            self.estimate_ = self.entropy_estimate(pk.sum(axis=0), k)[0] - sum(
-                ws[i] * self.entropy_estimate(x, k)[0] for i, x in enumerate(pk))
+            self.estimate_ = self.entropy_estimate(
+                pk.sum(axis=0), k)[0] - sum(
+                    ws[i] * self.entropy_estimate(x, k)[0]
+                    for i, x in enumerate(pk))
         return self
 
 
