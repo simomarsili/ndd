@@ -10,12 +10,13 @@ The **ndd** package provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
 a parameter-free, Bayesian entropy estimator for discrete data.
 
+News
+====
+Starting from `v1.0`, **ndd** requires Python3.4 or later.
+
 
 Basic usage
 ===========
-
-entropy function
-----------------
 
 The **ndd.entropy** function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
@@ -34,15 +35,9 @@ by computing an approximation for the posterior standard deviation::
   >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
   >>> std
   0.048675500725595504
+  
 
-
-new in v0.9
-===========
-
-jensen_shannon_divergence function
-----------------------------------
-
-The **ndd.jensen_shannon_divergence** returns an estimate of the
+The **ndd.jensen_shannon_divergence** function returns an estimate of the
 **Jensen-Shannon divergence** between two (or more) probability
 distributions. The function takes as input a n-by-p matrix of frequency
 counts with each row corresponding to a different distribution of a random
@@ -57,11 +52,7 @@ variable taking on p different values.::
   0.24166914358658187
 
 The estimate (in nats) is computed as a combination of single Bayesian entropy
-estimates. If the total number of samples varies among the distributions,
-the function returns the divergence between the n distributions with weights
-proportional to the total number of samples
-(see the general definition of Jensen-Shannon divergence:
-https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
+estimates. See docstrings for details.
 
 Where to get it
 ===============
