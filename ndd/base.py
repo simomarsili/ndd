@@ -123,6 +123,7 @@ class EntropyEstimatorMixin(object):
         ------
         CardinalityError
             If k is not valid (wrong type, negative, too large...)
+
         """
         MAX_LOGK = 150 * numpy.log(2)
 
@@ -195,6 +196,23 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         return self.fit(*args, **kwargs).estimate_
 
     def check_alpha(self, a):
+        """Check concentration parameter/#pseudocount.
+
+        Parameters
+        ----------
+        a : positive number
+            Concentration parameter or num. pseudocounts
+
+        Returns
+        -------
+        a : float64
+
+        Raises
+        ------
+        AlphaError
+            If a is not numeric or negative.
+
+        """
         if a is None:
             return a
         try:
