@@ -35,8 +35,11 @@ class EntropyEstimatorMixin(object):
     def nsb_estimator(self, pk, k):
         return ndd.fnsb.nsb(pk, k)
 
-    def select_estimator(self):
+    @property
+    def estimator_function(self):
         """
+        Entropy estimator function.
+
         Return an estimator function for the object.
         Possible estimators are:
         - NSB (Nemenman-Shafee-Bialek)
@@ -45,22 +48,24 @@ class EntropyEstimatorMixin(object):
         - pseudocounts-regularized plugin
         """
 
-        if self.plugin:
-            if self.alpha is None:
-                return self.plugin_estimator
+        if self._estimator_function is None:
+            if self.plugin:
+                if self.alpha is None:
+                    self._estimator_function = self.plugin_estimator
+                else:
+                    def pseudocounts_estimator(pk, k):
+                        return self.pseudocounts_estimator(pk, k, self.alpha)
+                    self._estimator_function = pseudocounts_estimator
             else:
-                def pseudocounts_estimator(pk, k):
-                    return self.pseudocounts_estimator(pk, k, self.alpha)
-                return pseudocounts_estimator
-        else:
-            if self.alpha is None:
-                return self.nsb_estimator
-            else:
-                def ww_estimator(pk, k):
-                    return self.ww_estimator(pk, k, self.alpha)
-                return ww_estimator
+                if self.alpha is None:
+                    self._estimator_function = self.nsb_estimator
+                else:
+                    def ww_estimator(pk, k):
+                        return self.ww_estimator(pk, k, self.alpha)
+                    self._estimator_function = ww_estimator
+        return self._estimator_function
 
-    def estimator(self, pk, k):
+    def compute_estimate(self, pk, k):
         """
         Return an entropy estimate from counts and the size of sample space.
 
@@ -199,13 +204,6 @@ class EntropyEstimator(BaseEstimator, EntropyEstimatorMixin):
         if a < 0:
             raise AlphaError('Negative alpha value: %r' % a)
         return a
-
-    @property
-    def estimator_function(self):
-        """Entropy estimator function."""
-        if self._estimator_function is None:
-            self._estimator_function = self.select_estimator()
-        return self._estimator_function
 
     @property
     def algorithm(self):
