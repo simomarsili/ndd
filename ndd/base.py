@@ -40,12 +40,13 @@ class EntropyEstimatorMixin(object):
         """
         Entropy estimator function.
 
-        Return an estimator function for the object.
+        Return the object estimator.
         Possible estimators are:
         - NSB (Nemenman-Shafee-Bialek)
         - WW (Wolper-Wolf)
         - "plugin"
         - pseudocounts-regularized plugin
+
         """
 
         if self._estimator is None:
@@ -67,7 +68,7 @@ class EntropyEstimatorMixin(object):
 
     def entropy_estimate(self, pk, k):
         """
-        Return an entropy estimate from counts and the size of sample space.
+        Return an entropy estimate given counts and the sample space size.
 
         Parameters
         ----------
@@ -156,8 +157,8 @@ class EntropyEstimatorMixin(object):
 class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
     """Extend the BaseEstimator to estimators of entropy-derived quantities.
 
-    Specific estimators should extend the EntropyBasedEstimator class with a fit()
-    method. The fit() method must set the estimator object attributes
+    Specific estimators should extend the EntropyBasedEstimator class with
+    a fit() method. The fit() method must set the estimator object attributes
     estimate_ and err_ (using the entropy_estimate method).
 
     Parameters
