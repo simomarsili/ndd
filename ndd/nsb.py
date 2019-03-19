@@ -71,10 +71,12 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     estimator = Entropy(alpha, plugin).fit(pk, k)
     S, err = estimator.estimate_, estimator.err_
 
-    if numpy.isnan(S) or (err is not None and numpy.isnan(err)):
+    if numpy.isnan(S):
         raise NumericError("NaN value")
 
     if return_std:
+        if err is not None and numpy.isnan(err):
+            raise NumericError("NaN value")
         return S, err
     else:
         return S
