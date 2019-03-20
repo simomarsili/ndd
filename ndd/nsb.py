@@ -136,7 +136,7 @@ def _nbins(data):
     the num. of unique elements for each variable.
     """
     # reshape as a p-by-n array
-    data = ndd.nsb.as_data_array(data)
+    data = as_data_array(data)
     return [len(numpy.unique(v)) for v in data]
 
 
@@ -166,7 +166,7 @@ def histogram(data, axis=0, r=0):
     """
     from itertools import combinations
     # reshape as a p-by-n array
-    data = ndd.nsb.as_data_array(data, axis=axis)
+    data = as_data_array(data, axis=axis)
     p = data.shape[0]
     if r > p:
         raise HistogramError(
