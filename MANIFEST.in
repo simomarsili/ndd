@@ -1,6 +1,7 @@
 include LICENSE.txt
-include README.md
-include ndd/version.json
+include README.rst
+include version.json
+include requirements.txt
 
 # Include the data files
 #recursive-include data *

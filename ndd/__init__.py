@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2017, Simone Marsili
-# All rights reserved.
+# Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
-# Author: Simone Marsili (simomarsili@gmail.com)
 """
 # ndd - Bayesian entropy estimation from discrete data
 
@@ -109,28 +107,15 @@ and interesting links:
 - [Il Memming Park on discrete entropy estimators](https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/)
 
 """
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import (  # pylint: disable=redefined-builtin, unused-import
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super,
-    filter, map, zip)
-import os
-import json
-from ndd.nsb import (entropy, histogram)
+import pkg_resources
+from ndd.nsb import (entropy,  # pylint: disable=unused-import
+                     jensen_shannon_divergence,
+                     histogram, )
 
-path_to_version = os.path.join(os.path.dirname(__file__), 'version.json')
-with open(path_to_version, 'r') as f:
-    version_data = json.load(f)
-    try:
-        __version__ = version_data['version']
-    except KeyError:
-        # no version number in version.json
-        raise KeyError("check version file: no version number")
-
-__copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
-__license__ = "BSD 3 clause"
-__author__ = "Simone Marsili (simo.marsili@gmail.com)"
+project_name = 'ndd'
+__version__ = pkg_resources.require(project_name)[0].version
 __all__ = ["entropy",
-           "histogram"]
+           "histogram",
+           "nbins",
+           "from_data",
+           "jensen_shannon_divergence"]

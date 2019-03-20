@@ -4,9 +4,10 @@ from pkg_resources import parse_version
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
-VERSION_FILE = 'ndd/version.json'
-SETUP_REQUIRES = ['numpy']
-INSTALL_REQUIRES = ['future', 'pytest', 'scipy']
+VERSION_FILE = 'version.json'
+SETUP_REQUIRES = ['numpy>=1.9']
+INSTALL_REQUIRES = []
+EXTRAS_REQUIRES = {'test': ['pytest']}
 
 def get_numpy_status():
     """
@@ -42,7 +43,7 @@ def get_long_description():
     from os import path
     import codecs
     here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, 'README.md'), encoding='utf-8') as _rf:
+    with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as _rf:
         return _rf.read()
 
 # check numpy first
@@ -65,8 +66,8 @@ from numpy.distutils.core import Extension # pylint: disable=wrong-import-positi
 VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
 
-_NSB = Extension(
-    name='ndd._nsb',
+FNSB = Extension(
+    name='ndd.fnsb',
     sources=['ndd/nsb.pyf',
              'ndd/exts/gamma.f90',
              'ndd/exts/quad.f90',
@@ -80,27 +81,26 @@ setup(
     version=VERSION,
     description="Bayesian entropy estimation from discrete data",
     long_description=LONG_DESCRIPTION,
-    long_description_content_type='text/markdown',
+    #long_description_content_type="text/markdown",
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
     data_files=[(NAME, ['ndd/version.json'])],
-
-    #py_modules=['ndd'],
     packages=['ndd'],
-    ext_modules=[_NSB],
-
+    package_data={'':
+                  ['LICENSE.txt',
+                   'README.rst',
+                   'requirements.txt']},
+    ext_modules=[FNSB],
     entry_points={
         'console_scripts': [
             'ndd=ndd.entry:main'
         ]},
-
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={
-        'test': ['pytest'],
-        'docs': ['mkdocs']},
+        'test': ['pytest']},
     license='BSD 3-Clause',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -111,9 +111,8 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 )
