@@ -1,391 +1,284 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016,2017 Simone Marsili
-# All rights reserved.
+# Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import (  # pylint: disable=redefined-builtin, unused-import
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super,
-    filter, map, zip)
-
-__copyright__ = "Copyright (C) 2016,2017 Simone Marsili"
-__license__ = "BSD 3 clause"
-__author__ = "Simone Marsili (simomarsili@gmail.com)"
-__all__ = ['entropy', 'histogram']
-
+"""Functions module."""
+import logging
 import numpy
 import ndd
-import ndd._nsb
+from ndd.estimators import Entropy, JSDivergence
+from ndd.exceptions import (NumericError, HistogramError, AxisError,
+                            CardinalityError)
+
+__all__ = ['entropy',
+           'jensen_shannon_divergence',
+           'histogram', ]
+
+logger = logging.getLogger(__name__)
 
 
-class Entropy(object):
-    def __init__(self, alpha=None, plugin=False):
-        self.std = None
-
-        # check alpha value
-        if alpha:
-            try:
-                alpha = numpy.float64(alpha)
-            except ValueError:
-                raise
-            if alpha <= 0:
-                raise ValueError("alpha <= 0")
-        self.alpha = alpha
-
-        # set estimator
-        if plugin:
-            if alpha is None:
-                self.estimator = self._plugin
-            else:
-                self.estimator = lambda counts, k: self._pseudocounts(
-                    counts, k, self.alpha)
-        else:
-            if alpha is None:
-                self.estimator = self._nsb
-            else:
-                self.estimator = lambda counts, k: self._ww(
-                    counts, k, self.alpha)
-
-    @staticmethod
-    def _plugin(counts, k):
-        return ndd._nsb.plugin(counts, k)
-
-    @staticmethod
-    def _pseudocounts(counts, k, alpha):
-        return ndd._nsb.pseudo(counts, k, alpha)
-
-    @staticmethod
-    def _ww(counts, k, alpha):
-        return ndd._nsb.dirichlet(counts, k, alpha)
-
-    @staticmethod
-    def _nsb(counts, k):
-        return ndd._nsb.nsb(counts, k)
-
-    @staticmethod
-    def check_counts(a):
-        try:
-            a = numpy.asarray(a, dtype=numpy.int32)
-        except ValueError:
-            raise
-        if numpy.any(a < 0):
-            raise ValueError("Frequency counts can't be negative")
-        return a.flatten()
-
-    @staticmethod
-    def check_k(k, n_bins):
-        """
-        if k is None, set k = number of bins
-        if k is a sequence, set k = prod(k) and check
-        if k is an integer, just check
-        """
-        MAX_LOGK = 150 * numpy.log(2)  # 200 bits
-
-        if k is None:
-            # set k to the number of observed bins
-            k = numpy.float64(n_bins)
-        else:
-            try:
-                k = numpy.float64(k)
-            except ValueError:
-                raise
-            if k.ndim:
-                if k.ndim > 1:
-                    raise ValueError('k must be a scalar or 1D array')
-                # if k is not a sequence, set k = prod(k)
-                logk = numpy.sum(numpy.log(x) for x in k)
-                if logk > MAX_LOGK:
-                    # too large a number; backoff to n_bins?
-                    # TODO: log warning
-                    raise ValueError('k (%r) larger than %r' %
-                                     (numpy.exp(logk), numpy.exp(MAX_LOGK)))
-                else:
-                    k = numpy.prod(k)
-            else:
-                # if a scalar check size
-                if numpy.log(k) > MAX_LOGK:
-                    raise ValueError('k (%r) larger than %r' %
-                                     (k, numpy.exp(MAX_LOGK)))
-            # consistency checks
-            if k < n_bins:
-                raise ValueError("k (%s) is smaller than the number of bins"
-                                 "(%s)" % (k, n_bins))
-            if not k.is_integer():
-                raise ValueError("k (%s) should be a whole number." % k)
-        return k
-
-    def __call__(self, counts, k=None, return_std=False):
-        """
-        counts : array_like
-            The number of occurrences of a set of bins.
-
-        k : int or array_like, optional
-            Number of bins. k >= len(counts).
-            If array, set k = numpy.prod(k).
-            Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to len(counts).
-
-        """
-        self.fit(counts, k)
-        return self.entropy
-
-    def fit(self, counts, k=None):
-        """
-        counts : array_like
-            The number of occurrences of a set of bins.
-
-        k : int or array_like, optional
-            Number of bins. k >= len(counts).
-            If array, set k = numpy.prod(k).
-            Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to len(counts).
-
-        """
-        counts = self.check_counts(counts)
-        k = self.check_k(k=k, n_bins=len(counts))
-        if k == 1:  # single bin
-            self.entropy = self.std = 0.0
-        else:
-            result = self.estimator(counts, k)
-            if isinstance(result, tuple):
-                self.entropy, self.std = result
-            else:
-                self.entropy = result
-
-
-def entropy(counts, k=None, alpha=None, return_std=False, plugin=False):
+def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
+    Return a Bayesian estimate of the entropy from an array of counts.
+
     Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from an input array of counts.
+    distribution from an input array of counts pk.
 
     Parameters
     ----------
-
-    counts : array_like
+    pk : array-like
         The number of occurrences of a set of bins.
-
-    k : int, optional
-        Number of bins. k >= len(counts).
-        A float value is a valid input for whole numbers (e.g. k=1.e3).
-        Defaults to len(counts).
-
+    k : int or array-like, optional
+        Total number of bins (taking into account unobserved bins);
+        k >= len(pk). A float is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k).
+        Defaults to n_bins.
     alpha : float, optional
-        If alpha is passed, use a single Dirichlet prior with concentration
+        If alpha is not None, use a single Dirichlet prior with concentration
         parameter alpha (fixed alpha estimator). alpha > 0.0.
-
-    return_std : boolean, optional
-        If True, also return an approximated value for the standard deviation
-        over the entropy posterior.
-
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
         distribution is estimated from the empirical frequencies over bins
         and inserted into the entropy definition (plugin estimator).
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
+    return_std : boolean, optional
+        If True, also return an approximated value for the standard deviation
+        over the entropy posterior.
 
     Returns
     -------
     entropy : float
         Entropy estimate.
-
     std : float, optional
         Uncertainty in the entropy estimate
-        (approximates the standard deviation over the entropy posterior).
-        Only provided if `return_std` is True.
+        (approximated standard deviation over the entropy posterior).
+        Only if `return_std` is True.
+
+    Raises
+    ------
+    NumericError
+        If result is NaN
 
     """
 
-    estimator = Entropy(alpha, plugin)
-    estimator.fit(counts, k)
+    # pk is an array of counts
+    estimator = Entropy(alpha, plugin).fit(pk, k)
+    S, err = estimator.estimate_, estimator.err_
+
+    if numpy.isnan(S):
+        raise NumericError("NaN value")
 
     if return_std:
-        result = estimator.entropy, estimator.std
+        if err is not None and numpy.isnan(err):
+            raise NumericError("NaN value")
+        return S, err
     else:
-        result = estimator.entropy
-
-    if numpy.any(numpy.isnan(numpy.squeeze(result))):
-        raise FloatingPointError("NaN value")
-
-    return result
+        return S
 
 
-def data_entropy(data, k=None, alpha=None, return_std=False, plugin=False):
+def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     """
-    Return a Bayesian estimate of the entropy of an unknown discrete
-    distribution from data.
+    Return the Jensen-Shannon divergence from a matrix of counts.
+
+    Return an estimate of the Jensen-Shannon divergence between
+    n_distributions unknown discrete distributions from a
+    n_distributions-by-n_bins input array of counts.
+    The estimate (in nats) is computed as a combination of single Bayesian
+    entropy estimates. If the total number of samples varies among the
+    distributions, the function returns the divergence between the
+    distributions with weights proportional to the total number of samples in
+    each row (see the general definition of Jensen-Shannon divergence:
+    https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
 
     Parameters
     ----------
 
-    data : array-like or generator
-        If a generator, data must return hashable objects (e.g. tuples) as
-        1D samples. Otherwise, data will be treated as an array of n samples
-        from p variables.
-
-    k : int or list, optional
-        Number of bins. If a list, set k = numpy.prod(k).
-        Floats are valid input for whole numbers (e.g. k=1.e3).
-        Defaults to the number of unique objects in data (if 1D),
-        or to the product of the number of unique elements for each variable.
-
+    pk : array-like, shape (n_distributions, n_bins)
+        Matrix of frequency counts. Each row corresponds to the number of
+        occurrences of a set of bins from a different distribution.
+    k : int or array-like, optional
+        Total number of bins (taking into account unobserved bins); k >= n_bins
+        A float is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k).
+        Defaults to n_bins.
     alpha : float, optional
-        If alpha is passed, use a single Dirichlet prior with concentration
-        parameter alpha (fixed alpha estimator). alpha > 0.0.
-
-    return_std : boolean, optional
-        If True, also return an approximated value for the standard deviation
-        over the entropy posterior.
-
+        If not None, the entropy estimator uses a single Dirichlet prior with
+        concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
     plugin : boolean, optional
-        If True, return a 'plugin' estimate of the entropy. The discrete
-        distribution is estimated from the empirical frequencies over bins
-        and inserted into the entropy definition (plugin estimator).
-        If alpha is passed in combination with plugin=True, add
-        alpha pseudocounts to each frequency count (pseudocount estimator).
+        If True, use a 'plugin' estimator for the entropy.
+        If alpha is passed in combination with plugin == True, add alpha
+        pseudoconts to the frequency counts in the plugin estimate.
 
     Returns
     -------
-    entropy : float
-        Entropy estimate.
+    float
+        Jensen-Shannon divergence.
 
-    std : float, optional
-        Uncertainty in the entropy estimate
-        (approximates the standard deviation over the entropy posterior).
-        Only provided if `return_std` is True.
+    Raises
+    ------
+    NumericError
+        If result is NaN
 
     """
 
-    counts, ks = ndd.histogram(data)
-    if k is None:
-        k = ks
+    estimator = JSDivergence(alpha, plugin).fit(pk, k)
+    js = estimator.estimate_
 
-    estimator = Entropy(alpha, plugin)
-    estimator.fit(counts, k)
+    if numpy.isnan(js):
+        raise NumericError("NaN value")
 
-    if return_std:
-        result = estimator.entropy, estimator.std
-    else:
-        result = estimator.entropy
-
-    if numpy.any(numpy.isnan(numpy.squeeze(result))):
-        raise FloatingPointError("NaN value")
-
-    return result
+    return js
 
 
-def histogram(data):
+def _nbins(data):
+    """
+    The number of unique elements along axis 0. If data is p-dimensional,
+    the num. of unique elements for each variable.
+    """
+    # reshape as a p-by-n array
+    data = ndd.nsb.as_data_array(data)
+    return [len(numpy.unique(v)) for v in data]
+
+
+def histogram(data, axis=0, r=0):
     """Compute an histogram from data. Wrapper to numpy.unique.
 
     Parameters
     ----------
-
-    data : array-like or generator
-        If a generator, data must return hashable objects (e.g. tuples) as
-        1D samples. Otherwise, data will be treated as an array of n samples
-        from p variables.
+    data : array-like
+        An array of n samples from p variables.
+    axis : int, optional
+        The sample-indexing axis
+    r : int, optional
+        If r > 0, return a generator that yields a bin counts array
+        for each possible combination of r variables.
 
     Returns
     -------
-
     counts : ndarray
         Bin counts.
 
-    ks : ndarray
-        Number of unique elements along axis 0 for each variable indexed by
-        the remaining axes in `data` array.
+    Raises
+    ------
+    HistogramError
+        If r > p.
 
     """
-    import inspect
-    if inspect.isgenerator(data):
-        from collections import Counter
-        counter = Counter(data)
-        counts = list(counter.values())
-        ks = [len(counts)]
-    else:
-        # reshape as a p-by-n array
-        data = ndd.nsb._2darray(data)
-        # number of unique elements for each of the p variables
-        ks = [len(numpy.unique(v)) for v in data]
+    from itertools import combinations
+    # reshape as a p-by-n array
+    data = ndd.nsb.as_data_array(data, axis=axis)
+    p = data.shape[0]
+    if r > p:
+        raise HistogramError(
+            'r (%r) is larger than the number of variables (%r)' % (r, p))
+    if r == 0:
         # statistics for the p-dimensional variable
         _, counts = numpy.unique(data, return_counts=True, axis=1)
-    return counts, ks
+        return counts
+    else:
+        return (ndd.histogram(d, axis=1) for d in combinations(data, r=r))
 
 
-def _2darray(ar):
+def as_data_array(ar, axis=0):
     """
-    For a 2D n-by-p data array, transpose it.
-    For a generic ndarray, flatten the subarrays indexed by axis 0
+    For a generic ndarray, flatten the subarrays indexed by axis `axis`
+    before transposing.
+
+    Attributes
+    ----------
+    ar : array-like
+        Data array.
+    axis : int, optional
+        The sample-indexing axis
+
+    Returns
+    -------
+    transpesed_array
+        2D data array with different samples in different columns.
+
+    Raises
+    ------
+    AxisError
+        axis is invalid
+
     """
 
     ar = numpy.asanyarray(ar)
 
     if ar.ndim == 1:
         n = ar.shape[0]
-        ar = ar.reshape(n, 1)
-
-    if ar.ndim > 2:
+        ar = ar.reshape(1, n)
+    elif ar.ndim == 2:
+        if axis == 0:
+            ar = ar.T
+    elif ar.ndim > 2:
+        if axis != 0:
+            try:
+                ar = numpy.swapaxes(ar, axis, 0)
+            except ValueError:
+                raise AxisError(axis, ar.ndim)
         n = ar.shape[0]
         ar = ar.reshape(n, -1)
-
-    ar = ar.T
+        ar = ar.T
 
     return numpy.ascontiguousarray(ar)
 
 
-def _combinations(f, ar, ks=None, r=1):
+def _from_data(ar, ks=None, axis=0, r=0):
     """
-    Given an estimator `f` and a n-by-p array of data, apply f over all
-    possible p-choose-r combinations of r columns.
+    Given an array of data, return an entropy estimate.
 
     Paramaters
     ----------
-
-    f : estimator
-        Function taking as input a discrete data array and alphabet size:
-        func(data, k=k).
-
     ar : array-like
-        Array of n samples from p discrete variables.
-
+        n-by-p array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-        The alphabet sizes for the r-dimensional variable corresponding to the
-        column indices ix is computed as numpy.prod([k[x] for x in ix]).
-        Defaults to the number of unique elements in each column.
-
+    axis : int, optional
+        The sample-indexing axis.
     r : int, optional
-        For each possible combination of r columns, return the estimated
-        entropy for the corresponding r-dimensional variable.
-        See itertools.combinations(range(p), r=r).
-        Defaults to 1 (a different estimate for each column/variable).
+        If r > 0, return a generator yielding estimates for the p-choose-r
+        possible combinations of length r from the op variables.
+
+    Returns
+    -------
+    float
+        Entropy estimate
+
+    Raises
+    ------
+    CardinalityError
+        len(ks) != p
 
     """
     from itertools import combinations
 
-    ar = _2darray(ar)
-    p, n = ar.shape
+    ar = as_data_array(ar, axis=axis)
+    p = ar.shape[0]
 
-    try:
-        if len(ks) == p:
-            ks = numpy.array(ks)
-        else:
-            raise ValueError("k should have len %s" % p)
-    except TypeError:
-        if ks is None:
-            ks = numpy.array([numpy.unique(v).size for v in ar])
-        else:
-            raise
+    if ks is None:
+        ks = numpy.array([len(numpy.unique(v)) for v in ar])
+    else:
+        try:
+            if len(ks) == p:
+                ks = numpy.array(ks)
+            else:
+                raise CardinalityError("k should have len %s" % p)
+        except TypeError as e:
+            raise CardinalityError(e)
 
-    alphabet_sizes = (numpy.prod(x) for x in combinations(ks, r=r))
-    data = combinations(ar, r=r)
-
-    estimates = []
-    for k, d in zip(alphabet_sizes, data):
-        estimates.append(f(d, k=k))
-    return estimates
+    entropy_estimator = Entropy()
+    if r == 0:
+        counts = histogram(ar, axis=1)
+        k = numpy.prod(ks)
+        return entropy_estimator(counts, k=k)
+    else:
+        counts_combinations = histogram(ar, axis=1, r=r)
+        alphabet_size_combinations = (numpy.prod(x)
+                                      for x in combinations(ks, r=r))
+        return (
+            entropy_estimator(c, k=k)
+            for c, k in zip(counts_combinations, alphabet_size_combinations))
 
 
 def multivariate_information(a, ks=None):

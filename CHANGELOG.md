@@ -1,11 +1,29 @@
 # Change log
 
 ## [Unreleased]
+
+## [1.0] - 2019-03-19
+### Changed
+- Python3 only
+- fixed NumericError for valid entropy estimation
+
+## [0.9] - 2019-01-15
 ### Added
-- data_entropy()
+- `jensen_shannnon_divergence()` function.
+- `estimators` module.
+- Entropy, KLDivergence and JSDivergence estimators.
+### Changed
+- entropy() signature is now:
+  `entropy(pk, k=None, alpha=None, plugin=False, return_std=False)`
+
+## [0.8] - 2019-01-08
+### Added
+- Entropy class. 
+- from_data() returns an estimate from a data samples
 
 ### Changed
 - histogram(): remove unique elements of array as optional output
+- histogram(): takes the `axis` and `r` optional args
 
 ## [0.7.1] - 2018-06-22
 ### Changed
