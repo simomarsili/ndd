@@ -291,14 +291,37 @@ def from_data(ar, ks=None, axis=0, r=0):
             for c, k in zip(counts_combinations, alphabet_size_combinations))
 
 
-def multivariate_information(a, ks=None, axis=0):
-    """docs."""
-    a = as_data_array(a, axis=axis)
-    p = a.shape[0]
+def mutual_information(ar, ks=None, axis=0):
+    """(Multivariate) mutual information from n-by-p data matrix.
 
-    multi_info = 0.0
+    If p == 2, estimate of the mutual information between the two
+    variables corresponding to the two columns in the data matrix.
+    If p > 2, estimate the multivariate mutual information between
+    the p variables.
+
+    Paramaters
+    ----------
+    ar : array-like
+        n-by-p array of n samples from p discrete variables.
+    ks : 1D p-dimensional array, optional
+        Alphabet size for each variable.
+    axis : int or None, optional
+        The sample-indexing axis. Array `ar` will be flattened over
+        dimensions other than `axis` and transposed.
+        If None, `ar` is not processed.
+
+    Returns
+    -------
+    float
+        Mutual information estimate.
+
+    """
+    ar = as_data_array(ar, axis=axis)
+    p = ar.shape[0]
+
+    info = 0.0
     for r in range(1, p+1):
         sgn = (-1)**r
-        multi_info += sgn * numpy.sum(from_data(a, ks=ks, r=r, axis=None))
+        info += sgn * numpy.sum(from_data(ar, ks=ks, r=r, axis=None))
 
-    return - multi_info
+    return - info
