@@ -291,7 +291,7 @@ def from_data(ar, ks=None, axis=0, r=0):
             for c, k in zip(counts_combinations, alphabet_size_combinations))
 
 
-def mutual_information(ar, ks=None, axis=0):
+def mutual_information(ar, ks=None, axis=0, r=0):
     """(Multivariate) mutual information from n-by-p data matrix.
 
     If p == 2, estimate of the mutual information between the two
@@ -309,6 +309,9 @@ def mutual_information(ar, ks=None, axis=0):
         The sample-indexing axis. Array `ar` will be flattened over
         dimensions other than `axis` and transposed.
         If None, `ar` is not processed.
+    r : int, optional
+        If r > 0, return a generator yielding estimates for the p-choose-r
+        possible combinations of length r from the p variables.
 
     Returns
     -------
@@ -316,12 +319,38 @@ def mutual_information(ar, ks=None, axis=0):
         Mutual information estimate.
 
     """
-    ar = as_data_array(ar, axis=axis)
+    from itertools import combinations
+
+    # return a 2D data array with samples as columns
+    if ar is not None:
+        ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
 
-    info = 0.0
-    for r in range(1, p+1):
-        sgn = (-1)**r
-        info += sgn * numpy.sum(from_data(ar, ks=ks, r=r, axis=None))
+    if ks is None:
+        ks = numpy.array([len(numpy.unique(v)) for v in ar])
+    else:
+        try:
+            ks = numpy.float64(ks)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+        if ks.ndim:
+            if len(ks) != p:
+                raise CardinalityError("k should have len %s" % p)
+            else:
+                raise CardinalityError('ks cant be a scalar')
 
-    return - info
+    def mmi(X, k):
+        info = 0.0
+        for ri in range(1, p+1):
+            sgn = (-1)**ri
+            info += sgn * numpy.sum(from_data(X, ks=k, r=ri, axis=None))
+        return - info
+
+    if r == 0:
+        return mmi(ar, ks)
+    else:
+        data_combinations = combinations(ar, r=r)
+        alphabet_size_combinations = (numpy.prod(x)
+                                      for x in combinations(ks, r=r))
+        return (mmi(ar1, k1) for ar1, k1 in
+                zip(data_combinations, alphabet_size_combinations))

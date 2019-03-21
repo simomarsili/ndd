@@ -10,7 +10,7 @@ import os
 import json
 import pytest
 import numpy
-from numpy import random as random
+from numpy import random, isclose
 import ndd
 
 SEED = 123
@@ -47,6 +47,19 @@ def random_tuple_generator(n, p, seed):
     alphabet = list(string.ascii_uppercase)
     for j in range(n):
         yield tuple(random.choice(alphabet, size=p))
+
+
+def redundancy_dataset(n, seed):
+    # generate a dataset with common-cause structure
+    random.seed(seed)
+    rnd = lambda x: numpy.random.binomial(n=1, p=x)
+    data = []
+    for k in range(n):
+        clouds = rnd(0.2)
+        rain = clouds * rnd(0.7) + (1 - clouds) * rnd(0.2)
+        dark = clouds * rnd(0.9)
+        data.append([clouds, rain, dark])
+    return numpy.array(data)
 
 
 with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
@@ -103,3 +116,29 @@ def test_JSD():
     estimator = ndd.estimators.JSDivergence()
     ref_result = -0.01804523405829217
     assert numpy.isclose(estimator(counts), ref_result)
+
+
+def test_mi():
+    random.seed(SEED)
+    from ndd.nsb import mutual_information
+    data = redundancy_dataset(n=1000, seed=SEED)
+    h1 = ndd.from_data(data[:, 1])
+    h2 = ndd.from_data(data[:, 2])
+    h12 = ndd.from_data(data[:, [1, 2]])
+    mi = h1 + h2 - h12
+    assert isclose(mutual_information(data[:, 1:]), mi)
+
+
+def test_mmi():
+    random.seed(SEED)
+    from ndd.nsb import mutual_information
+    data = redundancy_dataset(n=1000, seed=SEED)
+    h0 = ndd.from_data(data[:, 0])
+    h1 = ndd.from_data(data[:, 1])
+    h2 = ndd.from_data(data[:, 2])
+    h01 = ndd.from_data(data[:, [0, 1]])
+    h02 = ndd.from_data(data[:, [0, 2]])
+    h12 = ndd.from_data(data[:, [1, 2]])
+    h012 = ndd.from_data(data)
+    mmi = h0 + h1 + h2 - h01 - h02 - h12 + h012
+    assert isclose(mutual_information(data), mmi)
