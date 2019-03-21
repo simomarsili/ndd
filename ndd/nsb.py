@@ -11,7 +11,8 @@ from ndd.exceptions import (NumericError, HistogramError, AxisError,
 
 __all__ = ['entropy',
            'jensen_shannon_divergence',
-           'histogram', ]
+           'histogram',
+           'from_data']
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +225,7 @@ def as_data_array(ar, axis=0):
     return numpy.ascontiguousarray(ar)
 
 
-def _from_data(ar, ks=None, axis=0, r=0):
+def from_data(ar, ks=None, axis=0, r=0):
     """
     Given an array of data, return an entropy estimate.
 
