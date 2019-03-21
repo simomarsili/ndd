@@ -259,7 +259,8 @@ def from_data(ar, ks=None, axis=0, r=0):
     ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
 
-    entropy_estimator = Entropy()
+    # EntropyBasedEstimator objects are callable and return the fitted estimate
+    estimator = Entropy()
 
     if ks is None:
         ks = numpy.array([len(numpy.unique(v)) for v in ar])
@@ -274,7 +275,7 @@ def from_data(ar, ks=None, axis=0, r=0):
 
     if r == 0:
         counts = histogram(ar, axis=1)
-        return entropy_estimator(counts, k=ks)
+        return estimator(counts, k=ks)
     else:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
@@ -283,5 +284,5 @@ def from_data(ar, ks=None, axis=0, r=0):
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
         return (
-            entropy_estimator(c, k=k)
+            estimator(c, k=k)
             for c, k in zip(counts_combinations, alphabet_size_combinations))
