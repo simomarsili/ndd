@@ -11,6 +11,7 @@ from ndd.exceptions import (NumericError, HistogramError, AxisError,
 
 __all__ = ['entropy',
            'jensen_shannon_divergence',
+           'mutual_information',
            'histogram',
            'from_data']
 

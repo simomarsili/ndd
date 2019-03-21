@@ -116,5 +116,6 @@ project_name = 'ndd'
 __version__ = pkg_resources.require(project_name)[0].version
 __all__ = ["entropy",
            'jensen_shannon_divergence',
+           'mutual_information',
            "histogram",
            "from_data"]
