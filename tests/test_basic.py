@@ -49,12 +49,13 @@ def random_tuple_generator(n, p, seed):
         yield tuple(random.choice(alphabet, size=p))
 
 
-def redundancy_dataset(n, seed):
+@pytest.fixture
+def data_with_redundancy():
     # generate a dataset with common-cause structure
-    random.seed(seed)
+    random.seed(SEED)
     rnd = lambda x: numpy.random.binomial(n=1, p=x)
     data = []
-    for k in range(n):
+    for k in range(1000):
         clouds = rnd(0.2)
         rain = clouds * rnd(0.7) + (1 - clouds) * rnd(0.2)
         dark = clouds * rnd(0.9)
@@ -118,27 +119,25 @@ def test_JSD():
     assert numpy.isclose(estimator(counts), ref_result)
 
 
-def test_mi():
+def test_mi(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import mutual_information
-    data = redundancy_dataset(n=1000, seed=SEED)
-    h1 = ndd.from_data(data[:, 1])
-    h2 = ndd.from_data(data[:, 2])
-    h12 = ndd.from_data(data[:, [1, 2]])
+    h1 = ndd.from_data(data_with_redundancy[:, 1])
+    h2 = ndd.from_data(data_with_redundancy[:, 2])
+    h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
     mi = h1 + h2 - h12
-    assert isclose(mutual_information(data[:, 1:]), mi)
+    assert isclose(mutual_information(data_with_redundancy[:, 1:]), mi)
 
 
-def test_mmi():
+def test_mmi(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import mutual_information
-    data = redundancy_dataset(n=1000, seed=SEED)
-    h0 = ndd.from_data(data[:, 0])
-    h1 = ndd.from_data(data[:, 1])
-    h2 = ndd.from_data(data[:, 2])
-    h01 = ndd.from_data(data[:, [0, 1]])
-    h02 = ndd.from_data(data[:, [0, 2]])
-    h12 = ndd.from_data(data[:, [1, 2]])
-    h012 = ndd.from_data(data)
+    h0 = ndd.from_data(data_with_redundancy[:, 0])
+    h1 = ndd.from_data(data_with_redundancy[:, 1])
+    h2 = ndd.from_data(data_with_redundancy[:, 2])
+    h01 = ndd.from_data(data_with_redundancy[:, [0, 1]])
+    h02 = ndd.from_data(data_with_redundancy[:, [0, 2]])
+    h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
+    h012 = ndd.from_data(data_with_redundancy)
     mmi = h0 + h1 + h2 - h01 - h02 - h12 + h012
-    assert isclose(mutual_information(data), mmi)
+    assert isclose(mutual_information(data_with_redundancy), mmi)
