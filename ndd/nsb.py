@@ -235,8 +235,10 @@ def from_data(ar, ks=None, axis=0, r=0):
         n-by-p array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    axis : int, optional
-        The sample-indexing axis.
+    axis : int or None, optional
+        The sample-indexing axis. Array `ar` will be flattened over
+        dimensions other than `axis` and transposed.
+        If None, `ar` is not processed.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -256,7 +258,8 @@ def from_data(ar, ks=None, axis=0, r=0):
     from itertools import combinations
 
     # return a 2D data array with samples as columns
-    ar = as_data_array(ar, axis=axis)
+    if ar is not None:
+        ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
@@ -288,19 +291,14 @@ def from_data(ar, ks=None, axis=0, r=0):
             for c, k in zip(counts_combinations, alphabet_size_combinations))
 
 
-def multivariate_information(a, ks=None):
+def multivariate_information(a, ks=None, axis=0):
     """docs."""
-    import ndd
-
-    try:
-        n, p = a.shape
-    except AttributeError:
-        raise
+    a = as_data_array(a, axis=axis)
+    p = a.shape[0]
 
     multi_info = 0.0
     for r in range(1, p+1):
         sgn = (-1)**r
-        multi_info += sgn * numpy.sum(ndd._combinations(
-            ndd.entropy, a, ks=ks, r=r))
+        multi_info += sgn * numpy.sum(from_data(a, ks=ks, r=r, axis=None))
 
     return - multi_info
