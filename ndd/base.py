@@ -85,7 +85,11 @@ class EntropyEstimatorMixin(object):
             k = len(pk)
         k = self._check_k(k)
 
-        return self.estimator(pk, k)
+        zero = numpy.float64(0)
+        if k == 1:
+            return zero, zero
+        else:
+            return self.estimator(pk, k)
 
     @staticmethod
     def _check_pk(a):
