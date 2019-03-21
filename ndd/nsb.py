@@ -238,7 +238,7 @@ def _from_data(ar, ks=None, axis=0, r=0):
         The sample-indexing axis.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the op variables.
+        possible combinations of length r from the p variables.
 
     Returns
     -------
@@ -248,31 +248,36 @@ def _from_data(ar, ks=None, axis=0, r=0):
     Raises
     ------
     CardinalityError
-        len(ks) != p
+        If ks is array-like and len(ks) != p
+        If r > 0 and is a scalar.
 
     """
     from itertools import combinations
 
+    # return a 2D data array with samples as columns
     ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
+
+    entropy_estimator = Entropy()
 
     if ks is None:
         ks = numpy.array([len(numpy.unique(v)) for v in ar])
     else:
         try:
-            if len(ks) == p:
-                ks = numpy.array(ks)
-            else:
+            ks = numpy.float64(ks)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+        if ks.ndim:
+            if len(ks) != p:
                 raise CardinalityError("k should have len %s" % p)
-        except TypeError as e:
-            raise CardinalityError(e)
 
-    entropy_estimator = Entropy()
     if r == 0:
         counts = histogram(ar, axis=1)
-        k = numpy.prod(ks)
-        return entropy_estimator(counts, k=k)
+        return entropy_estimator(counts, k=ks)
     else:
+        if ks.ndim == 0:
+            raise CardinalityError('For combinations, ks cant be a scalar')
+
         counts_combinations = histogram(ar, axis=1, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
