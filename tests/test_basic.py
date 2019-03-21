@@ -13,7 +13,6 @@ import numpy
 from numpy import random as random
 import ndd
 
-EPS = 0.0001
 SEED = 123
 
 
@@ -54,34 +53,36 @@ with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
     CASES = json.load(_jf)
 
 
-@pytest.mark.parametrize('setting, kwargs, result', CASES)
-def test_entropy(setting, kwargs, result):
+@pytest.mark.parametrize('setting, kwargs, ref_result', CASES)
+def test_entropy(setting, kwargs, ref_result):
     """Basic tests."""
     counts = random_counts(**setting)
     test_result = ndd.entropy(counts, k=setting['k'], **kwargs)
-    assert numpy.abs(test_result - numpy.float64(result)) < EPS
+    assert numpy.isclose(test_result, ref_result)
 
 
 def test_histogram_ndarray():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    ref = 9.107550241712808
-    assert ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)) == ref
+    ref_result = 9.107550241712808
+    assert numpy.isclose(ndd.entropy(ndd.histogram(data),
+                                     k=ndd.nsb._nbins(data)), ref_result)
 
 
 def test_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    ref = 9.107550241712808
-    assert ndd.nsb._from_data(data, ks=ndd.nsb._nbins(data)) == ref
+    ref_result = 9.107550241712808
+    assert numpy.isclose(ndd.nsb._from_data(data, ks=ndd.nsb._nbins(data)),
+                         ref_result)
 
 
 def test_combinations_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
     hs_pairs = ndd.nsb._from_data(data, ks=ndd.nsb._nbins(data), r=2)
-    ref = 18.84820751635297
-    assert numpy.sum(hs_pairs) == ref
+    ref_result = 18.84820751635297
+    assert numpy.isclose(numpy.sum(hs_pairs), ref_result)
 
 
 def test_KLD():
@@ -90,8 +91,8 @@ def test_KLD():
     qk = random.dirichlet([ALPHA]*P)
     pk = random.multinomial(N, qk)
     estimator = ndd.estimators.KLDivergence()
-    ref = -0.04299973796573253
-    assert estimator(pk, qk) == ref
+    ref_result = -0.04299973796573253
+    assert numpy.isclose(estimator(pk, qk), ref_result)
 
 
 def test_JSD():
@@ -100,5 +101,5 @@ def test_JSD():
     pk = random.dirichlet([ALPHA]*P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.estimators.JSDivergence()
-    ref = -0.01804523405829217
-    assert estimator(counts) == ref
+    ref_result = -0.01804523405829217
+    assert numpy.isclose(estimator(counts), ref_result)
