@@ -90,7 +90,8 @@ def test_KLD():
     qk = random.dirichlet([ALPHA]*P)
     pk = random.multinomial(N, qk)
     estimator = ndd.estimators.KLDivergence()
-    assert estimator(pk, qk) == -0.04299973796573253
+    ref = -0.04299973796573253
+    assert estimator(pk, qk) == ref
 
 
 def test_JSD():
@@ -99,4 +100,5 @@ def test_JSD():
     pk = random.dirichlet([ALPHA]*P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.estimators.JSDivergence()
-    assert estimator(counts) == -0.01804523405829217
+    ref = -0.01804523405829217
+    assert estimator(counts) == ref
