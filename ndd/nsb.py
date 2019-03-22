@@ -319,7 +319,7 @@ def interaction_information(ar, ks=None, axis=0, r=0):
     Returns
     -------
     float
-        Mutual information estimate.
+        Interaction information estimate.
 
     """
     from itertools import combinations
@@ -338,22 +338,24 @@ def interaction_information(ar, ks=None, axis=0, r=0):
             raise CardinalityError('%s: not a valid cardinality')
         if ks.ndim > 0:
             if len(ks) != p:
-                raise CardinalityError("k should have len %s" % p)
+                raise CardinalityError("k should have len %r (%r)" %
+                                       (p, len(ks)))
         else:
             raise CardinalityError('ks cant be a scalar')
 
-    def interaction_information(X, k):
+    def iinfo(X, k):
         info = 0.0
+        px = X.shape[0]
         for ri in range(1, p+1):
-            sgn = (-1)**(p - ri)
+            sgn = (-1)**(px - ri)
             info += sgn * numpy.sum(from_data(X, ks=k, r=ri, axis=None))
         return - info
 
     if r == 0:
-        return interaction_information(ar, ks)
+        return iinfo(ar, ks)
     else:
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
-        return (interaction_information(ar1, k1) for ar1, k1 in
+        return (iinfo(ar1, k1) for ar1, k1 in
                 zip(data_combinations, alphabet_size_combinations))
