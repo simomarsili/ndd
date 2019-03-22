@@ -11,7 +11,7 @@ from ndd.exceptions import (NumericError, HistogramError, AxisError,
 
 __all__ = ['entropy',
            'jensen_shannon_divergence',
-           'mutual_information',
+           'interaction_information',
            'histogram',
            'from_data']
 
@@ -292,13 +292,12 @@ def from_data(ar, ks=None, axis=0, r=0):
             for c, k in zip(counts_combinations, alphabet_size_combinations))
 
 
-def mutual_information(ar, ks=None, axis=0, r=0):
-    """(Multivariate) mutual information from n-by-p data matrix.
+def interaction_information(ar, ks=None, axis=0, r=0):
+    """Interaction information from n-by-p data matrix.
 
-    If p == 2, estimate of the mutual information between the two
-    variables corresponding to the two columns in the data matrix.
-    If p > 2, estimate the multivariate mutual information between
-    the p variables.
+    If p == 2, return an estimate of the mutual information between the two
+    variables corresponding to the two columns.
+
 
     Paramaters
     ----------
@@ -313,6 +312,9 @@ def mutual_information(ar, ks=None, axis=0, r=0):
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
+        If r == 1, return the entropy for each variable. If r == 2 return the
+        mutual information for each possible pair. If r > 2 return the
+        interaction information for each possible subset of length r.
 
     Returns
     -------
@@ -334,24 +336,24 @@ def mutual_information(ar, ks=None, axis=0, r=0):
             ks = numpy.float64(ks)
         except ValueError:
             raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim:
+        if ks.ndim > 0:
             if len(ks) != p:
                 raise CardinalityError("k should have len %s" % p)
-            else:
-                raise CardinalityError('ks cant be a scalar')
+        else:
+            raise CardinalityError('ks cant be a scalar')
 
-    def mmi(X, k):
+    def interaction_information(X, k):
         info = 0.0
         for ri in range(1, p+1):
-            sgn = (-1)**ri
+            sgn = (-1)**(p - ri)
             info += sgn * numpy.sum(from_data(X, ks=k, r=ri, axis=None))
         return - info
 
     if r == 0:
-        return mmi(ar, ks)
+        return interaction_information(ar, ks)
     else:
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
-        return (mmi(ar1, k1) for ar1, k1 in
+        return (interaction_information(ar1, k1) for ar1, k1 in
                 zip(data_combinations, alphabet_size_combinations))

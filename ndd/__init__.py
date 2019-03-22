@@ -110,12 +110,13 @@ and interesting links:
 import pkg_resources
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      jensen_shannon_divergence,
+                     interaction_information,
                      histogram, from_data)
 
 project_name = 'ndd'
 __version__ = pkg_resources.require(project_name)[0].version
 __all__ = ["entropy",
            'jensen_shannon_divergence',
-           'mutual_information',
+           'interaction_information',
            "histogram",
            "from_data"]
