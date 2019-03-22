@@ -343,19 +343,18 @@ def interaction_information(ar, ks=None, axis=0, r=0):
         else:
             raise CardinalityError('ks cant be a scalar')
 
-    def iinfo(X, k):
+    def iinfo(X, ks):
         info = 0.0
         px = X.shape[0]
         for ri in range(1, px+1):
             sgn = (-1)**(px - ri)
-            info -= sgn * numpy.sum(from_data(X, ks=k, r=ri, axis=None))
+            info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri, axis=None))
         return info
 
     if r == 0:
         return iinfo(ar, ks)
     else:
         data_combinations = combinations(ar, r=r)
-        alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ks, r=r))
-        return (iinfo(ar1, k1) for ar1, k1 in
+        alphabet_size_combinations = (x for x in combinations(ks, r=r))
+        return (iinfo(ar1, ks1) for ar1, ks1 in
                 zip(data_combinations, alphabet_size_combinations))
