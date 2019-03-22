@@ -39,7 +39,7 @@ by computing an approximation for the posterior standard deviation::
 Entropy measures
 ================
 **ndd** provide functions for the estimation of information measures
-(as combination of single Bayesian entropy estimates):
+(as combinations of single Bayesian entropy estimates):
 
 * **ndd.mutual_information**
 * **ndd.interaction_information**
