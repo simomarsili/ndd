@@ -46,7 +46,7 @@ Entropy measures
 * **ndd.coinformation**
 * **ndd.jensen_shannon_divergence**
 
-See the function docstrings for details.
+See the functions' docstrings for details.
 
 Where to get it
 ===============
