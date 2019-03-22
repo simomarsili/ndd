@@ -346,10 +346,10 @@ def interaction_information(ar, ks=None, axis=0, r=0):
     def iinfo(X, k):
         info = 0.0
         px = X.shape[0]
-        for ri in range(1, p+1):
+        for ri in range(1, px+1):
             sgn = (-1)**(px - ri)
-            info += sgn * numpy.sum(from_data(X, ks=k, r=ri, axis=None))
-        return - info
+            info -= sgn * numpy.sum(from_data(X, ks=k, r=ri, axis=None))
+        return info
 
     if r == 0:
         return iinfo(ar, ks)

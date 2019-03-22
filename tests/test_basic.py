@@ -133,5 +133,5 @@ def test_mmi(data_with_redundancy):
     h02 = ndd.from_data(data_with_redundancy[:, [0, 2]])
     h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
     h012 = ndd.from_data(data_with_redundancy)
-    mmi = h0 + h1 + h2 - h01 - h02 - h12 + h012
+    mmi = - (h0 + h1 + h2 - h01 - h02 - h12 + h012)
     assert isclose(interaction_information(data_with_redundancy), mmi)
