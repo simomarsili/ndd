@@ -317,6 +317,7 @@ def interaction_information(ar, ks=None, axis=0, r=0):
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
         interaction information for each possible subset of length r.
+        Combinations are ordered as: list(itertools.combinations(range(p), r)).
 
     Returns
     -------
@@ -388,6 +389,7 @@ def coinformation(ar, ks=None, axis=0, r=0):
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
         interaction information for each possible subset of length r.
+        Combinations are ordered as: list(itertools.combinations(range(p), r)).
 
     Returns
     -------
@@ -408,7 +410,7 @@ def mutual_information(ar, ks=None, axis=0):
     """Mutual information from n-by-p data matrix.
 
     If p > 2, return an estimate of the mutual information for each possible
-    pair of variables.
+    pair of variables, ordered as list(itertools.combinations(range(p), r=2)).
 
     Paramaters
     ----------
