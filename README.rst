@@ -40,10 +40,12 @@ Entropy measures
 ================
 ndd provide functions to estimate information measures as combinations of
 single Bayesian entropy estimates:
+
 * **mutual_information**
 * **interaction_information**
 * **coinformation**
 * **jensen_shannon_divergence**
+
 See docstrings for details.
 
 Where to get it
