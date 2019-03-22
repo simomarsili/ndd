@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 - ndd.from_data(): entropy estimate from a data array
-- ndd.mutual_information(): (multivariate) mutual information estimates
+- ndd.mutual_information()
+- ndd.interaction_information()
+- ndd.coinformation()
 
 ## [1.0] - 2019-03-19
 ### Changed
