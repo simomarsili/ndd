@@ -12,6 +12,8 @@ from ndd.exceptions import (NumericError, HistogramError, AxisError,
 __all__ = ['entropy',
            'jensen_shannon_divergence',
            'interaction_information',
+           'coinformation',
+           'mutual_information',
            'histogram',
            'from_data']
 
@@ -295,7 +297,7 @@ def from_data(ar, ks=None, axis=0, r=0):
 def interaction_information(ar, ks=None, axis=0, r=0):
     """Interaction information from n-by-p data matrix.
 
-    If p == 2, return an estimate of the mutual information between the two
+    If p == 2, return an estimate of the mutual information between the
     variables corresponding to the two columns.
 
 
@@ -325,9 +327,12 @@ def interaction_information(ar, ks=None, axis=0, r=0):
     from itertools import combinations
 
     # return a 2D data array with samples as columns
-    if ar is not None:
+    if axis is not None:
         ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
+
+    if r == 0:
+        r = p
 
     if ks is None:
         ks = numpy.array([len(numpy.unique(v)) for v in ar])
@@ -351,10 +356,76 @@ def interaction_information(ar, ks=None, axis=0, r=0):
             info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri, axis=None))
         return info
 
-    if r == 0:
+    if r == p:
         return iinfo(ar, ks)
     else:
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
         return (iinfo(ar1, ks1) for ar1, ks1 in
                 zip(data_combinations, alphabet_size_combinations))
+
+
+def coinformation(ar, ks=None, axis=0, r=0):
+    """Coinformation from n-by-p data matrix.
+
+    If p == 2, return an estimate of the mutual information between the
+    variables corresponding to the two columns.
+
+
+    Paramaters
+    ----------
+    ar : array-like
+        n-by-p array of n samples from p discrete variables.
+    ks : 1D p-dimensional array, optional
+        Alphabet size for each variable.
+    axis : int or None, optional
+        The sample-indexing axis. Array `ar` will be flattened over
+        dimensions other than `axis` and transposed.
+        If None, `ar` is not processed.
+    r : int, optional
+        If r > 0, return a generator yielding estimates for the p-choose-r
+        possible combinations of length r from the p variables.
+        If r == 1, return the entropy for each variable. If r == 2 return the
+        mutual information for each possible pair. If r > 2 return the
+        interaction information for each possible subset of length r.
+
+    Returns
+    -------
+    float
+        Coinformation estimate.
+
+    """
+
+    # return a 2D data array with samples as columns
+    if axis is not None:
+        ar = as_data_array(ar, axis=axis)
+    p = ar.shape[0]
+
+    return (-1)**p * interaction_information(ar=ar, ks=ks, axis=None, r=r)
+
+
+def mutual_information(ar, ks=None, axis=0):
+    """Mutual information from n-by-p data matrix.
+
+    If p > 2, return an estimate of the mutual information for each possible
+    pair of variables.
+
+    Paramaters
+    ----------
+    ar : array-like
+        n-by-p array of n samples from p discrete variables.
+    ks : 1D p-dimensional array, optional
+        Alphabet size for each variable.
+    axis : int or None, optional
+        The sample-indexing axis. Array `ar` will be flattened over
+        dimensions other than `axis` and transposed.
+        If None, `ar` is not processed.
+
+    Returns
+    -------
+    float
+        Coinformation estimate.
+
+    """
+
+    return interaction_information(ar=ar, ks=ks, axis=axis, r=2)

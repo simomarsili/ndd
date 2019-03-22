@@ -114,12 +114,12 @@ def test_JSD():
 
 def test_mi(data_with_redundancy):
     random.seed(SEED)
-    from ndd.nsb import interaction_information
+    from ndd.nsb import mutual_information
     h1 = ndd.from_data(data_with_redundancy[:, 1])
     h2 = ndd.from_data(data_with_redundancy[:, 2])
     h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
     mi = h1 + h2 - h12
-    assert isclose(interaction_information(data_with_redundancy[:, 1:]), mi)
+    assert isclose(mutual_information(data_with_redundancy[:, [1, 2]]), mi)
 
 
 def test_mmi(data_with_redundancy):
