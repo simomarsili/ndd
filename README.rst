@@ -18,7 +18,7 @@ Starting from `v1.0`, **ndd** requires Python3.4 or later.
 Basic usage
 ===========
 
-The **ndd.entropy** function takes as input a vector of frequency counts 
+The **entropy** function takes as input a vector of frequency counts 
 (the observed frequencies for a set of classes or states) 
 and returns an **entropy** estimate (in nats)::
 
@@ -36,23 +36,15 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
   
-
-The **ndd.jensen_shannon_divergence** function returns an estimate of the
-**Jensen-Shannon divergence** between two (or more) probability
-distributions. The function takes as input a n-by-p matrix of frequency
-counts with each row corresponding to a different distribution of a random
-variable taking on p different values.::
-
-  >>> counts
-  [[11, 5, 0, 3, 8, 16, 43, 4, 7, 3],
-   [1, 38, 8, 15, 1, 0, 23, 0, 3, 11]]
-  >>> import ndd
-  >>> js_estimate = ndd.jensen_shannon_divergence(counts)
-  >>> js_estimate
-  0.24166914358658187
-
-The estimate (in nats) is computed as a combination of single Bayesian entropy
-estimates. See docstrings for details.
+Entropy measures
+================
+ndd provide functions to estimate information measures as combinations of
+single Bayesian entropy estimates:
+* **mutual_information**
+* **interaction_information**
+* **coinformation**
+* **jensen_shannon_divergence**
+See docstrings for details.
 
 Where to get it
 ===============

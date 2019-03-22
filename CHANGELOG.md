@@ -1,8 +1,12 @@
 # Change log
 
 ## [Unreleased]
+- ndd.from_data(): entropy estimate from a data array
+- ndd.mutual_information()
+- ndd.interaction_information()
+- ndd.coinformation()
 
-## [1.0] - 2019-01-15
+## [1.0] - 2019-03-19
 ### Changed
 - Python3 only
 - fixed NumericError for valid entropy estimation

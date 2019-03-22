@@ -9,6 +9,7 @@ SETUP_REQUIRES = ['numpy>=1.9']
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 
+
 def get_numpy_status():
     """
     Returns a dictionary containing a boolean specifying whether NumPy
@@ -28,6 +29,7 @@ def get_numpy_status():
         status['version'] = ''
     return status
 
+
 def get_version(source):
     """ Retrieve version number."""
     import json
@@ -38,6 +40,7 @@ def get_version(source):
     except KeyError:
         raise KeyError("check version file: no version number")
 
+
 def get_long_description():
     """Get the long description from the README file."""
     from os import path
@@ -45,6 +48,7 @@ def get_long_description():
     here = path.abspath(path.dirname(__file__))
     with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as _rf:
         return _rf.read()
+
 
 # check numpy first
 NUMPY_STATUS = get_numpy_status()
@@ -72,8 +76,8 @@ FNSB = Extension(
              'ndd/exts/gamma.f90',
              'ndd/exts/quad.f90',
              'ndd/exts/estimators.f90'],
-    #extra_f90_compile_args = ["-fopenmp"],
-    #extra_link_args = ["-lgomp"],
+    # extra_f90_compile_args = ["-fopenmp"],
+    # extra_link_args = ["-lgomp"],
 )
 
 setup(
@@ -81,7 +85,7 @@ setup(
     version=VERSION,
     description="Bayesian entropy estimation from discrete data",
     long_description=LONG_DESCRIPTION,
-    #long_description_content_type="text/markdown",
+    # long_description_content_type="text/markdown",
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
@@ -93,6 +97,7 @@ setup(
                    'README.rst',
                    'requirements.txt']},
     ext_modules=[FNSB],
+    python_requires='>=3.4',
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={
