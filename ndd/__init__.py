@@ -111,6 +111,8 @@ import pkg_resources
 from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      jensen_shannon_divergence,
                      interaction_information,
+                     coinformation,
+                     mutual_information,
                      histogram, from_data)
 
 project_name = 'ndd'
