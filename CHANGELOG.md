@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.1] - 2019-03-26
+### Added
+- `ndd.from_data`
+- `ndd.mutual_information`
+- `ndd.conditional_information`
+- `ndd.interaction_information`
+- `ndd.coinformation`
+
 ## [1.0] - 2019-03-19
 ### Changed
 - Python3 only

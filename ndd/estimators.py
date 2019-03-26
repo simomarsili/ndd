@@ -52,10 +52,7 @@ class Entropy(EntropyBasedEstimator):
             Returns the instance itself.
 
         """
-        if k == 1:  # single bin
-            self.estimate_ = self.err_ = 0.0
-        else:
-            self.estimate_, self.err_ = self.entropy_estimate(pk, k)
+        self.estimate_, self.err_ = self.entropy_estimate(pk, k)
         return self
 
 

@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import (  # pylint: disable=redefined-builtin, unused-import
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super,
-    filter, map, zip)
 import os
 import json
 import pytest
 import numpy
-from numpy import random as random
+from numpy import random, isclose
 import ndd
 
-EPS = 0.0001
 SEED = 123
 
 
@@ -50,28 +42,54 @@ def random_tuple_generator(n, p, seed):
         yield tuple(random.choice(alphabet, size=p))
 
 
+@pytest.fixture
+def data_with_redundancy():
+    # generate a dataset with common-cause structure
+    random.seed(SEED)
+    rnd = lambda x: numpy.random.binomial(n=1, p=x)
+    data = []
+    for k in range(1000):
+        clouds = rnd(0.2)
+        rain = clouds * rnd(0.7) + (1 - clouds) * rnd(0.2)
+        dark = clouds * rnd(0.9)
+        data.append([clouds, rain, dark])
+    return numpy.array(data)
+
+
 with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
     CASES = json.load(_jf)
 
 
-@pytest.mark.parametrize('setting, kwargs, result', CASES)
-def test_entropy(setting, kwargs, result):
+@pytest.mark.parametrize('setting, kwargs, ref_result', CASES)
+def test_entropy(setting, kwargs, ref_result):
     """Basic tests."""
     counts = random_counts(**setting)
     test_result = ndd.entropy(counts, k=setting['k'], **kwargs)
-    assert numpy.abs(test_result - numpy.float64(result)) < EPS
+    assert numpy.isclose(test_result, ref_result)
 
 
 def test_histogram_ndarray():
-    N, P = 100, 2
+    N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    assert ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)) == 6.412863794582687
+    ref_result = 9.107550241712808
+    assert numpy.isclose(ndd.entropy(ndd.histogram(data),
+                                     k=ndd.nsb._nbins(data)), ref_result)
 
 
 def test_from_data():
-    N, P = 100, 2
+    N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    assert ndd.nsb._from_data(data, ks=ndd.nsb._nbins(data)) == 6.412863794582687
+    ref_result = 9.107550241712808
+    assert numpy.isclose(ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data)),
+                         ref_result)
+
+
+def test_combinations_from_data():
+    N, P = 100, 3
+    data = random_ndarray(N, P, SEED)
+    hs_pairs = ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data), r=2)
+    ref_result = 18.84820751635297
+    assert numpy.isclose(numpy.sum(hs_pairs), ref_result)
 
 
 def test_KLD():
@@ -80,7 +98,8 @@ def test_KLD():
     qk = random.dirichlet([ALPHA]*P)
     pk = random.multinomial(N, qk)
     estimator = ndd.estimators.KLDivergence()
-    assert estimator(pk, qk) == -0.04299973796573253
+    ref_result = -0.04299973796573253
+    assert numpy.isclose(estimator(pk, qk), ref_result)
 
 
 def test_JSD():
@@ -89,4 +108,39 @@ def test_JSD():
     pk = random.dirichlet([ALPHA]*P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.estimators.JSDivergence()
-    assert estimator(counts) == -0.01804523405829217
+    ref_result = -0.01804523405829217
+    assert numpy.isclose(estimator(counts), ref_result)
+
+
+def test_mi(data_with_redundancy):
+    random.seed(SEED)
+    from ndd.nsb import mutual_information
+    h1 = ndd.from_data(data_with_redundancy[:, 1])
+    h2 = ndd.from_data(data_with_redundancy[:, 2])
+    h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
+    mi = h1 + h2 - h12
+    assert isclose(mutual_information(data_with_redundancy[:, [1, 2]]), mi)
+
+
+def test_mmi(data_with_redundancy):
+    random.seed(SEED)
+    from ndd.nsb import interaction_information
+    h0 = ndd.from_data(data_with_redundancy[:, 0])
+    h1 = ndd.from_data(data_with_redundancy[:, 1])
+    h2 = ndd.from_data(data_with_redundancy[:, 2])
+    h01 = ndd.from_data(data_with_redundancy[:, [0, 1]])
+    h02 = ndd.from_data(data_with_redundancy[:, [0, 2]])
+    h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
+    h012 = ndd.from_data(data_with_redundancy)
+    mmi = - (h0 + h1 + h2 - h01 - h02 - h12 + h012)
+    assert isclose(interaction_information(data_with_redundancy), mmi)
+
+
+def test_conditional_entropy(data_with_redundancy):
+    random.seed(SEED)
+    from ndd.nsb import mutual_information
+    data = data_with_redundancy[:, [1, 2]]
+    assert isclose(mutual_information(data),
+                   ndd.from_data(data)
+                   - ndd.conditional_entropy(data, c=0)
+                   - ndd.conditional_entropy(data, c=1), atol=0.01)
