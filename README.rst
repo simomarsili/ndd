@@ -41,10 +41,11 @@ Entropy measures
 **ndd** provide functions for the estimation of entropy measures
 (as combinations of single Bayesian entropy estimates):
 
-* **ndd.mutual_information**
-* **ndd.interaction_information**
-* **ndd.coinformation**
-* **ndd.jensen_shannon_divergence**
+* ndd.conditional_entropy
+* ndd.mutual_information
+* ndd.interaction_information
+* ndd.coinformation
+* ndd.jensen_shannon_divergence
 
 See the functions' docstrings for details.
 
