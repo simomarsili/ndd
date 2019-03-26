@@ -125,7 +125,6 @@ def test_mi(data_with_redundancy):
 def test_mmi(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import interaction_information
-    p = data_with_redundancy.shape[1]
     h0 = ndd.from_data(data_with_redundancy[:, 0])
     h1 = ndd.from_data(data_with_redundancy[:, 1])
     h2 = ndd.from_data(data_with_redundancy[:, 2])
@@ -135,3 +134,13 @@ def test_mmi(data_with_redundancy):
     h012 = ndd.from_data(data_with_redundancy)
     mmi = - (h0 + h1 + h2 - h01 - h02 - h12 + h012)
     assert isclose(interaction_information(data_with_redundancy), mmi)
+
+
+def test_conditional_entropy(data_with_redundancy):
+    random.seed(SEED)
+    from ndd.nsb import mutual_information
+    data = data_with_redundancy[:, [1, 2]]
+    assert isclose(mutual_information(data),
+                   ndd.from_data(data)
+                   - ndd.conditional_entropy(data, c=0)
+                   - ndd.conditional_entropy(data, c=1), atol=0.01)

@@ -266,6 +266,9 @@ def from_data(ar, ks=None, axis=0, r=0):
         ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
 
+    if r == 0:
+        r = p
+
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
 
@@ -280,7 +283,7 @@ def from_data(ar, ks=None, axis=0, r=0):
             if len(ks) != p:
                 raise CardinalityError("k should have len %s" % p)
 
-    if r == 0:
+    if r == p:
         counts = histogram(ar, axis=1)
         return estimator(counts, k=ks)
     else:
