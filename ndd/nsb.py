@@ -7,13 +7,14 @@ import numpy
 import ndd
 from ndd.estimators import Entropy, JSDivergence
 from ndd.exceptions import (NumericError, HistogramError, AxisError,
-                            CardinalityError)
+                            CardinalityError, EstimatorInputError)
 
 __all__ = ['entropy',
            'jensen_shannon_divergence',
            'interaction_information',
            'coinformation',
            'mutual_information',
+           'conditional_entropy',
            'histogram',
            'from_data']
 
@@ -431,3 +432,89 @@ def mutual_information(ar, ks=None, axis=0):
     """
 
     return interaction_information(ar=ar, ks=ks, axis=axis, r=2)
+
+
+def conditional_entropy(ar, c, ks=None, axis=0, r=0):
+    """
+    Coditional entropy estimate from data array.
+
+    Paramaters
+    ----------
+    ar : array-like
+        n-by-p array of n samples from p discrete variables.
+    c : int or array-like
+        The variables on which entropy is conditioned (as column indices).
+    ks : 1D p-dimensional array, optional
+        Alphabet size for each variable.
+    axis : int or None, optional
+        The sample-indexing axis. Array `ar` will be flattened over
+        dimensions other than `axis` and transposed.
+        If None, `ar` is not processed.
+    r : int, optional
+        If r > 0, return a generator yielding estimates for the p-choose-r
+        possible combinations of length r from the p variables.
+        Indices are sorted as:
+        >>> from collections import combinations
+        >>> [x for x in combinations(range(p), r=r) if set(c) <= set(x)]
+
+    Returns
+    -------
+    float
+        Conditional entropy estimate
+
+    Raises
+    ------
+    CardinalityError
+        If ks is array-like and len(ks) != p
+        If r > 0 and is a scalar.
+
+    """
+    from itertools import combinations
+
+    # return a 2D data array with samples as columns
+    if ar is not None:
+        ar = as_data_array(ar, axis=axis)
+    p = ar.shape[0]
+
+    try:
+        c = list(c)
+    except TypeError:
+        c = [c]
+    if not set(c) <= set(range(p)):
+        return EstimatorInputError('The indices of conditioning variables'
+                                   ' are not valid')
+
+    if ks is None:
+        ks = numpy.array([len(numpy.unique(v)) for v in ar])
+    else:
+        try:
+            ks = numpy.float64(ks)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+        if ks.ndim:
+            if len(ks) != p:
+                raise CardinalityError("k should have len %s" % p)
+
+    # EntropyBasedEstimator objects are callable and return the fitted estimate
+    estimator = Entropy()
+
+    # Entropy of features on which we are conditioning
+    counts = histogram(ar[c], axis=1)
+    hc = estimator(counts, k=ks)
+
+    if r == 0:
+        counts = histogram(ar, axis=1)
+        return estimator(counts, k=ks) - hc
+    else:
+        if ks.ndim == 0:
+            raise CardinalityError('For combinations, ks cant be a scalar')
+
+        indices = combinations(range(p), r=r)
+        counts_combinations = histogram(ar, axis=1, r=r)
+        alphabet_size_combinations = (numpy.prod(x)
+                                      for x in combinations(ks, r=r))
+        return (
+            estimator(counts, k=size) - hc
+            for ids, counts, size in zip(indices, counts_combinations,
+                                         alphabet_size_combinations)
+            if set(ids) <= set(c))

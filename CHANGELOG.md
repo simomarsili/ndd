@@ -1,10 +1,11 @@
 # Change log
 
 ## [Unreleased]
-- ndd.from_data(): entropy estimate from a data array
-- ndd.mutual_information()
-- ndd.interaction_information()
-- ndd.coinformation()
+- ndd.from_data: entropy estimate from a data array
+- ndd.mutual_information
+- ndd.conditional_information
+- ndd.interaction_information
+- ndd.coinformation
 
 ## [1.0] - 2019-03-19
 ### Changed

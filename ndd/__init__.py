@@ -113,6 +113,7 @@ from ndd.nsb import (entropy,  # pylint: disable=unused-import
                      interaction_information,
                      coinformation,
                      mutual_information,
+                     conditional_entropy,
                      histogram, from_data)
 
 project_name = 'ndd'
@@ -122,5 +123,6 @@ __all__ = ["entropy",
            'interaction_information',
            'coinformation',
            'mutual_information',
+           'conditional_entropy',
            "histogram",
            "from_data"]
