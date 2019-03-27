@@ -152,8 +152,9 @@ def histogram(data, axis=0, r=0):
     ----------
     data : array-like
         An array of n samples from p variables.
-    axis : int, optional
+    axis : int or None, optional
         The sample-indexing axis
+        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator that yields a bin counts array
         for each possible combination of r variables.
@@ -170,13 +171,17 @@ def histogram(data, axis=0, r=0):
 
     """
     from itertools import combinations
-    # reshape as a p-by-n array
-    data = as_data_array(data, axis=axis)
+    # return a 2D data array with samples as columns
+    if data is not None:
+        data = as_data_array(data, axis=axis)
     p = data.shape[0]
+
+    if r == 0:
+        r = p
     if r > p:
         raise HistogramError(
             'r (%r) is larger than the number of variables (%r)' % (r, p))
-    if r == 0:
+    if r == p:
         # statistics for the p-dimensional variable
         _, counts = numpy.unique(data, return_counts=True, axis=1)
         return counts
@@ -240,9 +245,8 @@ def from_data(ar, ks=None, axis=0, r=0):
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int or None, optional
-        The sample-indexing axis. Array `ar` will be flattened over
-        dimensions other than `axis` and transposed.
-        If None, `ar` is not processed.
+        The sample-indexing axis.
+        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -312,9 +316,8 @@ def interaction_information(ar, ks=None, axis=0, r=0):
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int or None, optional
-        The sample-indexing axis. Array `ar` will be flattened over
-        dimensions other than `axis` and transposed.
-        If None, `ar` is not processed.
+        The sample-indexing axis.
+        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -384,9 +387,8 @@ def coinformation(ar, ks=None, axis=0, r=0):
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int or None, optional
-        The sample-indexing axis. Array `ar` will be flattened over
-        dimensions other than `axis` and transposed.
-        If None, `ar` is not processed.
+        The sample-indexing axis.
+        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -423,9 +425,8 @@ def mutual_information(ar, ks=None, axis=0):
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int or None, optional
-        The sample-indexing axis. Array `ar` will be flattened over
-        dimensions other than `axis` and transposed.
-        If None, `ar` is not processed.
+        The sample-indexing axis.
+        If None, `ar` is a transposed (p-by-n) data array.
 
     Returns
     -------
@@ -450,15 +451,14 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int or None, optional
-        The sample-indexing axis. Array `ar` will be flattened over
-        dimensions other than `axis` and transposed.
-        If None, `ar` is not processed.
+        The sample-indexing axis.
+        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
         Indices are sorted as:
-        >>> from collections import combinations
-        >>> [x for x in combinations(range(p), r=r) if set(c) <= set(x)]
+        list(x for x in collections.combinations(range(p), r=r)
+             if set(c) <= set(x))
 
     Returns
     -------
