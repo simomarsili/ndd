@@ -1,8 +1,11 @@
 # Change log
 
 ## [Unreleased]
+
+## [1.2] - 2019-04-01
 ### Changed
-- fixed conditional_entropy functions
+- fixed conditional_entropy function
+- histogram: `axis` should be None is data matrix is tarnsposed.
 
 ## [1.1] - 2019-03-26
 ### Added
