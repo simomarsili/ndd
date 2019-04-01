@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- fixed conditional_entropy functions
 
 ## [1.1] - 2019-03-26
 ### Added
