@@ -36,9 +36,9 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
   
-Entropic information measures
+Information measures
 =============================
-**ndd** provide functions for the estimation of information measures
+**ndd** provide functions for the estimation of entropic information measures
 (as linear combinations of single Bayesian entropy estimates):
 
 * ndd.conditional_entropy
