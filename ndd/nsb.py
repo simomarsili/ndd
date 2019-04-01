@@ -454,10 +454,10 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
         The sample-indexing axis.
         If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
-        If r > 0, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the p variables.
+        If r > 0, return a generator yielding estimates for all possible
+        combinations of r variables conditioning on the `c` variables.
         Indices are sorted as:
-        list(x for x in collections.combinations(range(p), r=r)
+        list(x for x in collections.combinations(range(p), r=r+len(c))
              if set(c) <= set(x))
 
     Returns
@@ -512,6 +512,7 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
 
+        r = r + len(c)
         indices = combinations(range(p), r=r)
         counts_combinations = histogram(ar, axis=1, r=r)
         alphabet_size_combinations = (numpy.prod(x)
@@ -520,4 +521,4 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
             estimator(counts, k=size) - hc
             for ids, counts, size in zip(indices, counts_combinations,
                                          alphabet_size_combinations)
-            if set(ids) <= set(c))
+            if set(c) <= set(ids))
