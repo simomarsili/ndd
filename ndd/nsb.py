@@ -298,8 +298,8 @@ def from_data(ar, ks=None, axis=0, r=0):
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
         return (
-            estimator(c, k=k)
-            for c, k in zip(counts_combinations, alphabet_size_combinations))
+            estimator(*args)
+            for args in zip(counts_combinations, alphabet_size_combinations))
 
 
 def interaction_information(ar, ks=None, axis=0, r=0):
@@ -369,7 +369,7 @@ def interaction_information(ar, ks=None, axis=0, r=0):
     else:
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
-        return (iinfo(ar1, ks1) for ar1, ks1 in
+        return (iinfo(*args) for args in
                 zip(data_combinations, alphabet_size_combinations))
 
 
@@ -518,7 +518,7 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
         return (
-            estimator(counts, k=size) - hc
-            for ids, counts, size in zip(indices, counts_combinations,
-                                         alphabet_size_combinations)
+            estimator(*args) - hc
+            for ids, *args in zip(indices, counts_combinations,
+                                  alphabet_size_combinations)
             if set(c) <= set(ids))
