@@ -167,11 +167,9 @@ def histogram(data, r=0):
 
     """
     from itertools import combinations
-    # return a 2D data array with samples as columns
-    data = numpy.atleast_2d(data)
-    if data.ndim != 2:
-        raise HistogramError(
-            'input array has %s dimensions; must be 2D' % data.ndim)
+
+    # check data shape
+    data = _check_input_data(data)
     p = data.shape[0]
 
     if r == 0:
@@ -215,6 +213,8 @@ def from_data(ar, ks=None, r=0):
     """
     from itertools import combinations
 
+    # check data shape
+    ar = _check_input_data(ar)
     p = ar.shape[0]
     if r == 0:
         r = p
@@ -277,6 +277,8 @@ def interaction_information(ar, ks=None, r=0):
     """
     from itertools import combinations
 
+    # check data shape
+    ar = _check_input_data(ar)
     p = ar.shape[0]
     if r == 0:
         r = p
@@ -400,6 +402,8 @@ def conditional_entropy(ar, c, ks=None, r=0):
     """
     from itertools import combinations
 
+    # check data shape
+    ar = _check_input_data(ar)
     p = ar.shape[0]
 
     try:
@@ -445,3 +449,12 @@ def conditional_entropy(ar, c, ks=None, r=0):
             for ids, *args in zip(indices, counts_combinations,
                                   alphabet_size_combinations)
             if set(c) <= set(ids))
+
+
+def _check_input_data(ar):
+    # check data shape
+    ar = numpy.atleast_2d(ar)
+    if ar.ndim != 2:
+        raise HistogramError(
+            'input array has %s dimensions; must be 2D' % ar.ndim)
+    return ar
