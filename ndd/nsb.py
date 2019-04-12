@@ -141,20 +141,16 @@ def _nbins(data):
     the num. of unique elements for each variable.
     """
     # reshape as a p-by-n array
-    data = as_data_array(data)
     return [len(numpy.unique(v)) for v in data]
 
 
-def histogram(data, axis=0, r=0):
-    """Compute an histogram from data. Wrapper to numpy.unique.
+def histogram(data, r=0):
+    """Compute an histogram from a data array. Wrapper to numpy.unique.
 
     Parameters
     ----------
     data : array-like
-        An array of n samples from p variables.
-    axis : int or None, optional
-        The sample-indexing axis
-        If None, `ar` is a transposed (p-by-n) data array.
+        A p-by-n array of n samples from p variables.
     r : int, optional
         If r > 0, return a generator that yields a bin counts array
         for each possible combination of r variables.
@@ -172,8 +168,10 @@ def histogram(data, axis=0, r=0):
     """
     from itertools import combinations
     # return a 2D data array with samples as columns
-    if data is not None:
-        data = as_data_array(data, axis=axis)
+    data = numpy.atleast_2d(data)
+    if data.ndim != 2:
+        raise HistogramError(
+            'input array has %s dimensions; must be 2D' % data.ndim)
     p = data.shape[0]
 
     if r == 0:
@@ -186,67 +184,19 @@ def histogram(data, axis=0, r=0):
         _, counts = numpy.unique(data, return_counts=True, axis=1)
         return counts
     else:
-        return (ndd.histogram(d, axis=1) for d in combinations(data, r=r))
+        return (ndd.histogram(d) for d in combinations(data, r=r))
 
 
-def as_data_array(ar, axis=0):
-    """
-    For a generic ndarray, flatten the subarrays indexed by axis `axis`
-    before transposing.
-
-    Attributes
-    ----------
-    ar : array-like
-        Data array.
-    axis : int, optional
-        The sample-indexing axis
-
-    Returns
-    -------
-    transpesed_array
-        2D data array with different samples in different columns.
-
-    Raises
-    ------
-    AxisError
-        axis is invalid
-
-    """
-
-    ar = numpy.asanyarray(ar)
-
-    if ar.ndim == 1:
-        n = ar.shape[0]
-        ar = ar.reshape(1, n)
-    elif ar.ndim == 2:
-        if axis == 0:
-            ar = ar.T
-    elif ar.ndim > 2:
-        if axis != 0:
-            try:
-                ar = numpy.swapaxes(ar, axis, 0)
-            except ValueError:
-                raise AxisError(axis, ar.ndim)
-        n = ar.shape[0]
-        ar = ar.reshape(n, -1)
-        ar = ar.T
-
-    return numpy.ascontiguousarray(ar)
-
-
-def from_data(ar, ks=None, axis=0, r=0):
+def from_data(ar, ks=None, r=0):
     """
     Given an array of data, return an entropy estimate.
 
     Paramaters
     ----------
     ar : array-like
-        n-by-p array of n samples from p discrete variables.
+        p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    axis : int or None, optional
-        The sample-indexing axis.
-        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -265,11 +215,7 @@ def from_data(ar, ks=None, axis=0, r=0):
     """
     from itertools import combinations
 
-    # return a 2D data array with samples as columns
-    if ar is not None:
-        ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
-
     if r == 0:
         r = p
 
@@ -288,13 +234,13 @@ def from_data(ar, ks=None, axis=0, r=0):
                 raise CardinalityError("k should have len %s" % p)
 
     if r == p:
-        counts = histogram(ar, axis=1)
+        counts = histogram(ar)
         return estimator(counts, k=ks)
     else:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
 
-        counts_combinations = histogram(ar, axis=1, r=r)
+        counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
         return (
@@ -302,8 +248,8 @@ def from_data(ar, ks=None, axis=0, r=0):
             for args in zip(counts_combinations, alphabet_size_combinations))
 
 
-def interaction_information(ar, ks=None, axis=0, r=0):
-    """Interaction information from n-by-p data matrix.
+def interaction_information(ar, ks=None, r=0):
+    """Interaction information from p-by-n data matrix.
 
     If p == 2, return an estimate of the mutual information between the
     variables corresponding to the two columns.
@@ -312,12 +258,9 @@ def interaction_information(ar, ks=None, axis=0, r=0):
     Paramaters
     ----------
     ar : array-like
-        n-by-p array of n samples from p discrete variables.
+        p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    axis : int or None, optional
-        The sample-indexing axis.
-        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -334,11 +277,7 @@ def interaction_information(ar, ks=None, axis=0, r=0):
     """
     from itertools import combinations
 
-    # return a 2D data array with samples as columns
-    if axis is not None:
-        ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
-
     if r == 0:
         r = p
 
@@ -361,7 +300,7 @@ def interaction_information(ar, ks=None, axis=0, r=0):
         px = X.shape[0]
         for ri in range(1, px+1):
             sgn = (-1)**(px - ri)
-            info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri, axis=None))
+            info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
         return info
 
     if r == p:
@@ -373,8 +312,8 @@ def interaction_information(ar, ks=None, axis=0, r=0):
                 zip(data_combinations, alphabet_size_combinations))
 
 
-def coinformation(ar, ks=None, axis=0, r=0):
-    """Coinformation from n-by-p data matrix.
+def coinformation(ar, ks=None, r=0):
+    """Coinformation from p-by-n data matrix.
 
     If p == 2, return an estimate of the mutual information between the
     variables corresponding to the two columns.
@@ -383,12 +322,9 @@ def coinformation(ar, ks=None, axis=0, r=0):
     Paramaters
     ----------
     ar : array-like
-        n-by-p array of n samples from p discrete variables.
+        p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    axis : int or None, optional
-        The sample-indexing axis.
-        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -404,16 +340,12 @@ def coinformation(ar, ks=None, axis=0, r=0):
 
     """
 
-    # return a 2D data array with samples as columns
-    if axis is not None:
-        ar = as_data_array(ar, axis=axis)
-    p = ar.shape[0]
-
-    return (-1)**p * interaction_information(ar=ar, ks=ks, axis=None, r=r)
+    # change sign for odd #variables
+    return (-1)**ar.shape[0] * interaction_information(ar=ar, ks=ks, r=r)
 
 
 def mutual_information(ar, ks=None, axis=0):
-    """Mutual information from n-by-p data matrix.
+    """Mutual information from p-by-n data matrix.
 
     If p > 2, return an estimate of the mutual information for each possible
     pair of variables, ordered as list(itertools.combinations(range(p), r=2)).
@@ -421,12 +353,9 @@ def mutual_information(ar, ks=None, axis=0):
     Paramaters
     ----------
     ar : array-like
-        n-by-p array of n samples from p discrete variables.
+        p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    axis : int or None, optional
-        The sample-indexing axis.
-        If None, `ar` is a transposed (p-by-n) data array.
 
     Returns
     -------
@@ -435,24 +364,21 @@ def mutual_information(ar, ks=None, axis=0):
 
     """
 
-    return interaction_information(ar=ar, ks=ks, axis=axis, r=2)
+    return interaction_information(ar=ar, ks=ks, r=2)
 
 
-def conditional_entropy(ar, c, ks=None, axis=0, r=0):
+def conditional_entropy(ar, c, ks=None, r=0):
     """
     Coditional entropy estimate from data array.
 
     Paramaters
     ----------
     ar : array-like
-        n-by-p array of n samples from p discrete variables.
+        p-by-n array of n samples from p discrete variables.
     c : int or array-like
         The variables on which entropy is conditioned (as column indices).
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    axis : int or None, optional
-        The sample-indexing axis.
-        If None, `ar` is a transposed (p-by-n) data array.
     r : int, optional
         If r > 0, return a generator yielding estimates for all possible
         combinations of r variables conditioning on the `c` variables.
@@ -474,9 +400,6 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
     """
     from itertools import combinations
 
-    # return a 2D data array with samples as columns
-    if ar is not None:
-        ar = as_data_array(ar, axis=axis)
     p = ar.shape[0]
 
     try:
@@ -502,11 +425,11 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
     estimator = Entropy()
 
     # Entropy of features on which we are conditioning
-    counts = histogram(ar[c], axis=1)
+    counts = histogram(ar[c])
     hc = estimator(counts, k=ks)
 
     if r == 0:
-        counts = histogram(ar, axis=1)
+        counts = histogram(ar)
         return estimator(counts, k=ks) - hc
     else:
         if ks.ndim == 0:
@@ -514,7 +437,7 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=0):
 
         r = r + len(c)
         indices = combinations(range(p), r=r)
-        counts_combinations = histogram(ar, axis=1, r=r)
+        counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
         return (

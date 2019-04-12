@@ -31,7 +31,7 @@ def random_ndarray(n, p, seed):
     import string
     random.seed(seed)
     alphabet = list(string.ascii_uppercase)
-    return random.choice(alphabet, size=(n, p))
+    return random.choice(alphabet, size=(n, p)).T
 
 
 def random_tuple_generator(n, p, seed):
@@ -53,7 +53,7 @@ def data_with_redundancy():
         rain = clouds * rnd(0.7) + (1 - clouds) * rnd(0.2)
         dark = clouds * rnd(0.9)
         data.append([clouds, rain, dark])
-    return numpy.array(data)
+    return numpy.array(data).T
 
 
 with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
@@ -115,22 +115,22 @@ def test_JSD():
 def test_mi(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import mutual_information
-    h1 = ndd.from_data(data_with_redundancy[:, 1])
-    h2 = ndd.from_data(data_with_redundancy[:, 2])
-    h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
+    h1 = ndd.from_data(data_with_redundancy[1])
+    h2 = ndd.from_data(data_with_redundancy[2])
+    h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     mi = h1 + h2 - h12
-    assert isclose(mutual_information(data_with_redundancy[:, [1, 2]]), mi)
+    assert isclose(mutual_information(data_with_redundancy[[1, 2]]), mi)
 
 
 def test_mmi(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import interaction_information
-    h0 = ndd.from_data(data_with_redundancy[:, 0])
-    h1 = ndd.from_data(data_with_redundancy[:, 1])
-    h2 = ndd.from_data(data_with_redundancy[:, 2])
-    h01 = ndd.from_data(data_with_redundancy[:, [0, 1]])
-    h02 = ndd.from_data(data_with_redundancy[:, [0, 2]])
-    h12 = ndd.from_data(data_with_redundancy[:, [1, 2]])
+    h0 = ndd.from_data(data_with_redundancy[0])
+    h1 = ndd.from_data(data_with_redundancy[1])
+    h2 = ndd.from_data(data_with_redundancy[2])
+    h01 = ndd.from_data(data_with_redundancy[[0, 1]])
+    h02 = ndd.from_data(data_with_redundancy[[0, 2]])
+    h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     h012 = ndd.from_data(data_with_redundancy)
     mmi = - (h0 + h1 + h2 - h01 - h02 - h12 + h012)
     assert isclose(interaction_information(data_with_redundancy), mmi)
@@ -139,7 +139,7 @@ def test_mmi(data_with_redundancy):
 def test_conditional_entropy(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import mutual_information
-    data = data_with_redundancy[:, [1, 2]]
+    data = data_with_redundancy[[1, 2]]
     assert isclose(mutual_information(data),
                    ndd.from_data(data)
                    - ndd.conditional_entropy(data, c=0)
