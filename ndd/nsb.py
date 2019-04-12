@@ -6,7 +6,7 @@ import logging
 import numpy
 import ndd
 from ndd.estimators import Entropy, JSDivergence
-from ndd.exceptions import (NumericError, HistogramError, AxisError,
+from ndd.exceptions import (NumericError, HistogramError, DataArrayError,
                             CardinalityError, EstimatorInputError)
 
 __all__ = ['entropy',
@@ -455,6 +455,6 @@ def _check_input_data(ar):
     # check data shape
     ar = numpy.atleast_2d(ar)
     if ar.ndim != 2:
-        raise HistogramError(
+        raise DataArrayError(
             'input array has %s dimensions; must be 2D' % ar.ndim)
     return ar

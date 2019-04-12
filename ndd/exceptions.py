@@ -44,5 +44,9 @@ class HistogramError(NddError):
     """Error during evaluation of histogram."""
 
 
+class DataArrayError(NddError):
+    """Input is not a valid data array"""
+
+
 class AxisError(NddError):
     """invalid axis."""

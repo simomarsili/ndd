@@ -1,6 +1,16 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- input data arrays must be p-by-n 2D ndarrays containing
+  n samples from p discrete variables. This affects all methods/functions
+  working directly on data:
+  - histogram
+  - from_data
+  - interaction_information
+  - coinformation
+  - mutual_information
+  - conditional_entropy
 
 ## [1.2] - 2019-04-01
 ### Changed
