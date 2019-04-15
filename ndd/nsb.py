@@ -144,13 +144,15 @@ def _nbins(data):
     return [len(numpy.unique(v)) for v in data]
 
 
-def histogram(data, r=0):
+def histogram(data, axis=1, r=0):
     """Compute an histogram from a data array. Wrapper to numpy.unique.
 
     Parameters
     ----------
     data : array-like
-        A p-by-n array of n samples from p variables.
+        A n-by-p array of n samples from p variables.
+    axis : int, optional
+        The sample-indexing axis
     r : int, optional
         If r > 0, return a generator that yields a bin counts array
         for each possible combination of r variables.
@@ -170,6 +172,8 @@ def histogram(data, r=0):
 
     # check data shape
     data = _check_input_data(data)
+    if axis == 0:
+        data = data.T
     p = data.shape[0]
 
     if r == 0:
@@ -185,7 +189,7 @@ def histogram(data, r=0):
         return (ndd.histogram(d) for d in combinations(data, r=r))
 
 
-def from_data(ar, ks=None, r=0):
+def from_data(ar, ks=None, axis=1, r=0):
     """
     Given an array of data, return an entropy estimate.
 
@@ -195,6 +199,8 @@ def from_data(ar, ks=None, r=0):
         p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
+    axis : int, optional
+        The sample-indexing axis
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -215,6 +221,8 @@ def from_data(ar, ks=None, r=0):
 
     # check data shape
     ar = _check_input_data(ar)
+    if axis == 0:
+        ar = ar.T
     p = ar.shape[0]
     if r == 0:
         r = p
@@ -248,7 +256,7 @@ def from_data(ar, ks=None, r=0):
             for args in zip(counts_combinations, alphabet_size_combinations))
 
 
-def interaction_information(ar, ks=None, r=0):
+def interaction_information(ar, ks=None, axis=1, r=0):
     """Interaction information from p-by-n data matrix.
 
     If p == 2, return an estimate of the mutual information between the
@@ -261,6 +269,8 @@ def interaction_information(ar, ks=None, r=0):
         p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
+    axis : int, optional
+        The sample-indexing axis
     r : int, optional
         If r > 0, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
@@ -279,6 +289,8 @@ def interaction_information(ar, ks=None, r=0):
 
     # check data shape
     ar = _check_input_data(ar)
+    if axis == 0:
+        ar = ar.T
     p = ar.shape[0]
     if r == 0:
         r = p
@@ -299,7 +311,7 @@ def interaction_information(ar, ks=None, r=0):
 
     def iinfo(X, ks):
         info = 0.0
-        px = X.shape[0]
+        px = len(X)
         for ri in range(1, px+1):
             sgn = (-1)**(px - ri)
             info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
@@ -346,7 +358,7 @@ def coinformation(ar, ks=None, r=0):
     return (-1)**ar.shape[0] * interaction_information(ar=ar, ks=ks, r=r)
 
 
-def mutual_information(ar, ks=None, axis=0):
+def mutual_information(ar, ks=None, axis=1):
     """Mutual information from p-by-n data matrix.
 
     If p > 2, return an estimate of the mutual information for each possible
@@ -358,6 +370,8 @@ def mutual_information(ar, ks=None, axis=0):
         p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
+    axis : int, optional
+        The sample-indexing axis
 
     Returns
     -------
@@ -366,10 +380,37 @@ def mutual_information(ar, ks=None, axis=0):
 
     """
 
-    return interaction_information(ar=ar, ks=ks, r=2)
+    from itertools import combinations
+
+    # check data shape
+    ar = _check_input_data(ar)
+    if axis == 0:
+        ar = ar.T
+    p = ar.shape[0]
+
+    if ks is None:
+        ks = numpy.array([len(numpy.unique(v)) for v in ar])
+    else:
+        try:
+            ks = numpy.float64(ks)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+        if ks.ndim > 0:
+            if len(ks) != p:
+                raise CardinalityError("k should have len %r (%r)" %
+                                       (p, len(ks)))
+        else:
+            raise CardinalityError('ks cant be a scalar')
+
+    if p == 2:
+        return numpy.sum(from_data(ar, ks=ks, r=1)) - from_data(ar, ks=ks)
+    else:
+        h1 = list(from_data(ar, ks=ks, r=1))
+        return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]], ks=ks[[i1, i2]])
+                for i1, i2 in combinations(range(p), 2))
 
 
-def conditional_entropy(ar, c, ks=None, r=0):
+def conditional_entropy(ar, c, ks=None, axis=1, r=0):
     """
     Coditional entropy estimate from data array.
 
@@ -381,6 +422,8 @@ def conditional_entropy(ar, c, ks=None, r=0):
         The variables on which entropy is conditioned (as column indices).
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
+    axis : int, optional
+        The sample-indexing axis
     r : int, optional
         If r > 0, return a generator yielding estimates for all possible
         combinations of r variables conditioning on the `c` variables.
@@ -404,6 +447,8 @@ def conditional_entropy(ar, c, ks=None, r=0):
 
     # check data shape
     ar = _check_input_data(ar)
+    if axis == 0:
+        ar = ar.T
     p = ar.shape[0]
 
     try:
