@@ -77,6 +77,8 @@ Changelog
 1.3 (2019-04-16)
 ----------------
 - For methods/functions working on data matrices:
+
+
   the default input is a **p-by-n** 2D array
   (n samples from p discrete variables, with
   different samples on different **columns**).
@@ -84,6 +86,7 @@ Changelog
 1.1 (2019-03-26)
 ----------------
 Added:
+
 - `ndd.from_data`
 - `ndd.mutual_information`
 - `ndd.conditional_information`
