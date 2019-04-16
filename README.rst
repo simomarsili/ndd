@@ -10,11 +10,6 @@ The **ndd** package provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
 a parameter-free, Bayesian entropy estimator for discrete data.
 
-News
-====
-Starting from `v1.0`, **ndd** requires Python3.4 or later.
-
-
 Basic usage
 ===========
 
@@ -75,6 +70,33 @@ Clone the repo, install tests requirements and run the tests with `make`::
   cd ndd
   pip install .[test]
   make test
+
+Changelog
+=========
+
+1.3 (2019-04-16)
+----------------
+- For methods/functions working on data matrices:
+  the default input is a **p-by-n** 2D array
+  (n samples from p discrete variables, with
+  different samples on different **columns**).
+
+1.1 (2019-03-26)
+----------------
+Added:
+- `ndd.from_data`
+- `ndd.mutual_information`
+- `ndd.conditional_information`
+- `ndd.interaction_information`
+- `ndd.coinformation`
+
+1.0 (2019-03-19)
+----------------
+- Python3 only (>= 3.4)
+
+0.9 (2019-01-15)
+----------------
+- Added `jensen_shannnon_divergence` function.
 
 References
 ==========
