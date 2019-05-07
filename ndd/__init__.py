@@ -4,15 +4,15 @@
 """
 # ndd - Bayesian entropy estimation from discrete data
 
-The **ndd** module provides a simple Python interface to an efficient 
-implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
+The **ndd** module provides a simple Python interface to an efficient
+implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
 
-## Basic usage 
+## Basic usage
 
-The `ndd.entropy()` function takes as input a vector of frequency counts 
-(the observed frequencies for a set of classes or states) 
-and returns an entropy estimate (in nats): 
+The `ndd.entropy()` function takes as input a vector of frequency counts
+(the observed frequencies for a set of classes or states)
+and returns an entropy estimate (in nats):
 
 ```python
 >>> counts
@@ -23,7 +23,7 @@ and returns an entropy estimate (in nats):
 2.623634344902917
 ```
 
-Optionally, the uncertainty in the entropy estimate can be quantified 
+Optionally, the uncertainty in the entropy estimate can be quantified
 by computing an approximation for the posterior standard deviation:
 
 ```python
@@ -108,21 +108,16 @@ and interesting links:
 
 """
 import pkg_resources
-from ndd.nsb import (entropy,  # pylint: disable=unused-import
-                     jensen_shannon_divergence,
-                     interaction_information,
-                     coinformation,
-                     mutual_information,
-                     conditional_entropy,
-                     histogram, from_data)
+
+from ndd.nsb import entropy  # pylint: disable=unused-import
+from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
+                     interaction_information, jensen_shannon_divergence,
+                     mutual_information)
 
 project_name = 'ndd'
 __version__ = pkg_resources.require(project_name)[0].version
-__all__ = ["entropy",
-           'jensen_shannon_divergence',
-           'interaction_information',
-           'coinformation',
-           'mutual_information',
-           'conditional_entropy',
-           "histogram",
-           "from_data"]
+__all__ = [
+    'entropy', 'jensen_shannon_divergence', 'interaction_information',
+    'coinformation', 'mutual_information', 'conditional_entropy', 'histogram',
+    'from_data'
+]

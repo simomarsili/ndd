@@ -3,7 +3,7 @@ module gamma_funcs
   implicit none
 contains
   elemental function digamma (x)
-    
+
     !*****************************************************************************80
     !
     !! DIGAMMA calculates DIGAMMA ( X ) = d ( LOG ( GAMMA ( X ) ) ) / dX
@@ -87,9 +87,9 @@ contains
          - r * ( 1.0_real64 / 132.0_real64 ) ) ) ) )
 
   end function digamma
-  
+
   elemental function trigamma (x)
-    
+
     !*****************************************************************************80
     !
     !! TRIGAMMA calculates trigamma(x) = d^2 log(gamma(x)) / dx^2

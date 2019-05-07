@@ -41,7 +41,7 @@
 
 ## [0.8] - 2019-01-08
 ### Added
-- Entropy class. 
+- Entropy class.
 - from_data() returns an estimate from a data samples
 
 ### Changed

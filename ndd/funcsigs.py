@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2001-2013 Python Software Foundation; All Rights Reserved
 """Function signature objects for callables
 
@@ -5,23 +6,21 @@ Back port of Python 3.3's function signature tools from the inspect module,
 modified to be compatible with Python 2.7 and 3.2+.
 """
 from __future__ import absolute_import, division, print_function
-import itertools
+
 import functools
+import itertools
 import re
 import types
-
 from collections import OrderedDict
 
-__version__ = "0.4"
+__version__ = '0.4'
 
 __all__ = ['BoundArguments', 'Parameter', 'Signature', 'signature']
-
 
 _WrapperDescriptor = type(type.__call__)
 _MethodWrapper = type(all.__call__)
 
-_NonUserDefinedCallables = (_WrapperDescriptor,
-                            _MethodWrapper,
+_NonUserDefinedCallables = (_WrapperDescriptor, _MethodWrapper,
                             types.BuiltinFunctionType)
 
 
@@ -29,7 +28,7 @@ def formatannotation(annotation, base_module=None):
     if isinstance(annotation, type):
         if annotation.__module__ in ('builtins', '__builtin__', base_module):
             return annotation.__name__
-        return annotation.__module__+'.'+annotation.__name__
+        return annotation.__module__ + '.' + annotation.__name__
     return repr(annotation)
 
 
@@ -62,8 +61,8 @@ def signature(obj):
             if sig.parameters:
                 first = sig.parameters.values()[0].replace(
                     kind=_POSITIONAL_ONLY)
-                return sig.replace(
-                    parameters=(first,) + tuple(sig.parameters.values())[1:])
+                return sig.replace(parameters=(first, ) +
+                                   tuple(sig.parameters.values())[1:])
             else:
                 return sig
         else:
@@ -126,8 +125,8 @@ def signature(obj):
                 new_params[arg_name] = param.replace(default=arg_value,
                                                      _partial_kwarg=True)
 
-            elif (param.kind not in (_VAR_KEYWORD, _VAR_POSITIONAL) and
-                            not param._partial_kwarg):
+            elif (param.kind not in (_VAR_KEYWORD, _VAR_POSITIONAL)
+                  and not param._partial_kwarg):
                 new_params.pop(arg_name)
 
         return sig.replace(parameters=new_params.values())
@@ -170,7 +169,8 @@ def signature(obj):
         msg = 'no signature found for builtin function {0!r}'.format(obj)
         raise ValueError(msg)
 
-    raise ValueError('callable {0!r} is not supported by signature'.format(obj))
+    raise ValueError(
+        'callable {0!r} is not supported by signature'.format(obj))
 
 
 class _void(object):
@@ -194,11 +194,11 @@ class _ParameterKind(int):
         return '<_ParameterKind: {0!r}>'.format(self._name)
 
 
-_POSITIONAL_ONLY        = _ParameterKind(0, name='POSITIONAL_ONLY')
-_POSITIONAL_OR_KEYWORD  = _ParameterKind(1, name='POSITIONAL_OR_KEYWORD')
-_VAR_POSITIONAL         = _ParameterKind(2, name='VAR_POSITIONAL')
-_KEYWORD_ONLY           = _ParameterKind(3, name='KEYWORD_ONLY')
-_VAR_KEYWORD            = _ParameterKind(4, name='VAR_KEYWORD')
+_POSITIONAL_ONLY = _ParameterKind(0, name='POSITIONAL_ONLY')
+_POSITIONAL_OR_KEYWORD = _ParameterKind(1, name='POSITIONAL_OR_KEYWORD')
+_VAR_POSITIONAL = _ParameterKind(2, name='VAR_POSITIONAL')
+_KEYWORD_ONLY = _ParameterKind(3, name='KEYWORD_ONLY')
+_VAR_KEYWORD = _ParameterKind(4, name='VAR_KEYWORD')
 
 
 class Parameter(object):
@@ -223,15 +223,19 @@ class Parameter(object):
 
     __slots__ = ('_name', '_kind', '_default', '_annotation', '_partial_kwarg')
 
-    POSITIONAL_ONLY         = _POSITIONAL_ONLY
-    POSITIONAL_OR_KEYWORD   = _POSITIONAL_OR_KEYWORD
-    VAR_POSITIONAL          = _VAR_POSITIONAL
-    KEYWORD_ONLY            = _KEYWORD_ONLY
-    VAR_KEYWORD             = _VAR_KEYWORD
+    POSITIONAL_ONLY = _POSITIONAL_ONLY
+    POSITIONAL_OR_KEYWORD = _POSITIONAL_OR_KEYWORD
+    VAR_POSITIONAL = _VAR_POSITIONAL
+    KEYWORD_ONLY = _KEYWORD_ONLY
+    VAR_KEYWORD = _VAR_KEYWORD
 
     empty = _empty
 
-    def __init__(self, name, kind, default=_empty, annotation=_empty,
+    def __init__(self,
+                 name,
+                 kind,
+                 default=_empty,
+                 annotation=_empty,
                  _partial_kwarg=False):
 
         if kind not in (_POSITIONAL_ONLY, _POSITIONAL_OR_KEYWORD,
@@ -248,12 +252,13 @@ class Parameter(object):
 
         if name is None:
             if kind != _POSITIONAL_ONLY:
-                raise ValueError("None is not a valid name for a "
-                                 "non-positional-only parameter")
+                raise ValueError('None is not a valid name for a '
+                                 'non-positional-only parameter')
             self._name = name
         else:
             name = str(name)
-            if kind != _POSITIONAL_ONLY and not re.match(r'[a-z_]\w*$', name, re.I):
+            if kind != _POSITIONAL_ONLY and not re.match(
+                    r'[a-z_]\w*$', name, re.I):
                 msg = '{0!r} is not a valid parameter name'.format(name)
                 raise ValueError(msg)
             self._name = name
@@ -276,8 +281,12 @@ class Parameter(object):
     def kind(self):
         return self._kind
 
-    def replace(self, name=_void, kind=_void, annotation=_void,
-                default=_void, _partial_kwarg=_void):
+    def replace(self,
+                name=_void,
+                kind=_void,
+                annotation=_void,
+                default=_void,
+                _partial_kwarg=_void):
         '''Creates a customized copy of the Parameter.'''
 
         if name is _void:
@@ -295,7 +304,10 @@ class Parameter(object):
         if _partial_kwarg is _void:
             _partial_kwarg = self._partial_kwarg
 
-        return type(self)(name, kind, default=default, annotation=annotation,
+        return type(self)(name,
+                          kind,
+                          default=default,
+                          annotation=annotation,
                           _partial_kwarg=_partial_kwarg)
 
     def __str__(self):
@@ -310,7 +322,7 @@ class Parameter(object):
         # Add annotation and default value
         if self._annotation is not _empty:
             formatted = '{0}:{1}'.format(formatted,
-                                       formatannotation(self._annotation))
+                                         formatannotation(self._annotation))
 
         if self._default is not _empty:
             formatted = '{0}={1}'.format(formatted, repr(self._default))
@@ -324,18 +336,17 @@ class Parameter(object):
 
     def __repr__(self):
         return '<{0} at {1:#x} {2!r}>'.format(self.__class__.__name__,
-                                           id(self), self.name)
+                                              id(self), self.name)
 
     def __hash__(self):
         msg = "unhashable type: '{0}'".format(self.__class__.__name__)
         raise TypeError(msg)
 
     def __eq__(self, other):
-        return (issubclass(other.__class__, Parameter) and
-                self._name == other._name and
-                self._kind == other._kind and
-                self._default == other._default and
-                self._annotation == other._annotation)
+        return (issubclass(other.__class__, Parameter)
+                and self._name == other._name and self._kind == other._kind
+                and self._default == other._default
+                and self._annotation == other._annotation)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -370,8 +381,8 @@ class BoundArguments(object):
     def args(self):
         args = []
         for param_name, param in self._signature.parameters.items():
-            if (param.kind in (_VAR_KEYWORD, _KEYWORD_ONLY) or
-                                                    param._partial_kwarg):
+            if (param.kind in (_VAR_KEYWORD, _KEYWORD_ONLY)
+                    or param._partial_kwarg):
                 # Keyword arguments mapped by 'functools.partial'
                 # (Parameter._partial_kwarg is True) are mapped
                 # in 'BoundArguments.kwargs', along with VAR_KEYWORD &
@@ -400,8 +411,8 @@ class BoundArguments(object):
         kwargs_started = False
         for param_name, param in self._signature.parameters.items():
             if not kwargs_started:
-                if (param.kind in (_VAR_KEYWORD, _KEYWORD_ONLY) or
-                                                param._partial_kwarg):
+                if (param.kind in (_VAR_KEYWORD, _KEYWORD_ONLY)
+                        or param._partial_kwarg):
                     kwargs_started = True
                 else:
                     if param_name not in self.arguments:
@@ -430,9 +441,9 @@ class BoundArguments(object):
         raise TypeError(msg)
 
     def __eq__(self, other):
-        return (issubclass(other.__class__, BoundArguments) and
-                self.signature == other.signature and
-                self.arguments == other.arguments)
+        return (issubclass(other.__class__, BoundArguments)
+                and self.signature == other.signature
+                and self.arguments == other.arguments)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -468,7 +479,9 @@ class Signature(object):
 
     empty = _empty
 
-    def __init__(self, parameters=None, return_annotation=_empty,
+    def __init__(self,
+                 parameters=None,
+                 return_annotation=_empty,
                  __validate_parameters__=True):
         '''Constructs Signature from the given list of Parameter
         objects and 'return_annotation'.  All arguments are optional.
@@ -500,8 +513,8 @@ class Signature(object):
                         raise ValueError(msg)
                     params[name] = param
             else:
-                params = OrderedDict(((param.name, param)
-                                                for param in parameters))
+                params = OrderedDict(
+                    ((param.name, param) for param in parameters))
 
         self._parameters = params
         self._return_annotation = return_annotation
@@ -537,22 +550,26 @@ class Signature(object):
         non_default_count = pos_count - pos_default_count
         for name in positional[:non_default_count]:
             annotation = annotations.get(name, _empty)
-            parameters.append(Parameter(name, annotation=annotation,
-                                        kind=_POSITIONAL_OR_KEYWORD))
+            parameters.append(
+                Parameter(name,
+                          annotation=annotation,
+                          kind=_POSITIONAL_OR_KEYWORD))
 
         # ... w/ defaults.
         for offset, name in enumerate(positional[non_default_count:]):
             annotation = annotations.get(name, _empty)
-            parameters.append(Parameter(name, annotation=annotation,
-                                        kind=_POSITIONAL_OR_KEYWORD,
-                                        default=defaults[offset]))
+            parameters.append(
+                Parameter(name,
+                          annotation=annotation,
+                          kind=_POSITIONAL_OR_KEYWORD,
+                          default=defaults[offset]))
 
         # *args
         if func_code.co_flags & 0x04:
             name = arg_names[pos_count + keyword_only_count]
             annotation = annotations.get(name, _empty)
-            parameters.append(Parameter(name, annotation=annotation,
-                                        kind=_VAR_POSITIONAL))
+            parameters.append(
+                Parameter(name, annotation=annotation, kind=_VAR_POSITIONAL))
 
         # Keyword-only parameters.
         for name in keyword_only:
@@ -561,9 +578,11 @@ class Signature(object):
                 default = kwdefaults.get(name, _empty)
 
             annotation = annotations.get(name, _empty)
-            parameters.append(Parameter(name, annotation=annotation,
-                                        kind=_KEYWORD_ONLY,
-                                        default=default))
+            parameters.append(
+                Parameter(name,
+                          annotation=annotation,
+                          kind=_KEYWORD_ONLY,
+                          default=default))
         # **kwargs
         if func_code.co_flags & 0x08:
             index = pos_count + keyword_only_count
@@ -572,8 +591,8 @@ class Signature(object):
 
             name = arg_names[index]
             annotation = annotations.get(name, _empty)
-            parameters.append(Parameter(name, annotation=annotation,
-                                        kind=_VAR_KEYWORD))
+            parameters.append(
+                Parameter(name, annotation=annotation, kind=_VAR_KEYWORD))
 
         return cls(parameters,
                    return_annotation=annotations.get('return', _empty),
@@ -602,21 +621,20 @@ class Signature(object):
         if return_annotation is _void:
             return_annotation = self._return_annotation
 
-        return type(self)(parameters,
-                          return_annotation=return_annotation)
+        return type(self)(parameters, return_annotation=return_annotation)
 
     def __hash__(self):
         msg = "unhashable type: '{0}'".format(self.__class__.__name__)
         raise TypeError(msg)
 
     def __eq__(self, other):
-        if (not issubclass(type(other), Signature) or
-                    self.return_annotation != other.return_annotation or
-                    len(self.parameters) != len(other.parameters)):
+        if (not issubclass(type(other), Signature)
+                or self.return_annotation != other.return_annotation
+                or len(self.parameters) != len(other.parameters)):
             return False
 
-        other_positions = dict((param, idx)
-                           for idx, param in enumerate(other.parameters.keys()))
+        other_positions = dict(
+            (param, idx) for idx, param in enumerate(other.parameters.keys()))
 
         for idx, (param_name, param) in enumerate(self.parameters.items()):
             if param.kind == _KEYWORD_ONLY:
@@ -633,8 +651,8 @@ class Signature(object):
                 except KeyError:
                     return False
                 else:
-                    if (idx != other_idx or
-                                    param != other.parameters[param_name]):
+                    if (idx != other_idx
+                            or param != other.parameters[param_name]):
                         return False
 
         return True
@@ -684,18 +702,18 @@ class Signature(object):
                                   'but was passed as a keyword'
                             msg = msg.format(arg=param.name)
                             raise TypeError(msg)
-                        parameters_ex = (param,)
+                        parameters_ex = (param, )
                         break
-                    elif (param.kind == _VAR_KEYWORD or
-                                                param.default is not _empty):
+                    elif (param.kind == _VAR_KEYWORD
+                          or param.default is not _empty):
                         # That's fine too - we have a default value for this
                         # parameter.  So, lets start parsing `kwargs`, starting
                         # with the current parameter
-                        parameters_ex = (param,)
+                        parameters_ex = (param, )
                         break
                     else:
                         if partial:
-                            parameters_ex = (param,)
+                            parameters_ex = (param, )
                             break
                         else:
                             msg = '{arg!r} parameter lacking default value'
@@ -753,8 +771,8 @@ class Signature(object):
                 # if it has a default value, or it is an '*args'-like
                 # parameter, left alone by the processing of positional
                 # arguments.
-                if (not partial and param.kind != _VAR_POSITIONAL and
-                                                    param.default is _empty):
+                if (not partial and param.kind != _VAR_POSITIONAL
+                        and param.default is _empty):
                     raise TypeError('{arg!r} parameter lacking default value'. \
                                     format(arg=param_name))
 

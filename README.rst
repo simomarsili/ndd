@@ -6,15 +6,15 @@ ndd - Bayesian entropy estimation from discrete data
 .. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
     :target: https://travis-ci.com/simomarsili/ndd
 
-The **ndd** package provides a simple Python interface to an efficient 
-implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
+The **ndd** package provides a simple Python interface to an efficient
+implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
 
 Basic usage
 ===========
 
-The **entropy** function takes as input a vector of frequency counts 
-(the observed frequencies for a set of classes or states) 
+The **entropy** function takes as input a vector of frequency counts
+(the observed frequencies for a set of classes or states)
 and returns an **entropy** estimate (in nats)::
 
   >>> counts
@@ -24,13 +24,13 @@ and returns an **entropy** estimate (in nats)::
   >>> entropy_estimate
   2.623634344888532
 
-Optionally, the uncertainty in the entropy estimate can be quantified 
+Optionally, the uncertainty in the entropy estimate can be quantified
 by computing an approximation for the posterior standard deviation::
 
   >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
   >>> std
   0.048675500725595504
-  
+
 Information measures
 =============================
 **ndd** provide functions for the estimation of entropic information measures

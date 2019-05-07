@@ -3,10 +3,11 @@
 # License: BSD 3 clause
 """Base EntropyEstimator class."""
 import logging
+
+import ndd.fnsb
 import numpy
 from ndd.base_estimator import BaseEstimator
-import ndd.fnsb
-from ndd.exceptions import CountsError, CardinalityError, AlphaError
+from ndd.exceptions import AlphaError, CardinalityError, CountsError
 
 logger = logging.getLogger(__name__)
 
@@ -47,15 +48,19 @@ class EntropyEstimatorMixin(object):
                 if self.alpha is None:
                     self._estimator = self._plugin_estimator
                 else:
+
                     def pseudocounts_estimator(pk, k):
                         return self._pseudocounts_estimator(pk, k, self.alpha)
+
                     self._estimator = pseudocounts_estimator
             else:
                 if self.alpha is None:
                     self._estimator = self._nsb_estimator
                 else:
+
                     def ww_estimator(pk, k):
                         return self._ww_estimator(pk, k, self.alpha)
+
                     self._estimator = ww_estimator
         return self._estimator
 
@@ -144,10 +149,10 @@ class EntropyEstimatorMixin(object):
         else:
             # if a scalar check size
             if numpy.log(k) > MAX_LOGK:
-                raise CardinalityError(
-                    'k (%r) larger than %r' % (k, numpy.exp(MAX_LOGK)))
+                raise CardinalityError('k (%r) larger than %r' %
+                                       (k, numpy.exp(MAX_LOGK)))
         if not k.is_integer():
-            raise CardinalityError("k (%s) should be a whole number." % k)
+            raise CardinalityError('k (%s) should be a whole number.' % k)
         return k
 
 

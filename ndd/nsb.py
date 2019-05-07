@@ -3,20 +3,18 @@
 # License: BSD 3 clause
 """Functions module."""
 import logging
-import numpy
-import ndd
-from ndd.estimators import Entropy, JSDivergence
-from ndd.exceptions import (NumericError, HistogramError, DataArrayError,
-                            CardinalityError, EstimatorInputError)
 
-__all__ = ['entropy',
-           'jensen_shannon_divergence',
-           'interaction_information',
-           'coinformation',
-           'mutual_information',
-           'conditional_entropy',
-           'histogram',
-           'from_data']
+import ndd
+import numpy
+from ndd.estimators import Entropy, JSDivergence
+from ndd.exceptions import (CardinalityError, DataArrayError,
+                            EstimatorInputError, HistogramError, NumericError)
+
+__all__ = [
+    'entropy', 'jensen_shannon_divergence', 'interaction_information',
+    'coinformation', 'mutual_information', 'conditional_entropy', 'histogram',
+    'from_data'
+]
 
 logger = logging.getLogger(__name__)
 
@@ -71,11 +69,11 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S):
-        raise NumericError("NaN value")
+        raise NumericError('NaN value')
 
     if return_std:
         if err is not None and numpy.isnan(err):
-            raise NumericError("NaN value")
+            raise NumericError('NaN value')
         return S, err
     else:
         return S
@@ -130,7 +128,7 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     js = estimator.estimate_
 
     if numpy.isnan(js):
-        raise NumericError("NaN value")
+        raise NumericError('NaN value')
 
     return js
 
@@ -239,7 +237,7 @@ def from_data(ar, ks=None, axis=1, r=0):
             raise CardinalityError('%s: not a valid cardinality')
         if ks.ndim:
             if len(ks) != p:
-                raise CardinalityError("k should have len %s" % p)
+                raise CardinalityError('k should have len %s' % p)
 
     if r == p:
         counts = histogram(ar)
@@ -304,7 +302,7 @@ def interaction_information(ar, ks=None, axis=1, r=0):
             raise CardinalityError('%s: not a valid cardinality')
         if ks.ndim > 0:
             if len(ks) != p:
-                raise CardinalityError("k should have len %r (%r)" %
+                raise CardinalityError('k should have len %r (%r)' %
                                        (p, len(ks)))
         else:
             raise CardinalityError('ks cant be a scalar')
@@ -312,7 +310,7 @@ def interaction_information(ar, ks=None, axis=1, r=0):
     def iinfo(X, ks):
         info = 0.0
         px = len(X)
-        for ri in range(1, px+1):
+        for ri in range(1, px + 1):
             sgn = (-1)**(px - ri)
             info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
         return info
@@ -322,8 +320,8 @@ def interaction_information(ar, ks=None, axis=1, r=0):
     else:
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
-        return (iinfo(*args) for args in
-                zip(data_combinations, alphabet_size_combinations))
+        return (iinfo(*args)
+                for args in zip(data_combinations, alphabet_size_combinations))
 
 
 def coinformation(ar, ks=None, r=0):
@@ -397,7 +395,7 @@ def mutual_information(ar, ks=None, axis=1):
             raise CardinalityError('%s: not a valid cardinality')
         if ks.ndim > 0:
             if len(ks) != p:
-                raise CardinalityError("k should have len %r (%r)" %
+                raise CardinalityError('k should have len %r (%r)' %
                                        (p, len(ks)))
         else:
             raise CardinalityError('ks cant be a scalar')
@@ -468,7 +466,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
             raise CardinalityError('%s: not a valid cardinality')
         if ks.ndim:
             if len(ks) != p:
-                raise CardinalityError("k should have len %s" % p)
+                raise CardinalityError('k should have len %s' % p)
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
@@ -489,17 +487,15 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
-        return (
-            estimator(*args) - hc
-            for ids, *args in zip(indices, counts_combinations,
-                                  alphabet_size_combinations)
-            if set(c) <= set(ids))
+        return (estimator(*args) - hc for ids, *args in zip(
+            indices, counts_combinations, alphabet_size_combinations)
+                if set(c) <= set(ids))
 
 
 def _check_input_data(ar):
     # check data shape
     ar = numpy.atleast_2d(ar)
     if ar.ndim != 2:
-        raise DataArrayError(
-            'input array has %s dimensions; must be 2D' % ar.ndim)
+        raise DataArrayError('input array has %s dimensions; must be 2D' %
+                             ar.ndim)
     return ar

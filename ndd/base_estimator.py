@@ -30,15 +30,15 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
-
 """Base estimator class from sklearn."""
 try:
     from inspect import signature  # pylint: disable=wrong-import-order
 except ImportError:
     from ndd.funcsigs import signature
-from collections import defaultdict  # pylint: disable=wrong-import-order
-import numpy
 import logging
+from collections import defaultdict  # pylint: disable=wrong-import-order
+
+import numpy
 from ndd.exceptions import EstimatorParameterError
 
 logger = logging.getLogger(__name__)
@@ -96,11 +96,11 @@ class BaseEstimator(object):
         for p in parameters:
             if p.kind == p.VAR_POSITIONAL:
                 raise EstimatorParameterError(
-                    "scikit-learn estimators should always "
-                    "specify their parameters in the signature"
-                    " of their __init__ (no varargs)."
+                    'scikit-learn estimators should always '
+                    'specify their parameters in the signature'
+                    ' of their __init__ (no varargs).'
                     " %s with constructor %s doesn't "
-                    " follow this convention." % (cls, init_signature))
+                    ' follow this convention.' % (cls, init_signature))
         # Extract and sort argument names excluding 'self'
         return sorted([p.name for p in parameters])
 

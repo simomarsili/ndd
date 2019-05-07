@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-import os
 import json
-import pytest
-import numpy
-from numpy import random, isclose
+import os
+
 import ndd
+import numpy
+import pytest
+from numpy import isclose, random
 
 SEED = 123
 
@@ -23,7 +24,7 @@ def tests_dir():
 
 def random_counts(n=None, k=None, alpha=None):
     random.seed(123)
-    pp = random.dirichlet([alpha]*k)
+    pp = random.dirichlet([alpha] * k)
     return random.multinomial(n, pp)
 
 
@@ -72,8 +73,8 @@ def test_histogram_ndarray():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
     ref_result = 9.107550241712808
-    assert numpy.isclose(ndd.entropy(ndd.histogram(data),
-                                     k=ndd.nsb._nbins(data)), ref_result)
+    assert numpy.isclose(
+        ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)), ref_result)
 
 
 def test_from_data():
@@ -95,7 +96,7 @@ def test_combinations_from_data():
 def test_KLD():
     ALPHA, N, P = 1.0, 100, 20
     random.seed(SEED)
-    qk = random.dirichlet([ALPHA]*P)
+    qk = random.dirichlet([ALPHA] * P)
     pk = random.multinomial(N, qk)
     estimator = ndd.estimators.KLDivergence()
     ref_result = -0.04299973796573253
@@ -105,7 +106,7 @@ def test_KLD():
 def test_JSD():
     ALPHA, N, P = 1.0, 100, 20
     random.seed(SEED)
-    pk = random.dirichlet([ALPHA]*P)
+    pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.estimators.JSDivergence()
     ref_result = -0.01804523405829217
@@ -132,7 +133,7 @@ def test_mmi(data_with_redundancy):
     h02 = ndd.from_data(data_with_redundancy[[0, 2]])
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     h012 = ndd.from_data(data_with_redundancy)
-    mmi = - (h0 + h1 + h2 - h01 - h02 - h12 + h012)
+    mmi = -(h0 + h1 + h2 - h01 - h02 - h12 + h012)
     assert isclose(interaction_information(data_with_redundancy), mmi)
 
 
@@ -141,6 +142,6 @@ def test_conditional_entropy(data_with_redundancy):
     from ndd.nsb import mutual_information
     data = data_with_redundancy[[1, 2]]
     assert isclose(mutual_information(data),
-                   ndd.from_data(data)
-                   - ndd.conditional_entropy(data, c=0)
-                   - ndd.conditional_entropy(data, c=1), atol=0.01)
+                   ndd.from_data(data) - ndd.conditional_entropy(data, c=0) -
+                   ndd.conditional_entropy(data, c=1),
+                   atol=0.01)
