@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 __all__ = ['Entropy', 'KLDivergence', 'JSDivergence']
 
 
-# TODO: docstrings
 class Entropy(EntropyBasedEstimator):
     """Entropy estimator class.
 
@@ -83,7 +82,7 @@ class KLDivergence(EntropyBasedEstimator):
 
     """
 
-    def fit(self, pk, qk, k=None):
+    def fit(self, pk, qk, k=None):  # pylint: disable=arguments-differ
         """
         Attributes
         ----------
@@ -121,7 +120,7 @@ class KLDivergence(EntropyBasedEstimator):
         else:
             self.estimate_, self.err_ = self.entropy_estimate(pk, k)
         self.estimate_ += numpy.sum(pk * log_qk) / float(sum(pk))
-        self.estimate_ = -self.estimate_
+        self.estimate_ = numpy.negative(self.estimate_)
         return self
 
 
@@ -184,6 +183,7 @@ class JSDivergence(EntropyBasedEstimator):
 
 
 def is_pmf(a):
+    """If a is a valid probability mass function."""
     a = numpy.float64(a)
     not_negative = numpy.all(a >= 0)
     normalized = numpy.isclose(sum(a), 1.0)

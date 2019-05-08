@@ -32,19 +32,20 @@
 # DAMAGE.
 """Base estimator class from sklearn."""
 try:
-    from inspect import signature  # pylint: disable=wrong-import-order
+    from inspect import signature
 except ImportError:
     from ndd.funcsigs import signature
 import logging
-from collections import defaultdict  # pylint: disable=wrong-import-order
+from collections import defaultdict
 
 import numpy
-from ndd.exceptions import EstimatorParameterError
+from ndd.exceptions import \
+    EstimatorParameterError  # pylint: disable=ungrouped-imports
 
 logger = logging.getLogger(__name__)
 
 
-class BaseEstimator(object):
+class BaseEstimator:
     """Base class for estimators from sklearn.
 
     The class is consistent with sklearn estimator API:

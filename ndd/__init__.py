@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
+# pylint: disable=line-too-long
 """
 # ndd - Bayesian entropy estimation from discrete data
 

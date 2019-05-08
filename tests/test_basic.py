@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Tests module."""
 import json
 import os
 
@@ -11,24 +12,26 @@ SEED = 123
 
 
 def tests_dir():
-    """Return None is no tests dir."""
+    """Return None if no tests dir."""
     cwd = os.getcwd()
     basename = os.path.basename(cwd)
     if basename == 'tests':
         return cwd
-    else:
-        tests_dir = os.path.join(cwd, 'tests')
-        if os.path.exists(tests_dir):
-            return tests_dir
+    tdir = os.path.join(cwd, 'tests')
+    if os.path.exists(tdir):
+        return tdir
+    return None
 
 
 def random_counts(n=None, k=None, alpha=None):
+    """Sample from random multinomial."""
     random.seed(123)
     pp = random.dirichlet([alpha] * k)
     return random.multinomial(n, pp)
 
 
 def random_ndarray(n, p, seed):
+    """Random array of characters from ascii_uppercase."""
     import string
     random.seed(seed)
     alphabet = list(string.ascii_uppercase)
@@ -39,7 +42,7 @@ def random_tuple_generator(n, p, seed):
     import string
     random.seed(seed)
     alphabet = list(string.ascii_uppercase)
-    for j in range(n):
+    for _ in range(n):
         yield tuple(random.choice(alphabet, size=p))
 
 
@@ -49,7 +52,7 @@ def data_with_redundancy():
     random.seed(SEED)
     rnd = lambda x: numpy.random.binomial(n=1, p=x)
     data = []
-    for k in range(1000):
+    for _ in range(1000):
         clouds = rnd(0.2)
         rain = clouds * rnd(0.7) + (1 - clouds) * rnd(0.2)
         dark = clouds * rnd(0.9)

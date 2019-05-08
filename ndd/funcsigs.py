@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright 2001-2013 Python Software Foundation; All Rights Reserved
+# pylint: skip-file
 """Function signature objects for callables
 
 Back port of Python 3.3's function signature tools from the inspect module,

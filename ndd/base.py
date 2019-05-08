@@ -231,6 +231,6 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
         """Estimator function name."""
         return self.estimator.__name__.split('_')[0]
 
-    def fit(self):
+    def fit(self, pk, k=None):
         """Set the estimated parameters."""
         raise NotImplementedError

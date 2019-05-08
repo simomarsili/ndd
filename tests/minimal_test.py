@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Fast test."""
 import ndd
 import numpy
 
