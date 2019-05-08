@@ -4,11 +4,11 @@
 import json
 import os
 
-import pytest
-
-import ndd
 import numpy
 from numpy import random
+
+import ndd
+import pytest
 
 SEED = 123
 
