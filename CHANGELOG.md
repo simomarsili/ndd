@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+
+## [1.3] - 2019-05-08
 ### Changed
 - input data arrays must be p-by-n 2D ndarrays containing
   n samples from p discrete variables. This affects all methods/functions

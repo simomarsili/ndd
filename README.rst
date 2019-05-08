@@ -71,10 +71,10 @@ Clone the repo, install tests requirements and run the tests with `make`::
   pip install .[test]
   make test
 
-Changelog
-=========
+Changes
+=======
 
-1.3 (2019-04-16)
+1.3 (2019-05-08)
 ----------------
 - For methods/functions working on data matrices:
 
