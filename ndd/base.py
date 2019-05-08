@@ -1,34 +1,40 @@
 # -*- coding: utf-8 -*-
 # Author: Simone Marsili
 # License: BSD 3 clause
+# pylint: disable=c-extension-no-member
 """Base EntropyEstimator class."""
 import logging
 
-import ndd.fnsb
 import numpy
+
+import ndd.fnsb
 from ndd.base_estimator import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError
 
 logger = logging.getLogger(__name__)
 
 
-class EntropyEstimatorMixin(object):
+class EntropyEstimatorMixin:
     """Mixin class for EntropyEstimator.
 
     Methods for estimator selection and estimation.
 
     """
 
-    def _plugin_estimator(self, pk, k):
+    @staticmethod
+    def _plugin_estimator(pk, k):
         return ndd.fnsb.plugin(pk, k), None
 
-    def _pseudocounts_estimator(self, pk, k, alpha):
+    @staticmethod
+    def _pseudocounts_estimator(pk, k, alpha):
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
-    def _ww_estimator(self, pk, k, alpha):
+    @staticmethod
+    def _ww_estimator(pk, k, alpha):
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
-    def _nsb_estimator(self, pk, k):
+    @staticmethod
+    def _nsb_estimator(pk, k):
         return ndd.fnsb.nsb(pk, k)
 
     @property
@@ -93,8 +99,7 @@ class EntropyEstimatorMixin(object):
         zero = numpy.float64(0)
         if k == 1:
             return zero, zero
-        else:
-            return self.estimator(pk, k)
+        return self.estimator(pk, k)
 
     @staticmethod
     def _check_pk(a):
@@ -144,8 +149,7 @@ class EntropyEstimatorMixin(object):
                 # TODO: log warning
                 raise CardinalityError('k (%r) larger than %r' %
                                        (numpy.exp(logk), numpy.exp(MAX_LOGK)))
-            else:
-                k = numpy.prod(k)
+            k = numpy.prod(k)
         else:
             # if a scalar check size
             if numpy.log(k) > MAX_LOGK:
@@ -198,7 +202,8 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
         """Fit and return the estimated value."""
         return self.fit(*args, **kwargs).estimate_
 
-    def check_alpha(self, a):
+    @staticmethod
+    def check_alpha(a):
         """Check concentration parameter/#pseudocount.
 
         Parameters
