@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.3] - 2019-05-08
+### Changed
+- input data arrays must be p-by-n 2D ndarrays containing
+  n samples from p discrete variables. This affects all methods/functions
+  working directly on data:
+  - histogram
+  - from_data
+  - interaction_information
+  - coinformation
+  - mutual_information
+  - conditional_entropy
+
 ## [1.2] - 2019-04-01
 ### Changed
 - fixed conditional_entropy function
@@ -31,7 +43,7 @@
 
 ## [0.8] - 2019-01-08
 ### Added
-- Entropy class. 
+- Entropy class.
 - from_data() returns an estimate from a data samples
 
 ### Changed

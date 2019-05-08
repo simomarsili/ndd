@@ -1,4 +1,4 @@
-! Copyright (C) 2016, Simone Marsili 
+! Copyright (C) 2016, Simone Marsili
 ! All rights reserved.
 ! License: BSD 3 clause
 
@@ -28,12 +28,12 @@ contains
     ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
     real(real64), intent(in) :: nc
-    
+
     alphabet_size = nc
     n_data = sum(counts)
-    
+
     call compute_multiplicities(counts)
-    
+
   end subroutine initialize_dirichlet
 
   subroutine compute_multiplicities(counts)
@@ -45,7 +45,7 @@ contains
     integer(int32)              :: nmax
     integer(int32), allocatable :: multi0(:)
 
-    ! compute multiplicities 
+    ! compute multiplicities
     ! nmax is the largest number of samples in a bin
     nbins = size(counts)
     nmax = maxval(counts)
@@ -64,37 +64,37 @@ contains
     end do
 
     ! further compress data into 'sparse' multiplicities
-    n_multi = count(multi0 > 0) 
+    n_multi = count(multi0 > 0)
     allocate(multi_z(n_multi),stat=err)
     allocate(multi(n_multi),stat=err)
     k_ = 0
     do i_ = 1, nmax
-       if (multi0(i_) > 0) then 
+       if (multi0(i_) > 0) then
           k_ = k_ + 1
           multi_z(k_) = i_
           multi(k_) = multi0(i_)
        end if
     end do
     deallocate(multi0)
-    
+
   end subroutine compute_multiplicities
 
   subroutine dirichlet_finalize()
-    
+
     deallocate(multi_z,multi)
-    
+
   end subroutine dirichlet_finalize
 
-  pure real(real64) function log_pna(alpha) 
+  pure real(real64) function log_pna(alpha)
     ! log(p(n|a)) (log of) marginal probability of data given alpha
     ! computed from histogram multiplicities. Dirichlet-multinomial.
     use constants
-    
+
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
     real(real64)   :: wsum
 
-    log_pna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) & 
+    log_pna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
@@ -103,7 +103,7 @@ contains
          sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
 
     log_pna = log_pna + wsum
-    
+
   end function log_pna
 
   real(real64) function h_bayes(alpha)
@@ -111,7 +111,7 @@ contains
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
     use constants
-    
+
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
 
@@ -128,7 +128,7 @@ contains
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
     use constants
-    
+
     real(real64), intent(in) :: alpha, lw_max
     integer(int32), intent(in) :: order
     real(real64) :: hb, lw
@@ -138,7 +138,7 @@ contains
     real(real64) :: asum, bsum
 
     lpna = log_gamma(n_data + one) &
-         + log_gamma(alpha * alphabet_size) & 
+         + log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
@@ -152,24 +152,24 @@ contains
 
     lpna = lpna + bsum
     lw = log_fpa(alpha) + lpna - lw_max
-    
+
     hb = -asum
     hb = hb / (n_data + alpha * alphabet_size)
     hb = hb + digamma(n_data + alpha * alphabet_size + one)
-    
+
     integrand = exp(lw) * hb**order
 
   end function integrand
 
-  elemental real(real64) function log_fpa(alpha) 
+  elemental real(real64) function log_fpa(alpha)
     ! prop. to p(alpha) - the prior for alpha in NSB estimator
     use constants
     use gamma_funcs, only: trigamma
-    
+
     real(real64), intent(in) :: alpha
-    
+
     log_fpa = log(alphabet_size * trigamma(alphabet_size * alpha + one) - trigamma(alpha + one))
-    
+
   end function log_fpa
 
 end module dirichlet_mod
@@ -190,14 +190,14 @@ contains
     use dirichlet_mod, only: log_pna, log_fpa
 
     real(real64), intent(in) :: alpha
-    
+
     log_weight = log_fpa(alpha) + log_pna(alpha)
 
   end function log_weight
 
   subroutine compute_integration_range()
     use dirichlet_mod, only: log_pna
-    
+
     integer(int32),parameter :: nx = 100
     real(real64)             :: dx,largest
     real(real64)             :: xs(nx),fxs(nx)
@@ -205,17 +205,17 @@ contains
     integer(int32)           :: i, counter, nbins
 
     largest = huge(dx)
-    
+
     ! initialize amax and integration range
     log_alpha1 = log(1.e-8_real64)
     log_alpha2 = log(1.e4_real64)
     amax = 1.0_real64
     lw_max = log_weight(amax)
-    
+
     counter = 0
     do
        counter = counter + 1
-       
+
        ! set intervals equally spaced on log scale
        dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
        do i = 1,nx
@@ -243,13 +243,13 @@ contains
     fxs = exp(log_weight(xs) - lw_max)
     log_alpha1 = log(minval(xs, fxs > 0.0_real64)) - dx
     log_alpha2 = log(maxval(xs, fxs > 0.0_real64)) + dx
-    
+
     dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
     do i = 1,nx
        xs(i) = log_alpha1 + (i - 0.5_real64) * dx
     end do
     xs = exp(xs)
-    
+
     fxs = log_weight(xs)
     ! find amax such that the alpha weight is maximal
     i = maxloc(fxs, 1, fxs < largest)
@@ -267,7 +267,7 @@ contains
 
     alpha = exp(x)
     m_func = integrand(alpha, lw_max, 1) * alpha
-    
+
   end function m_func
 
   real(real64) function m2_func(x)
@@ -279,7 +279,7 @@ contains
 
     alpha = exp(x)
     m2_func = integrand(alpha, lw_max, 2) * alpha
-    
+
   end function m2_func
 
   real(real64) function nrm_func(x)
@@ -292,7 +292,7 @@ contains
 
   end function nrm_func
 
-  subroutine hnsb(estimate,err_estimate) 
+  subroutine hnsb(estimate,err_estimate)
 
     real(real64), intent(out) :: estimate,err_estimate
     real(real64)              :: rslt,nrm
@@ -301,19 +301,19 @@ contains
 
     estimate = quad(m_func,log_alpha1,log_alpha2)
     estimate = estimate / nrm
-    
+
     err_estimate = quad(m2_func,log_alpha1,log_alpha2)
     err_estimate = err_estimate / nrm
-    err_estimate = sqrt(err_estimate - estimate**2)    
+    err_estimate = sqrt(err_estimate - estimate**2)
 
   end subroutine hnsb
 
   real(real64) function quad(func,a1,a2)
-    ! wrapper to dqag routine 
+    ! wrapper to dqag routine
     use quadrature, only: dqag
 
     real(real64),    external :: func
-    real(real64),  intent(in) :: a1,a2 
+    real(real64),  intent(in) :: a1,a2
     integer(int32), parameter :: limit = 500
     integer(int32), parameter :: lenw = 4 * limit
     real(real64)              :: abserr
@@ -329,13 +329,13 @@ contains
 
     call dqag ( func, a1, a2, epsabs, epsrel, key, quad, abserr, neval, ier, &
          limit, lenw, last, iwork, work )
-    
+
   end function quad
 
 end module nsb_mod
 
 subroutine plugin(n,counts,estimate)
-  ! plugin estimator - no prior, no regularization 
+  ! plugin estimator - no prior, no regularization
   use iso_fortran_env
   implicit none
 
@@ -351,9 +351,9 @@ subroutine plugin(n,counts,estimate)
   logical :: multi = .false.
 
   if (multi) then
-     ! using multiplicities 
+     ! using multiplicities
      nbins = size(counts)
-     if (nbins == 1) then 
+     if (nbins == 1) then
         estimate = 0.0_real64
         return
      end if
@@ -376,7 +376,7 @@ subroutine plugin(n,counts,estimate)
   else
      ! standard implementation
      nbins = size(counts)
-     if (nbins == 1) then 
+     if (nbins == 1) then
         estimate = 0.0_real64
         return
      end if
@@ -391,15 +391,15 @@ end subroutine plugin
 subroutine pseudo(n,counts,nc,alpha,estimate)
   use iso_fortran_env
   ! pseudocount estimator(s)
-  ! estimate the bin frequencies using pseudocounts 
-  ! and then compute the entropy of the regularized histogram 
-  ! 
-  ! connection to Bayesian modeling with a Dirichlet prior: 
-  ! using a Dirichlet prior with parameter alpha, 
-  ! the resulting posterior is again Dirichlet with mean corresponding to 
+  ! estimate the bin frequencies using pseudocounts
+  ! and then compute the entropy of the regularized histogram
+  !
+  ! connection to Bayesian modeling with a Dirichlet prior:
+  ! using a Dirichlet prior with parameter alpha,
+  ! the resulting posterior is again Dirichlet with mean corresponding to
   ! the regularized empirical histogram with alpha as bin pseudocounts
-  ! 
-  ! the alpha parameter determines the specifical prior: 
+  !
+  ! the alpha parameter determines the specifical prior:
   ! 0   : maximum likelihood (ML), or plugin, estimator
   ! 1/2 : Jeffreys' or Krychevsky-Trofimov (KT) estimator
   ! 1   : Laplace (LA) estimator
@@ -423,7 +423,7 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
   end if
 
   nbins = size(counts)
-!  if (nbins == 1) then 
+!  if (nbins == 1) then
 !     estimate = 0.0_real64
 !     return
 !  end if
@@ -444,7 +444,7 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
 end subroutine pseudo
 
 subroutine dirichlet(n,counts,nc,alpha,estimate)
-  ! posterior mean entropy (averaged over Dirichlet distribution) given alpha 
+  ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use iso_fortran_env
   use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
   use dirichlet_mod, only: h_bayes
@@ -456,7 +456,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   real(real64),   intent(in)  :: alpha
   real(real64),   intent(out) :: estimate
 
-!  if (size(counts) == 1) then 
+!  if (size(counts) == 1) then
 !     estimate = 0.0_real64
 !     return
 !  end if
@@ -483,7 +483,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
 
-!  if (size(counts) == 1) then 
+!  if (size(counts) == 1) then
 !     estimate = 0.0_real64
 !     err_estimate = 0.0_real64
 !     return
@@ -502,7 +502,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 end subroutine nsb
 
 subroutine plugin2d(n,m,counts,estimate)
-  ! plugin estimator - no prior, no regularization 
+  ! plugin estimator - no prior, no regularization
   use iso_fortran_env
   implicit none
 

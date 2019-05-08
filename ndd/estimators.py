@@ -3,16 +3,17 @@
 # License: BSD 3 clause
 """Base classes module."""
 import logging
+
 import numpy
+
 from ndd.base import EntropyBasedEstimator
-from ndd.exceptions import PmfError, CountsError
+from ndd.exceptions import CountsError, PmfError
 
 logger = logging.getLogger(__name__)
 
 __all__ = ['Entropy', 'KLDivergence', 'JSDivergence']
 
 
-# TODO: docstrings
 class Entropy(EntropyBasedEstimator):
     """Entropy estimator class.
 
@@ -82,7 +83,7 @@ class KLDivergence(EntropyBasedEstimator):
 
     """
 
-    def fit(self, pk, qk, k=None):
+    def fit(self, pk, qk, k=None):  # pylint: disable=arguments-differ
         """
         Attributes
         ----------
@@ -120,7 +121,7 @@ class KLDivergence(EntropyBasedEstimator):
         else:
             self.estimate_, self.err_ = self.entropy_estimate(pk, k)
         self.estimate_ += numpy.sum(pk * log_qk) / float(sum(pk))
-        self.estimate_ = - self.estimate_
+        self.estimate_ = numpy.negative(self.estimate_)
         return self
 
 
@@ -156,7 +157,7 @@ class JSDivergence(EntropyBasedEstimator):
             Number of bins. k >= p if pk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to pk.shape[1].
-        
+
         Returns
         -------
         self : object
@@ -176,14 +177,14 @@ class JSDivergence(EntropyBasedEstimator):
         if k == 1:  # single bin
             self.estimate_ = 0.0
         else:
-            self.estimate_ = self.entropy_estimate(
-                pk.sum(axis=0), k)[0] - sum(
-                    ws[i] * self.entropy_estimate(x, k)[0]
-                    for i, x in enumerate(pk))
+            self.estimate_ = self.entropy_estimate(pk.sum(axis=0), k)[0] - sum(
+                ws[i] * self.entropy_estimate(x, k)[0]
+                for i, x in enumerate(pk))
         return self
 
 
 def is_pmf(a):
+    """If a is a valid probability mass function."""
     a = numpy.float64(a)
     not_negative = numpy.all(a >= 0)
     normalized = numpy.isclose(sum(a), 1.0)

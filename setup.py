@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
+"""Setup module."""
 from __future__ import print_function
+
 from pkg_resources import parse_version
+
+# from setuptools import setup # pylint: disable=wrong-import-position
+from numpy.distutils.core import \
+    Extension  # pylint: disable=wrong-import-position
+from numpy.distutils.core import setup  # pylint: disable=wrong-import-position
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
@@ -21,8 +28,8 @@ def get_numpy_status():
     try:
         import numpy
         numpy_version = numpy.__version__
-        status['up_to_date'] = parse_version(
-            numpy_version) >= parse_version(NUMPY_MIN_VERSION)
+        status['up_to_date'] = parse_version(numpy_version) >= parse_version(
+            NUMPY_MIN_VERSION)
         status['version'] = numpy_version
     except ImportError:
         status['up_to_date'] = False
@@ -38,7 +45,7 @@ def get_version(source):
     try:
         return version_data['version']
     except KeyError:
-        raise KeyError("check version file: no version number")
+        raise KeyError('check version file: no version number')
 
 
 def get_long_description():
@@ -55,27 +62,19 @@ NUMPY_STATUS = get_numpy_status()
 NUMPY_REQ_STR = "ndd requires NumPy >= %s. Run 'pip install -U numpy' " % NUMPY_MIN_VERSION
 if NUMPY_STATUS['up_to_date'] is False:
     if NUMPY_STATUS['version']:
-        raise ImportError(
-            "Your installation of NumPy %s is out-of-date.\n%s"
-            % (NUMPY_STATUS['version'], NUMPY_REQ_STR))
-    else:
-        raise ImportError(
-            "NumPy is not installed.\n%s"
-            % NUMPY_REQ_STR)
-
-from numpy.distutils.core import setup # pylint: disable=wrong-import-position
-#from setuptools import setup # pylint: disable=wrong-import-position
-from numpy.distutils.core import Extension # pylint: disable=wrong-import-position
+        raise ImportError('Your installation of NumPy %s is out-of-date.\n%s' %
+                          (NUMPY_STATUS['version'], NUMPY_REQ_STR))
+    raise ImportError('NumPy is not installed.\n%s' % NUMPY_REQ_STR)
 
 VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
 
 FNSB = Extension(
     name='ndd.fnsb',
-    sources=['ndd/nsb.pyf',
-             'ndd/exts/gamma.f90',
-             'ndd/exts/quad.f90',
-             'ndd/exts/estimators.f90'],
+    sources=[
+        'ndd/nsb.pyf', 'ndd/exts/gamma.f90', 'ndd/exts/quad.f90',
+        'ndd/exts/estimators.f90'
+    ],
     # extra_f90_compile_args = ["-fopenmp"],
     # extra_link_args = ["-lgomp"],
 )
@@ -83,7 +82,7 @@ FNSB = Extension(
 setup(
     name=NAME,
     version=VERSION,
-    description="Bayesian entropy estimation from discrete data",
+    description='Bayesian entropy estimation from discrete data',
     long_description=LONG_DESCRIPTION,
     # long_description_content_type="text/markdown",
     author='Simone Marsili',
@@ -92,16 +91,12 @@ setup(
     keywords='entropy estimation Bayes discrete_data',
     data_files=[(NAME, ['ndd/version.json'])],
     packages=['ndd'],
-    package_data={'':
-                  ['LICENSE.txt',
-                   'README.rst',
-                   'requirements.txt']},
+    package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
     ext_modules=[FNSB],
     python_requires='>=3.4',
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
-    extras_require={
-        'test': ['pytest']},
+    extras_require={'test': ['pytest']},
     license='BSD 3-Clause',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[

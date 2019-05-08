@@ -1,33 +1,40 @@
 # -*- coding: utf-8 -*-
 # Author: Simone Marsili
 # License: BSD 3 clause
+# pylint: disable=c-extension-no-member
 """Base EntropyEstimator class."""
 import logging
+
 import numpy
-from ndd.base_estimator import BaseEstimator
+
 import ndd.fnsb
-from ndd.exceptions import CountsError, CardinalityError, AlphaError
+from ndd.base_estimator import BaseEstimator
+from ndd.exceptions import AlphaError, CardinalityError, CountsError
 
 logger = logging.getLogger(__name__)
 
 
-class EntropyEstimatorMixin(object):
+class EntropyEstimatorMixin:
     """Mixin class for EntropyEstimator.
 
     Methods for estimator selection and estimation.
 
     """
 
-    def _plugin_estimator(self, pk, k):
+    @staticmethod
+    def _plugin_estimator(pk, k):
         return ndd.fnsb.plugin(pk, k), None
 
-    def _pseudocounts_estimator(self, pk, k, alpha):
+    @staticmethod
+    def _pseudocounts_estimator(pk, k, alpha):
         return ndd.fnsb.pseudo(pk, k, alpha), None
 
-    def _ww_estimator(self, pk, k, alpha):
+    @staticmethod
+    def _ww_estimator(pk, k, alpha):
         return ndd.fnsb.dirichlet(pk, k, alpha), None
 
-    def _nsb_estimator(self, pk, k):
+    @staticmethod
+    def _nsb_estimator(pk, k):
         return ndd.fnsb.nsb(pk, k)
 
     @property
@@ -47,15 +54,19 @@ class EntropyEstimatorMixin(object):
                 if self.alpha is None:
                     self._estimator = self._plugin_estimator
                 else:
+
                     def pseudocounts_estimator(pk, k):
                         return self._pseudocounts_estimator(pk, k, self.alpha)
+
                     self._estimator = pseudocounts_estimator
             else:
                 if self.alpha is None:
                     self._estimator = self._nsb_estimator
                 else:
+
                     def ww_estimator(pk, k):
                         return self._ww_estimator(pk, k, self.alpha)
+
                     self._estimator = ww_estimator
         return self._estimator
 
@@ -88,8 +99,7 @@ class EntropyEstimatorMixin(object):
         zero = numpy.float64(0)
         if k == 1:
             return zero, zero
-        else:
-            return self.estimator(pk, k)
+        return self.estimator(pk, k)
 
     @staticmethod
     def _check_pk(a):
@@ -139,15 +149,14 @@ class EntropyEstimatorMixin(object):
                 # TODO: log warning
                 raise CardinalityError('k (%r) larger than %r' %
                                        (numpy.exp(logk), numpy.exp(MAX_LOGK)))
-            else:
-                k = numpy.prod(k)
+            k = numpy.prod(k)
         else:
             # if a scalar check size
             if numpy.log(k) > MAX_LOGK:
-                raise CardinalityError(
-                    'k (%r) larger than %r' % (k, numpy.exp(MAX_LOGK)))
+                raise CardinalityError('k (%r) larger than %r' %
+                                       (k, numpy.exp(MAX_LOGK)))
         if not k.is_integer():
-            raise CardinalityError("k (%s) should be a whole number." % k)
+            raise CardinalityError('k (%s) should be a whole number.' % k)
         return k
 
 
@@ -193,7 +202,8 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
         """Fit and return the estimated value."""
         return self.fit(*args, **kwargs).estimate_
 
-    def check_alpha(self, a):
+    @staticmethod
+    def check_alpha(a):
         """Check concentration parameter/#pseudocount.
 
         Parameters
@@ -226,6 +236,6 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
         """Estimator function name."""
         return self.estimator.__name__.split('_')[0]
 
-    def fit(self):
+    def fit(self, pk, k=None):
         """Set the estimated parameters."""
         raise NotImplementedError

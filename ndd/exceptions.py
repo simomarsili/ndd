@@ -4,7 +4,6 @@
 """Base EntropyEstimator class."""
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -44,5 +43,5 @@ class HistogramError(NddError):
     """Error during evaluation of histogram."""
 
 
-class AxisError(NddError):
-    """invalid axis."""
+class DataArrayError(NddError):
+    """Input is not a valid data array"""

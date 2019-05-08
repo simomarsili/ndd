@@ -6,20 +6,15 @@ ndd - Bayesian entropy estimation from discrete data
 .. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
     :target: https://travis-ci.com/simomarsili/ndd
 
-The **ndd** package provides a simple Python interface to an efficient 
-implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
+The **ndd** package provides a simple Python interface to an efficient
+implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
-
-News
-====
-Starting from `v1.0`, **ndd** requires Python3.4 or later.
-
 
 Basic usage
 ===========
 
-The **entropy** function takes as input a vector of frequency counts 
-(the observed frequencies for a set of classes or states) 
+The **entropy** function takes as input a vector of frequency counts
+(the observed frequencies for a set of classes or states)
 and returns an **entropy** estimate (in nats)::
 
   >>> counts
@@ -29,23 +24,24 @@ and returns an **entropy** estimate (in nats)::
   >>> entropy_estimate
   2.623634344888532
 
-Optionally, the uncertainty in the entropy estimate can be quantified 
+Optionally, the uncertainty in the entropy estimate can be quantified
 by computing an approximation for the posterior standard deviation::
 
   >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
   >>> std
   0.048675500725595504
-  
+
 Information measures
 =============================
 **ndd** provide functions for the estimation of entropic information measures
 (as linear combinations of single Bayesian entropy estimates):
 
+* ndd.jensen_shannon_divergence
 * ndd.conditional_entropy
 * ndd.mutual_information
 * ndd.interaction_information
 * ndd.coinformation
-* ndd.jensen_shannon_divergence
+
 
 See the functions' docstrings for details.
 
@@ -74,6 +70,36 @@ Clone the repo, install tests requirements and run the tests with `make`::
   cd ndd
   pip install .[test]
   make test
+
+Changes
+=======
+
+1.3 (2019-05-08)
+----------------
+- For methods/functions working on data matrices:
+
+
+  the default input is a **p-by-n** 2D array
+  (n samples from p discrete variables, with
+  different samples on different **columns**).
+
+1.1 (2019-03-26)
+----------------
+Added:
+
+- `ndd.from_data`
+- `ndd.mutual_information`
+- `ndd.conditional_information`
+- `ndd.interaction_information`
+- `ndd.coinformation`
+
+1.0 (2019-03-19)
+----------------
+- Python3 only (>= 3.4)
+
+0.9 (2019-01-15)
+----------------
+- Added `jensen_shannnon_divergence` function.
 
 References
 ==========
