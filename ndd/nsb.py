@@ -74,7 +74,8 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     if return_std:
         if err is not None and numpy.isnan(err):
-            raise NumericError('NaN value')
+            err = numpy.nan
+            logger.warning('nan value for entropy posterior std deviation')
         return S, err
 
     return S
