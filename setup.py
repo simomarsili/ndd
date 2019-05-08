@@ -2,12 +2,11 @@
 """Setup module."""
 from __future__ import print_function
 
-from pkg_resources import parse_version
-
-# from setuptools import setup # pylint: disable=wrong-import-position
 from numpy.distutils.core import \
-    Extension  # pylint: disable=wrong-import-position
-from numpy.distutils.core import setup  # pylint: disable=wrong-import-position
+    Extension  # isort:skip, pylint: disable=wrong-import-position
+from numpy.distutils.core import \
+    setup  # isort:skip, pylint: disable=wrong-import-position
+from pkg_resources import parse_version
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
