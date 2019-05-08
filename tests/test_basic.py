@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=missing-docstring
 """Tests module."""
 import json
 import os
 
 import numpy
-from numpy import isclose, random
+from numpy import random
 
 import ndd
 import pytest
@@ -78,21 +79,22 @@ def test_histogram_ndarray():
     data = random_ndarray(N, P, SEED)
     ref_result = 9.107550241712808
     assert numpy.isclose(
-        ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)), ref_result)
+        ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)), ref_result)  # pylint: disable=protected-access
 
 
 def test_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
     ref_result = 9.107550241712808
-    assert numpy.isclose(ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data)),
-                         ref_result)
+    assert numpy.isclose(
+        ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data)),  # pylint: disable=protected-access
+        ref_result)
 
 
 def test_combinations_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    hs_pairs = ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data), r=2)
+    hs_pairs = ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data), r=2)  # pylint: disable=protected-access
     ref_result = 18.84820751635297
     assert numpy.isclose(numpy.sum(hs_pairs), ref_result)
 
@@ -117,17 +119,17 @@ def test_JSD():
     assert numpy.isclose(estimator(counts), ref_result)
 
 
-def test_mi(data_with_redundancy):
+def test_mi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     random.seed(SEED)
     from ndd.nsb import mutual_information
     h1 = ndd.from_data(data_with_redundancy[1])
     h2 = ndd.from_data(data_with_redundancy[2])
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     mi = h1 + h2 - h12
-    assert isclose(mutual_information(data_with_redundancy[[1, 2]]), mi)
+    assert numpy.isclose(mutual_information(data_with_redundancy[[1, 2]]), mi)
 
 
-def test_mmi(data_with_redundancy):
+def test_mmi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     random.seed(SEED)
     from ndd.nsb import interaction_information
     h0 = ndd.from_data(data_with_redundancy[0])
@@ -138,14 +140,15 @@ def test_mmi(data_with_redundancy):
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     h012 = ndd.from_data(data_with_redundancy)
     mmi = -(h0 + h1 + h2 - h01 - h02 - h12 + h012)
-    assert isclose(interaction_information(data_with_redundancy), mmi)
+    assert numpy.isclose(interaction_information(data_with_redundancy), mmi)
 
 
-def test_conditional_entropy(data_with_redundancy):
+def test_conditional_entropy(data_with_redundancy):  # pylint: disable=redefined-outer-name
     random.seed(SEED)
     from ndd.nsb import mutual_information
     data = data_with_redundancy[[1, 2]]
-    assert isclose(mutual_information(data),
-                   ndd.from_data(data) - ndd.conditional_entropy(data, c=0) -
-                   ndd.conditional_entropy(data, c=1),
-                   atol=0.01)
+    assert numpy.isclose(mutual_information(data),
+                         ndd.from_data(data) -
+                         ndd.conditional_entropy(data, c=0) -
+                         ndd.conditional_entropy(data, c=1),
+                         atol=0.01)
