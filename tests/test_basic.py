@@ -5,10 +5,10 @@ import json
 import os
 
 import numpy
-from numpy import random
+import numpy.random as random
+import pytest
 
 import ndd
-import pytest
 
 SEED = 123
 
