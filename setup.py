@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 """Setup module."""
+# pylint: disable=wrong-import-position
 from __future__ import print_function
 
 from pkg_resources import parse_version
-
-# from setuptools import setup # pylint: disable=wrong-import-position
-from numpy.distutils.core import \
-    Extension  # pylint: disable=wrong-import-position
-from numpy.distutils.core import setup  # pylint: disable=wrong-import-position
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.9'
@@ -65,6 +61,9 @@ if NUMPY_STATUS['up_to_date'] is False:
         raise ImportError('Your installation of NumPy %s is out-of-date.\n%s' %
                           (NUMPY_STATUS['version'], NUMPY_REQ_STR))
     raise ImportError('NumPy is not installed.\n%s' % NUMPY_REQ_STR)
+
+from numpy.distutils.core import Extension  # isort:skip
+from numpy.distutils.core import setup  # isort:skip
 
 VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
