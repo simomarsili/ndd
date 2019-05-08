@@ -5,6 +5,7 @@
 import logging
 
 import numpy
+
 from ndd.base import EntropyBasedEstimator
 from ndd.exceptions import CountsError, PmfError
 

@@ -4,8 +4,9 @@
 """Functions module."""
 import logging
 
-import ndd
 import numpy
+
+import ndd
 from ndd.estimators import Entropy, JSDivergence
 from ndd.exceptions import (CardinalityError, DataArrayError,
                             EstimatorInputError, HistogramError, NumericError)
@@ -75,8 +76,8 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         if err is not None and numpy.isnan(err):
             raise NumericError('NaN value')
         return S, err
-    else:
-        return S
+
+    return S
 
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
@@ -176,15 +177,16 @@ def histogram(data, axis=1, r=0):
 
     if r == 0:
         r = p
+
     if r > p:
         raise HistogramError(
             'r (%r) is larger than the number of variables (%r)' % (r, p))
-    if r == p:
-        # statistics for the p-dimensional variable
-        _, counts = numpy.unique(data, return_counts=True, axis=1)
-        return counts
-    else:
+    if r < p:
         return (ndd.histogram(d) for d in combinations(data, r=r))
+
+    # statistics for the p-dimensional variable
+    _, counts = numpy.unique(data, return_counts=True, axis=1)
+    return counts
 
 
 def from_data(ar, ks=None, axis=1, r=0):
@@ -239,10 +241,7 @@ def from_data(ar, ks=None, axis=1, r=0):
             if len(ks) != p:
                 raise CardinalityError('k should have len %s' % p)
 
-    if r == p:
-        counts = histogram(ar)
-        return estimator(counts, k=ks)
-    else:
+    if r != p:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
 
@@ -252,6 +251,9 @@ def from_data(ar, ks=None, axis=1, r=0):
         return (
             estimator(*args)
             for args in zip(counts_combinations, alphabet_size_combinations))
+
+    counts = histogram(ar)
+    return estimator(counts, k=ks)
 
 
 def interaction_information(ar, ks=None, axis=1, r=0):
@@ -300,7 +302,7 @@ def interaction_information(ar, ks=None, axis=1, r=0):
             ks = numpy.float64(ks)
         except ValueError:
             raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim > 0:
+        if ks.ndim > 0:  # pylint: disable=comparison-with-callable
             if len(ks) != p:
                 raise CardinalityError('k should have len %r (%r)' %
                                        (p, len(ks)))
@@ -315,13 +317,13 @@ def interaction_information(ar, ks=None, axis=1, r=0):
             info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
         return info
 
-    if r == p:
-        return iinfo(ar, ks)
-    else:
+    if r != p:
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
         return (iinfo(*args)
                 for args in zip(data_combinations, alphabet_size_combinations))
+
+    return iinfo(ar, ks)
 
 
 def coinformation(ar, ks=None, r=0):
@@ -393,19 +395,19 @@ def mutual_information(ar, ks=None, axis=1):
             ks = numpy.float64(ks)
         except ValueError:
             raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim > 0:
+        if ks.ndim > 0:  # pylint: disable=comparison-with-callable
             if len(ks) != p:
                 raise CardinalityError('k should have len %r (%r)' %
                                        (p, len(ks)))
         else:
             raise CardinalityError('ks cant be a scalar')
 
-    if p == 2:
-        return numpy.sum(from_data(ar, ks=ks, r=1)) - from_data(ar, ks=ks)
-    else:
+    if p > 2:
         h1 = list(from_data(ar, ks=ks, r=1))
         return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]], ks=ks[[i1, i2]])
                 for i1, i2 in combinations(range(p), 2))
+
+    return numpy.sum(from_data(ar, ks=ks, r=1)) - from_data(ar, ks=ks)
 
 
 def conditional_entropy(ar, c, ks=None, axis=1, r=0):
@@ -475,10 +477,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
     counts = histogram(ar[c])
     hc = estimator(counts, k=ks)
 
-    if r == 0:
-        counts = histogram(ar)
-        return estimator(counts, k=ks) - hc
-    else:
+    if r > 0:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
 
@@ -490,6 +489,9 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
         return (estimator(*args) - hc for ids, *args in zip(
             indices, counts_combinations, alphabet_size_combinations)
                 if set(c) <= set(ids))
+
+    counts = histogram(ar)
+    return estimator(counts, k=ks) - hc
 
 
 def _check_input_data(ar):

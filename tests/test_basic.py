@@ -3,10 +3,11 @@
 import json
 import os
 
-import ndd
 import numpy
-import pytest
 from numpy import isclose, random
+
+import ndd
+import pytest
 
 SEED = 123
 

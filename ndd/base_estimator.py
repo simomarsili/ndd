@@ -39,6 +39,7 @@ import logging
 from collections import defaultdict
 
 import numpy
+
 from ndd.exceptions import \
     EstimatorParameterError  # pylint: disable=ungrouped-imports
 
