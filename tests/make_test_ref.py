@@ -50,20 +50,19 @@ def counts_prms():
 
 
 def cases():
-    pass
+    for prms in counts_prms():
+        counts = random_counts(**prms)
+        for kwargs in estimator_prms():
+            yield (counts, prms, kwargs)
 
 
 def main():
     """Main function."""
-    tests = []
-    for setting in counts_prms():
-        counts = random_counts(**setting)
-        for kwargs in estimator_prms():
-            # n. of classes is known
-            result = ndd.entropy(counts, **kwargs, k=len(counts))
-            test_case = (setting, kwargs, result)
-            tests.append(test_case)
-    json.dump(tests, sys.stdout)
+    results = []
+    for counts, _, kwargs in cases():
+        result = ndd.entropy(counts, **kwargs, k=len(counts))
+        results.append(result)
+    json.dump(results, sys.stdout)
 
 
 if __name__ == '__main__':

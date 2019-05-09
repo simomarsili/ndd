@@ -9,7 +9,7 @@ import numpy.random as random
 import pytest
 
 import ndd
-from make_test_ref import SEED, random_counts
+from make_test_ref import SEED, cases
 
 
 def tests_dir():
@@ -55,14 +55,14 @@ def data_with_redundancy():
 
 
 with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
-    CASES = json.load(_jf)
+    results = json.load(_jf)
 
 
-@pytest.mark.parametrize('setting, kwargs, ref_result', CASES)
-def test_entropy(setting, kwargs, ref_result):
+@pytest.mark.parametrize('case, ref_result', zip(cases(), results))
+def test_entropy(case, ref_result):
     """Basic tests."""
-    counts = random_counts(**setting)
-    test_result = ndd.entropy(counts, k=setting['k'], **kwargs)
+    counts, _, kwargs = case
+    test_result = ndd.entropy(counts, k=len(counts), **kwargs)
     assert numpy.isclose(test_result, ref_result)
 
 
