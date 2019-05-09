@@ -38,15 +38,15 @@ def estimator_prms():
 
 
 def counts_prms():
-    n_vals = [int(x) for x in numpy.logspace(1, 3, num=3)]
-    k_vals = [int(x) for x in numpy.logspace(1, 3, num=3)]
-    a_vals = numpy.logspace(-2, 1, num=4)
+    ns = [int(x) for x in numpy.logspace(1, 3, num=3)]
+    ks = [int(x) for x in numpy.logspace(1, 3, num=3)]
+    alphas = numpy.logspace(-2, 1, num=4)
     # list of combinations of parameter values
     return ({
         'n': n,
         'k': k,
         'alpha': alpha
-    } for n, k, alpha in itertools.product(n_vals, k_vals, a_vals))
+    } for n, k, alpha in itertools.product(ns, ks, alphas))
 
 
 def cases():
