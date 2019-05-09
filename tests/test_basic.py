@@ -9,8 +9,7 @@ import numpy.random as random
 import pytest
 
 import ndd
-
-SEED = 123
+from make_test_ref import SEED, random_counts
 
 
 def tests_dir():
@@ -23,13 +22,6 @@ def tests_dir():
     if os.path.exists(tdir):
         return tdir
     return None
-
-
-def random_counts(n=None, k=None, alpha=None):
-    """Sample from random multinomial."""
-    random.seed(123)
-    pp = random.dirichlet([alpha] * k)
-    return random.multinomial(n, pp)
 
 
 def random_ndarray(n, p, seed):
