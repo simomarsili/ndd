@@ -60,7 +60,7 @@ def main():
     """Main function."""
     results = []
     for counts, _, kwargs in cases():
-        result = ndd.entropy(counts, **kwargs, k=len(counts))
+        result = ndd.entropy(counts, k=len(counts), **kwargs)
         results.append(result)
     json.dump(results, sys.stdout)
 
