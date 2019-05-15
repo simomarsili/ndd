@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+- `r` (length of combinations) defaults to None
 
 ## [1.3] - 2019-05-08
 ### Changed
