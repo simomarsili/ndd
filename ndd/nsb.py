@@ -267,10 +267,10 @@ def interaction_information(ar, ks=None, axis=1, r=None):
 
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
-        return (_iinfo(*args)
+        return (iinfo(*args)
                 for args in zip(data_combinations, alphabet_size_combinations))
 
-    return _iinfo(ar, ks)
+    return iinfo(ar, ks)
 
 
 def coinformation(ar, ks=None, r=None):
@@ -490,7 +490,8 @@ def _check_ks(ks, ar):
     return ks
 
 
-def _iinfo(X, ks):
+def iinfo(X, ks):
+    """Helper function for interaction information from data."""
     info = 0.0
     px = len(X)
     for ri in range(1, px + 1):
