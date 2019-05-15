@@ -407,7 +407,7 @@ def mutual_information(ar, ks=None, axis=1):
     return numpy.sum(from_data(ar, ks=ks, r=1)) - from_data(ar, ks=ks)
 
 
-def conditional_entropy(ar, c, ks=None, axis=1, r=0):
+def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     """
     Coditional entropy estimate from data array.
 
@@ -421,8 +421,9 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int, optional
-        If r > 0, return a generator yielding estimates for all possible
+    r : int or None, optional
+        For r values in the interval [1, p-len(c)],
+        return a generator yielding estimates for all possible
         combinations of r variables conditioning on the `c` variables.
         Indices are sorted as:
         list(x for x in collections.combinations(range(p), r=r+len(c))
@@ -437,7 +438,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
     ------
     CardinalityError
         If ks is array-like and len(ks) != p
-        If r > 0 and is a scalar.
+    CombinationError
+        For r values out of the interval [1, p-len(c)].
 
     """
     from itertools import combinations
@@ -474,11 +476,16 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
     counts = histogram(ar[c])
     hc = estimator(counts, k=ks)
 
-    if r > 0:
+    if r is not None:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
 
+        # include the c variables in the set
         r = r + len(c)
+        if r < 1 or r > p:
+            raise CombinationError('r values must be in the interval'
+                                   '[1, p-len(c)]')
+
         indices = combinations(range(p), r=r)
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
