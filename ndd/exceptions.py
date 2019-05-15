@@ -44,8 +44,8 @@ class HistogramError(NddError):
 
 
 class DataArrayError(NddError):
-    """Input is not a valid data array"""
+    """Input is not a valid data array."""
 
 
 class CombinationError(NddError):
-    """r must be non-negative"""
+    """r must be in the interval [1, p]."""

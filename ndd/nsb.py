@@ -144,7 +144,7 @@ def _nbins(data):
     return [len(numpy.unique(v)) for v in data]
 
 
-def histogram(data, axis=1, r=0):
+def histogram(data, axis=1, r=None):
     """Compute an histogram from a data array. Wrapper to numpy.unique.
 
     Parameters
@@ -153,19 +153,15 @@ def histogram(data, axis=1, r=0):
         A n-by-p array of n samples from p variables.
     axis : int, optional
         The sample-indexing axis
-    r : int, optional
-        If r > 0, return a generator that yields a bin counts array
-        for each possible combination of r variables.
+    r : int or None, optional
+        For r values in the interval [1, p],
+        return a generator that yields a bin counts array for each possible
+        combination of r variables.
 
     Returns
     -------
     counts : ndarray
         Bin counts.
-
-    Raises
-    ------
-    HistogramError
-        If r > p.
 
     """
     from itertools import combinations
@@ -176,14 +172,10 @@ def histogram(data, axis=1, r=0):
         data = data.T
     p = data.shape[0]
 
-    if r == 0:
-        r = p
-
-    if r > p:
-        raise HistogramError(
-            'r (%r) is larger than the number of variables (%r)' % (r, p))
-    if r < p:
-        return (ndd.histogram(d) for d in combinations(data, r=r))
+    if r is not None:
+        if 1 <= r <= p:
+            return (ndd.histogram(d) for d in combinations(data, r=r))
+        raise HistogramError('r values must be in the interval [1, p]')
 
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
