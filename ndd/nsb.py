@@ -262,23 +262,15 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     if ks.ndim == 0:
         raise CardinalityError('ks cant be a scalar')
 
-    def iinfo(X, ks):
-        info = 0.0
-        px = len(X)
-        for ri in range(1, px + 1):
-            sgn = (-1)**(px - ri)
-            info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
-        return info
-
     if r is not None:
         r = _check_r(r, ar)
 
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
-        return (iinfo(*args)
+        return (_iinfo(*args)
                 for args in zip(data_combinations, alphabet_size_combinations))
 
-    return iinfo(ar, ks)
+    return _iinfo(ar, ks)
 
 
 def coinformation(ar, ks=None, r=None):
@@ -496,3 +488,12 @@ def _check_ks(ks, ar):
             if len(ks) != p:
                 raise CardinalityError('k should have len %s' % p)
     return ks
+
+
+def _iinfo(X, ks):
+    info = 0.0
+    px = len(X)
+    for ri in range(1, px + 1):
+        sgn = (-1)**(px - ri)
+        info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
+    return info
