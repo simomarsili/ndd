@@ -155,8 +155,8 @@ def histogram(data, axis=1, r=None):
         The sample-indexing axis
     r : int or None, optional
         For r values in the interval [1, p],
-        return a generator that yields a bin counts array for each possible
-        combination of r variables.
+        return a generator yielding bin counts for the p-choose-r
+        possible combinations of length r from the p variables.
 
     Returns
     -------
@@ -173,16 +173,16 @@ def histogram(data, axis=1, r=None):
     p = data.shape[0]
 
     if r is not None:
-        if 1 <= r <= p:
-            return (ndd.histogram(d) for d in combinations(data, r=r))
-        raise HistogramError('r values must be in the interval [1, p]')
+        if r < 1 or r > p:
+            raise HistogramError('r values must be in the interval [1, p]')
+        return (ndd.histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts
 
 
-def from_data(ar, ks=None, axis=1, r=0):
+def from_data(ar, ks=None, axis=1, r=None):
     """
     Given an array of data, return an entropy estimate.
 
@@ -194,8 +194,9 @@ def from_data(ar, ks=None, axis=1, r=0):
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int, optional
-        If r > 0, return a generator yielding estimates for the p-choose-r
+    r : int or None, optional
+        For r values in the interval [1, p],
+        return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
 
     Returns
@@ -217,8 +218,6 @@ def from_data(ar, ks=None, axis=1, r=0):
     if axis == 0:
         ar = ar.T
     p = ar.shape[0]
-    if r == 0:
-        r = p
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
@@ -234,9 +233,11 @@ def from_data(ar, ks=None, axis=1, r=0):
             if len(ks) != p:
                 raise CardinalityError('k should have len %s' % p)
 
-    if r != p:
+    if r is not None:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
+        if r < 1 or r > p:
+            raise HistogramError('r values must be in the interval [1, p]')
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
