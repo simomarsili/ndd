@@ -163,6 +163,11 @@ def histogram(data, axis=1, r=None):
     counts : ndarray
         Bin counts.
 
+    Raises
+    ------
+    CombinationError
+        For r values out of the interval [1, p].
+
     """
     from itertools import combinations
 
@@ -190,7 +195,7 @@ def from_data(ar, ks=None, axis=1, r=None):
     ----------
     ar : array-like
         p-by-n array of n samples from p discrete variables.
-    ks : 1D p-dimensional array, optional
+    ks : int or 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
@@ -207,8 +212,9 @@ def from_data(ar, ks=None, axis=1, r=None):
     Raises
     ------
     CardinalityError
-        If ks is array-like and len(ks) != p
-        If r > 0 and is a scalar.
+        If ks is array-like and len(ks) != p.
+    CombinationError
+        For r values out of the interval [1, p].
 
     """
     from itertools import combinations
@@ -261,7 +267,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     ----------
     ar : array-like
         p-by-n array of n samples from p discrete variables.
-    ks : 1D p-dimensional array, optional
+    ks : 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
@@ -278,6 +284,13 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     -------
     float
         Interaction information estimate.
+
+    Raises
+    ------
+    CardinalityError
+        If len(ks) != p.
+    CombinationError
+        For r values out of the interval [1, p].
 
     """
     from itertools import combinations
@@ -333,7 +346,7 @@ def coinformation(ar, ks=None, r=None):
     ----------
     ar : array-like
         p-by-n array of n samples from p discrete variables.
-    ks : 1D p-dimensional array, optional
+    ks : 1D array of length p, optional
         Alphabet size for each variable.
     r : int or None, optional
         For r values in the interval [1, p],
@@ -374,6 +387,11 @@ def mutual_information(ar, ks=None, axis=1):
     -------
     float
         Coinformation estimate.
+
+    Raises
+    ------
+    CardinalityError
+        If len(ks) != p.
 
     """
 
