@@ -8,8 +8,8 @@ import numpy
 
 import ndd
 from ndd.estimators import Entropy, JSDivergence
-from ndd.exceptions import (CardinalityError, DataArrayError,
-                            EstimatorInputError, HistogramError, NumericError)
+from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
+                            EstimatorInputError, NumericError)
 
 __all__ = [
     'entropy', 'jensen_shannon_divergence', 'interaction_information',
@@ -174,7 +174,7 @@ def histogram(data, axis=1, r=None):
 
     if r is not None:
         if r < 1 or r > p:
-            raise HistogramError('r values must be in the interval [1, p]')
+            raise CombinationError('r values must be in the interval [1, p]')
         return (ndd.histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
@@ -237,7 +237,7 @@ def from_data(ar, ks=None, axis=1, r=None):
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
         if r < 1 or r > p:
-            raise HistogramError('r values must be in the interval [1, p]')
+            raise CombinationError('r values must be in the interval [1, p]')
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
@@ -250,7 +250,7 @@ def from_data(ar, ks=None, axis=1, r=None):
     return estimator(counts, k=ks)
 
 
-def interaction_information(ar, ks=None, axis=1, r=0):
+def interaction_information(ar, ks=None, axis=1, r=None):
     """Interaction information from p-by-n data matrix.
 
     If p == 2, return an estimate of the mutual information between the
@@ -265,8 +265,9 @@ def interaction_information(ar, ks=None, axis=1, r=0):
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int, optional
-        If r > 0, return a generator yielding estimates for the p-choose-r
+    r : int or None, optional
+        For r values in the interval [1, p],
+        return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
@@ -286,8 +287,6 @@ def interaction_information(ar, ks=None, axis=1, r=0):
     if axis == 0:
         ar = ar.T
     p = ar.shape[0]
-    if r == 0:
-        r = p
 
     if ks is None:
         ks = numpy.array([len(numpy.unique(v)) for v in ar])
@@ -311,7 +310,10 @@ def interaction_information(ar, ks=None, axis=1, r=0):
             info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
         return info
 
-    if r != p:
+    if r is not None:
+        if r < 1 or r > p:
+            raise CombinationError('r values must be in the interval [1, p]')
+
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
         return (iinfo(*args)
