@@ -161,10 +161,9 @@ def histogram(data, axis=1, r=None):
     data = _check_input_data(data)
     if axis == 0:
         data = data.T
-    p = data.shape[0]
 
     if r is not None:
-        r = _check_r(r, p)
+        r = _check_r(r, data)
         return (ndd.histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
@@ -201,7 +200,6 @@ def from_data(ar, ks=None, axis=1, r=None):
     ar = _check_input_data(ar)
     if axis == 0:
         ar = ar.T
-    p = ar.shape[0]
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
@@ -211,7 +209,7 @@ def from_data(ar, ks=None, axis=1, r=None):
     if r is not None:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
-        r = _check_r(r, p)
+        r = _check_r(r, ar)
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
@@ -265,7 +263,6 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     ar = _check_input_data(ar)
     if axis == 0:
         ar = ar.T
-    p = ar.shape[0]
 
     ks = _check_ks(ks, ar)
     if ks.ndim == 0:
@@ -280,7 +277,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         return info
 
     if r is not None:
-        r = _check_r(r, p)
+        r = _check_r(r, ar)
 
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
@@ -466,13 +463,17 @@ def _check_input_data(ar):
     return ar
 
 
-def _check_r(r, p):
+def _check_r(r, ar):
     """
     Raises
     ------
     CombinationError
         For r values out of the interval [1, p].
     """
+    if ar.shape:
+        p = ar.shape[0]
+    else:
+        p = ar
     if r < 1 or r > p:
         raise CombinationError('r values must be in the interval [1, %s]' % p)
     return r
