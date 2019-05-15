@@ -163,11 +163,6 @@ def histogram(data, axis=1, r=None):
     counts : ndarray
         Bin counts.
 
-    Raises
-    ------
-    CombinationError
-        For r values out of the interval [1, p].
-
     """
     from itertools import combinations
 
@@ -212,8 +207,6 @@ def from_data(ar, ks=None, axis=1, r=None):
     ------
     CardinalityError
         If ks is array-like and len(ks) != p.
-    CombinationError
-        For r values out of the interval [1, p].
 
     """
     from itertools import combinations
@@ -241,8 +234,7 @@ def from_data(ar, ks=None, axis=1, r=None):
     if r is not None:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
-        if r < 1 or r > p:
-            raise CombinationError('r values must be in the interval [1, p]')
+        r = _check_r(r, p)
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
@@ -288,8 +280,6 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     ------
     CardinalityError
         If len(ks) != p.
-    CombinationError
-        For r values out of the interval [1, p].
 
     """
     from itertools import combinations
@@ -323,8 +313,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         return info
 
     if r is not None:
-        if r < 1 or r > p:
-            raise CombinationError('r values must be in the interval [1, p]')
+        r = _check_r(r, p)
 
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
@@ -455,8 +444,6 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     ------
     CardinalityError
         If ks is array-like and len(ks) != p
-    CombinationError
-        For r values out of the interval [1, p-len(c)].
 
     """
     from itertools import combinations
@@ -497,11 +484,10 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
 
+        r = _check_r(r, p - len(c))
+
         # include the c variables in the set
         r = r + len(c)
-        if r < 1 or r > p:
-            raise CombinationError('r values must be in the interval'
-                                   '[1, p-len(c)]')
 
         indices = combinations(range(p), r=r)
         counts_combinations = histogram(ar, r=r)
@@ -529,6 +515,12 @@ def _check_input_data(ar):
 
 
 def _check_r(r, p):
+    """
+    Raises
+    ------
+    CombinationError
+        For r values out of the interval [1, p].
+    """
     if r < 1 or r > p:
         raise CombinationError('r values must be in the interval [1, %s]' % p)
     return r
