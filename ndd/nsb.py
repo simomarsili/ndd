@@ -322,7 +322,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     return iinfo(ar, ks)
 
 
-def coinformation(ar, ks=None, r=0):
+def coinformation(ar, ks=None, r=None):
     """Coinformation from p-by-n data matrix.
 
     If p == 2, return an estimate of the mutual information between the
@@ -335,8 +335,9 @@ def coinformation(ar, ks=None, r=0):
         p-by-n array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    r : int, optional
-        If r > 0, return a generator yielding estimates for the p-choose-r
+    r : int or None, optional
+        For r values in the interval [1, p],
+        return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
