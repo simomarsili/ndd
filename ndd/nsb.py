@@ -276,19 +276,9 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         ar = ar.T
     p = ar.shape[0]
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim > 0:  # pylint: disable=comparison-with-callable
-            if len(ks) != p:
-                raise CardinalityError('k should have len %r (%r)' %
-                                       (p, len(ks)))
-        else:
-            raise CardinalityError('ks cant be a scalar')
+    ks = _check_ks(ks, ar)
+    if ks.ndim == 0:
+        raise CardinalityError('ks cant be a scalar')
 
     def iinfo(X, ks):
         info = 0.0
@@ -377,19 +367,9 @@ def mutual_information(ar, ks=None, axis=1):
         ar = ar.T
     p = ar.shape[0]
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim > 0:  # pylint: disable=comparison-with-callable
-            if len(ks) != p:
-                raise CardinalityError('k should have len %r (%r)' %
-                                       (p, len(ks)))
-        else:
-            raise CardinalityError('ks cant be a scalar')
+    ks = _check_ks(ks, ar)
+    if ks.ndim == 0:
+        raise CardinalityError('ks cant be a scalar')
 
     if p > 2:
         h1 = list(from_data(ar, ks=ks, r=1))
@@ -426,11 +406,6 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     float
         Conditional entropy estimate
 
-    Raises
-    ------
-    CardinalityError
-        If ks is array-like and len(ks) != p
-
     """
     from itertools import combinations
 
@@ -448,16 +423,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         return EstimatorInputError('The indices of conditioning variables'
                                    ' are not valid')
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim:
-            if len(ks) != p:
-                raise CardinalityError('k should have len %s' % p)
+    ks = _check_ks(ks, ar)
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
