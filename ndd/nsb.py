@@ -178,8 +178,7 @@ def histogram(data, axis=1, r=None):
     p = data.shape[0]
 
     if r is not None:
-        if r < 1 or r > p:
-            raise CombinationError('r values must be in the interval [1, p]')
+        r = _check_r(r, p)
         return (ndd.histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
@@ -527,3 +526,9 @@ def _check_input_data(ar):
     if n == 0 or p == 0:
         raise DataArrayError('Empty input array')
     return ar
+
+
+def _check_r(r, p):
+    if r < 1 or r > p:
+        raise CombinationError('r values must be in the interval [1, %s]' % p)
+    return r
