@@ -496,12 +496,13 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
 
 
 def _check_input_data(ar):
-    # check data shape
+    """Check that input arrays are non-empty 2D arrays."""
+
     ar = numpy.atleast_2d(ar)
     if ar.ndim > 2:
-        raise DataArrayError('input array has %s dimensions; must be 2D' %
+        raise DataArrayError('Input array has %s dimensions; must be 2D' %
                              ar.ndim)
     p, n = ar.shape
     if n == 0 or p == 0:
-        raise DataArrayError('empty input array')
+        raise DataArrayError('Empty input array')
     return ar
