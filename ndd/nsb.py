@@ -203,11 +203,6 @@ def from_data(ar, ks=None, axis=1, r=None):
     float
         Entropy estimate
 
-    Raises
-    ------
-    CardinalityError
-        If ks is array-like and len(ks) != p.
-
     """
     from itertools import combinations
 
@@ -220,16 +215,7 @@ def from_data(ar, ks=None, axis=1, r=None):
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim:
-            if len(ks) != p:
-                raise CardinalityError('k should have len %s' % p)
+    ks = _check_ks(ks, ar)
 
     if r is not None:
         if ks.ndim == 0:
@@ -524,3 +510,26 @@ def _check_r(r, p):
     if r < 1 or r > p:
         raise CombinationError('r values must be in the interval [1, %s]' % p)
     return r
+
+
+def _check_ks(ks, ar):
+    """
+    Raises
+    ------
+    CardinalityError
+        If ks is array-like and len(ks) != p.
+    """
+
+    if ks is None:
+        # guess from data
+        ks = numpy.array([len(numpy.unique(v)) for v in ar])
+    else:
+        try:
+            ks = numpy.float64(ks)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+        if ks.ndim:
+            p = ar.shape[0]
+            if len(ks) != p:
+                raise CardinalityError('k should have len %s' % p)
+    return ks
