@@ -81,29 +81,27 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     """
-    Return the Jensen-Shannon divergence from a matrix of counts.
+    Return the Jensen-Shannon divergence from a m-by-p matrix of counts.
 
     Return an estimate of the Jensen-Shannon divergence between
-    n_distributions unknown discrete distributions from a
-    n_distributions-by-n_bins input array of counts.
+    m unknown discrete distributions from a m-by-p input array of counts.
     The estimate (in nats) is computed as a combination of single Bayesian
     entropy estimates. If the total number of samples varies among the
-    distributions, the function returns the divergence between the
-    distributions with weights proportional to the total number of samples in
-    each row (see the general definition of Jensen-Shannon divergence:
+    distributions, the function returns a weighted divergence with weights
+    proportional to the total number of samples in each row
+    (see the general definition of Jensen-Shannon divergence:
     https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
 
     Parameters
     ----------
 
-    pk : array-like, shape (n_distributions, n_bins)
+    pk : array-like, shape (m, p)
         Matrix of frequency counts. Each row corresponds to the number of
         occurrences of a set of bins from a different distribution.
     k : int or array-like, optional
-        Total number of bins (taking into account unobserved bins); k >= n_bins
+        Total number of bins (including unobserved bins); k >= p.
         A float is a valid input for whole numbers (e.g. k=1.e3).
-        If an array, set k = numpy.prod(k).
-        Defaults to n_bins.
+        If an array, set k = numpy.prod(k). Defaults to p.
     alpha : float, optional
         If not None, the entropy estimator uses a single Dirichlet prior with
         concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
@@ -116,11 +114,6 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     -------
     float
         Jensen-Shannon divergence.
-
-    Raises
-    ------
-    NumericError
-        If result is NaN
 
     """
 
