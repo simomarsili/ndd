@@ -163,19 +163,18 @@ def histogram(data, axis=1, r=None):
 
 def from_data(ar, ks=None, axis=1, r=None):
     """
-    Given an array of data, return an entropy estimate.
+    Given a p-by-n array of data, return an entropy estimate.
 
     Paramaters
     ----------
-    ar : array-like
-        p-by-n array of n samples from p discrete variables.
+    ar : array-like, shape (p, n)
+        2D array of n samples from p discrete variables.
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int or None, optional
-        For r values in the interval [1, p],
-        return a generator yielding estimates for the p-choose-r
+    r : int, optional; ; 1<=r<=p.
+        If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
 
     Returns
@@ -225,9 +224,8 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int or None, optional
-        For r values in the interval [1, p],
-        return a generator yielding estimates for the p-choose-r
+    r : int, optional; 1<=r<=p.
+        If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
@@ -278,9 +276,8 @@ def coinformation(ar, ks=None, r=None):
         p-by-n array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
-    r : int or None, optional
-        For r values in the interval [1, p],
-        return a generator yielding estimates for the p-choose-r
+    r : int or None, optional; 1<=r<=p.
+        If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
@@ -358,9 +355,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int or None, optional
-        For r values in the interval [1, p-len(c)],
-        return a generator yielding estimates for all possible
+    r : int or None, optional; 1<=r<=p-len(c).
+        If passed, return a generator yielding estimates for all possible
         combinations of r variables conditioning on the `c` variables.
         Indices are sorted as:
         list(x for x in collections.combinations(range(p), r=r+len(c))
