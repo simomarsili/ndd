@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
-"""Functions module."""
+"""
+Functions for entropy estimation.
+
+The module contains functions for the estimation of entropy and
+entropic information measures.
+"""
 import logging
 
 import numpy
@@ -79,88 +84,6 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     return S
 
 
-def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
-    """
-    Return the Jensen-Shannon divergence from a m-by-p matrix of counts.
-
-    Return an estimate of the Jensen-Shannon divergence between
-    m unknown discrete distributions from a m-by-p input array of counts.
-    The estimate (in nats) is computed as a combination of single Bayesian
-    entropy estimates. If the total number of samples varies among the
-    distributions, the function returns a weighted divergence with weights
-    proportional to the total number of samples in each row
-    (see the general definition of Jensen-Shannon divergence:
-    https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
-
-    Parameters
-    ----------
-
-    pk : array-like, shape (m, p)
-        Matrix of frequency counts. Each row corresponds to the number of
-        occurrences of a set of bins from a different distribution.
-    k : int or array-like, optional
-        Total number of bins (including unobserved bins); k >= p.
-        A float is a valid input for whole numbers (e.g. k=1.e3).
-        If an array, set k = numpy.prod(k). Defaults to p.
-    alpha : float, optional
-        If not None, the entropy estimator uses a single Dirichlet prior with
-        concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
-    plugin : boolean, optional
-        If True, use a 'plugin' estimator for the entropy.
-        If alpha is passed in combination with plugin == True, add alpha
-        pseudoconts to the frequency counts in the plugin estimate.
-
-    Returns
-    -------
-    float
-        Jensen-Shannon divergence.
-
-    """
-
-    estimator = JSDivergence(alpha, plugin).fit(pk, k)
-    js = estimator.estimate_
-
-    if numpy.isnan(js):
-        logger.warning('nan value for JS divergence')
-        js = numpy.nan
-
-    return js
-
-
-def histogram(data, axis=1, r=None):
-    """Compute an histogram from a data array. Wrapper to numpy.unique.
-
-    Parameters
-    ----------
-    data : array-like, shape (p, n)
-        A p-by-n array of n samples from p variables.
-    axis : int, optional
-        The sample-indexing axis. Defaults to 1.
-    r : int, optional
-        For r values in the interval [1, p],
-        return a generator yielding bin counts for each of the p-choose-r
-        combinations of r variables.
-
-    Returns
-    -------
-    counts : ndarray
-        Bin counts.
-
-    """
-    from itertools import combinations
-
-    # check data shape
-    data = _check_data(data, axis)
-
-    if r is not None:
-        r = _check_r(r, data)
-        return (ndd.histogram(d) for d in combinations(data, r=r))
-
-    # statistics for the p-dimensional variable
-    _, counts = numpy.unique(data, return_counts=True, axis=1)
-    return counts
-
-
 def from_data(ar, ks=None, axis=1, r=None):
     """
     Entropy estimate from a p-by-n array of data.
@@ -207,6 +130,54 @@ def from_data(ar, ks=None, axis=1, r=None):
 
     counts = histogram(ar)
     return estimator(counts, k=ks)
+
+
+def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
+    """
+    Return the Jensen-Shannon divergence from a m-by-p matrix of counts.
+
+    Return an estimate of the Jensen-Shannon divergence between
+    m unknown discrete distributions from a m-by-p input array of counts.
+    The estimate (in nats) is computed as a combination of single Bayesian
+    entropy estimates. If the total number of samples varies among the
+    distributions, the function returns a weighted divergence with weights
+    proportional to the total number of samples in each row
+    (see the general definition of Jensen-Shannon divergence:
+    https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
+
+    Parameters
+    ----------
+
+    pk : array-like, shape (m, p)
+        Matrix of frequency counts. Each row corresponds to the number of
+        occurrences of a set of bins from a different distribution.
+    k : int or array-like, optional
+        Total number of bins (including unobserved bins); k >= p.
+        A float is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k). Defaults to p.
+    alpha : float, optional
+        If not None, the entropy estimator uses a single Dirichlet prior with
+        concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
+    plugin : boolean, optional
+        If True, use a 'plugin' estimator for the entropy.
+        If alpha is passed in combination with plugin == True, add alpha
+        pseudoconts to the frequency counts in the plugin estimate.
+
+    Returns
+    -------
+    float
+        Jensen-Shannon divergence.
+
+    """
+
+    estimator = JSDivergence(alpha, plugin).fit(pk, k)
+    js = estimator.estimate_
+
+    if numpy.isnan(js):
+        logger.warning('nan value for JS divergence')
+        js = numpy.nan
+
+    return js
 
 
 def interaction_information(ar, ks=None, axis=1, r=None):
@@ -420,6 +391,40 @@ def _nbins(data):
     """
     # reshape as a p-by-n array
     return [len(numpy.unique(v)) for v in data]
+
+
+def histogram(data, axis=1, r=None):
+    """Compute an histogram from a data array. Wrapper to numpy.unique.
+
+    Parameters
+    ----------
+    data : array-like, shape (p, n)
+        A p-by-n array of n samples from p variables.
+    axis : int, optional
+        The sample-indexing axis. Defaults to 1.
+    r : int, optional
+        For r values in the interval [1, p],
+        return a generator yielding bin counts for each of the p-choose-r
+        combinations of r variables.
+
+    Returns
+    -------
+    counts : ndarray
+        Bin counts.
+
+    """
+    from itertools import combinations
+
+    # check data shape
+    data = _check_data(data, axis)
+
+    if r is not None:
+        r = _check_r(r, data)
+        return (ndd.histogram(d) for d in combinations(data, r=r))
+
+    # statistics for the p-dimensional variable
+    _, counts = numpy.unique(data, return_counts=True, axis=1)
+    return counts
 
 
 def _check_data(ar, axis):
