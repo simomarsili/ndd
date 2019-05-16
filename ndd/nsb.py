@@ -132,14 +132,14 @@ def histogram(data, axis=1, r=None):
 
     Parameters
     ----------
-    data : array-like
-        A n-by-p array of n samples from p variables.
+    data : array-like, shape (p, n)
+        A p-by-n array of n samples from p variables.
     axis : int, optional
-        The sample-indexing axis
-    r : int or None, optional
+        The sample-indexing axis. Defaults to 1.
+    r : int, optional
         For r values in the interval [1, p],
-        return a generator yielding bin counts for the p-choose-r
-        possible combinations of length r from the p variables.
+        return a generator yielding bin counts for each of the p-choose-r
+        combinations of r variables.
 
     Returns
     -------
