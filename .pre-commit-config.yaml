@@ -1,0 +1,33 @@
+# after a clone:
+# $ pre-commit install
+# cp this file to the root of the project
+# $ pre-commit autoupdate
+
+default_language_version:
+    python: python3.6
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.2.1
+    hooks:
+    - id: double-quote-string-fixer
+    - id: fix-encoding-pragma
+    - id: requirements-txt-fixer
+    - id: trailing-whitespace
+-   repo: https://github.com/pre-commit/mirrors-yapf
+    rev: v0.27.0
+    hooks:
+    - id: yapf
+-   repo: local
+    hooks:
+    -   id: pylint
+        name: pylint
+        entry: python -m pylint.__main__
+        language: system
+        types: [python]
+-   repo: local
+    hooks:
+    -   id: isort
+        name: isort
+        entry: python -m isort.__main__
+        language: system
+        types: [python]

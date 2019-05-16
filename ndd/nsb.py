@@ -8,8 +8,8 @@ import numpy
 
 import ndd
 from ndd.estimators import Entropy, JSDivergence
-from ndd.exceptions import (CardinalityError, DataArrayError,
-                            EstimatorInputError, HistogramError, NumericError)
+from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
+                            EstimatorInputError)
 
 __all__ = [
     'entropy', 'jensen_shannon_divergence', 'interaction_information',
@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
-    Return a Bayesian estimate of the entropy from an array of counts.
+    Bayesian entropy estimate from an array of counts.
 
-    Return a Bayesian estimate of the entropy of an unknown discrete
+    Return a Bayesian estimate for the entropy of an unknown discrete
     distribution from an input array of counts pk.
 
     Parameters
@@ -32,10 +32,9 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     pk : array-like
         The number of occurrences of a set of bins.
     k : int or array-like, optional
-        Total number of bins (taking into account unobserved bins);
-        k >= len(pk). A float is a valid input for whole numbers (e.g. k=1.e3).
-        If an array, set k = numpy.prod(k).
-        Defaults to n_bins.
+        Total number of bins (including unobserved bins); k >= len(pk).
+        A float is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k). Defaults to len(pk).
     alpha : float, optional
         If alpha is not None, use a single Dirichlet prior with concentration
         parameter alpha (fixed alpha estimator). alpha > 0.0.
@@ -46,7 +45,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
     return_std : boolean, optional
-        If True, also return an approximated value for the standard deviation
+        If True, also return an approximation for the standard deviation
         over the entropy posterior.
 
     Returns
@@ -54,9 +53,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     entropy : float
         Entropy estimate.
     std : float, optional
-        Uncertainty in the entropy estimate
-        (approximated standard deviation over the entropy posterior).
-        Only if `return_std` is True.
+        Uncertainty in the entropy estimate. Only if `return_std` is True.
 
     Raises
     ------
@@ -70,7 +67,8 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S):
-        raise NumericError('NaN value')
+        logger.warning('nan value for entropy estimate')
+        S = numpy.nan
 
     if return_std:
         if err is not None and numpy.isnan(err):
@@ -83,29 +81,27 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     """
-    Return the Jensen-Shannon divergence from a matrix of counts.
+    Return the Jensen-Shannon divergence from a m-by-p matrix of counts.
 
     Return an estimate of the Jensen-Shannon divergence between
-    n_distributions unknown discrete distributions from a
-    n_distributions-by-n_bins input array of counts.
+    m unknown discrete distributions from a m-by-p input array of counts.
     The estimate (in nats) is computed as a combination of single Bayesian
     entropy estimates. If the total number of samples varies among the
-    distributions, the function returns the divergence between the
-    distributions with weights proportional to the total number of samples in
-    each row (see the general definition of Jensen-Shannon divergence:
+    distributions, the function returns a weighted divergence with weights
+    proportional to the total number of samples in each row
+    (see the general definition of Jensen-Shannon divergence:
     https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
 
     Parameters
     ----------
 
-    pk : array-like, shape (n_distributions, n_bins)
+    pk : array-like, shape (m, p)
         Matrix of frequency counts. Each row corresponds to the number of
         occurrences of a set of bins from a different distribution.
     k : int or array-like, optional
-        Total number of bins (taking into account unobserved bins); k >= n_bins
+        Total number of bins (including unobserved bins); k >= p.
         A float is a valid input for whole numbers (e.g. k=1.e3).
-        If an array, set k = numpy.prod(k).
-        Defaults to n_bins.
+        If an array, set k = numpy.prod(k). Defaults to p.
     alpha : float, optional
         If not None, the entropy estimator uses a single Dirichlet prior with
         concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
@@ -119,70 +115,45 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     float
         Jensen-Shannon divergence.
 
-    Raises
-    ------
-    NumericError
-        If result is NaN
-
     """
 
     estimator = JSDivergence(alpha, plugin).fit(pk, k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
-        raise NumericError('NaN value')
+        logger.warning('nan value for JS divergence')
+        js = numpy.nan
 
     return js
 
 
-def _nbins(data):
-    """
-    The number of unique elements along axis 0. If data is p-dimensional,
-    the num. of unique elements for each variable.
-    """
-    # reshape as a p-by-n array
-    return [len(numpy.unique(v)) for v in data]
-
-
-def histogram(data, axis=1, r=0):
+def histogram(data, axis=1, r=None):
     """Compute an histogram from a data array. Wrapper to numpy.unique.
 
     Parameters
     ----------
-    data : array-like
-        A n-by-p array of n samples from p variables.
+    data : array-like, shape (p, n)
+        A p-by-n array of n samples from p variables.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 1.
     r : int, optional
-        If r > 0, return a generator that yields a bin counts array
-        for each possible combination of r variables.
+        For r values in the interval [1, p],
+        return a generator yielding bin counts for each of the p-choose-r
+        combinations of r variables.
 
     Returns
     -------
     counts : ndarray
         Bin counts.
 
-    Raises
-    ------
-    HistogramError
-        If r > p.
-
     """
     from itertools import combinations
 
     # check data shape
-    data = _check_input_data(data)
-    if axis == 0:
-        data = data.T
-    p = data.shape[0]
+    data = _check_data(data, axis)
 
-    if r == 0:
-        r = p
-
-    if r > p:
-        raise HistogramError(
-            'r (%r) is larger than the number of variables (%r)' % (r, p))
-    if r < p:
+    if r is not None:
+        r = _check_r(r, data)
         return (ndd.histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
@@ -190,20 +161,20 @@ def histogram(data, axis=1, r=0):
     return counts
 
 
-def from_data(ar, ks=None, axis=1, r=0):
+def from_data(ar, ks=None, axis=1, r=None):
     """
-    Given an array of data, return an entropy estimate.
+    Entropy estimate from a p-by-n array of data.
 
     Paramaters
     ----------
-    ar : array-like
-        p-by-n array of n samples from p discrete variables.
-    ks : 1D p-dimensional array, optional
+    ar : array-like, shape (p, n)
+        2D array of n samples from p discrete variables.
+    ks : int or 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int, optional
-        If r > 0, return a generator yielding estimates for the p-choose-r
+    r : int, optional; ; 1<=r<=p.
+        If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
 
     Returns
@@ -211,40 +182,21 @@ def from_data(ar, ks=None, axis=1, r=0):
     float
         Entropy estimate
 
-    Raises
-    ------
-    CardinalityError
-        If ks is array-like and len(ks) != p
-        If r > 0 and is a scalar.
-
     """
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar)
-    if axis == 0:
-        ar = ar.T
-    p = ar.shape[0]
-    if r == 0:
-        r = p
+    ar = _check_data(ar, axis)
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim:
-            if len(ks) != p:
-                raise CardinalityError('k should have len %s' % p)
+    ks = _check_ks(ks, ar)
 
-    if r != p:
+    if r is not None:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
+        r = _check_r(r, ar)
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
@@ -257,7 +209,7 @@ def from_data(ar, ks=None, axis=1, r=0):
     return estimator(counts, k=ks)
 
 
-def interaction_information(ar, ks=None, axis=1, r=0):
+def interaction_information(ar, ks=None, axis=1, r=None):
     """Interaction information from p-by-n data matrix.
 
     If p == 2, return an estimate of the mutual information between the
@@ -268,12 +220,12 @@ def interaction_information(ar, ks=None, axis=1, r=0):
     ----------
     ar : array-like
         p-by-n array of n samples from p discrete variables.
-    ks : 1D p-dimensional array, optional
+    ks : 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int, optional
-        If r > 0, return a generator yielding estimates for the p-choose-r
+    r : int, optional; 1<=r<=p.
+        If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
@@ -285,40 +237,24 @@ def interaction_information(ar, ks=None, axis=1, r=0):
     float
         Interaction information estimate.
 
+    Raises
+    ------
+    CardinalityError
+        If len(ks) != p.
+
     """
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar)
-    if axis == 0:
-        ar = ar.T
-    p = ar.shape[0]
-    if r == 0:
-        r = p
+    ar = _check_data(ar, axis)
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim > 0:  # pylint: disable=comparison-with-callable
-            if len(ks) != p:
-                raise CardinalityError('k should have len %r (%r)' %
-                                       (p, len(ks)))
-        else:
-            raise CardinalityError('ks cant be a scalar')
+    ks = _check_ks(ks, ar)
+    if ks.ndim == 0:
+        raise CardinalityError('ks cant be a scalar')
 
-    def iinfo(X, ks):
-        info = 0.0
-        px = len(X)
-        for ri in range(1, px + 1):
-            sgn = (-1)**(px - ri)
-            info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
-        return info
+    if r is not None:
+        r = _check_r(r, ar)
 
-    if r != p:
         data_combinations = combinations(ar, r=r)
         alphabet_size_combinations = (x for x in combinations(ks, r=r))
         return (iinfo(*args)
@@ -327,7 +263,7 @@ def interaction_information(ar, ks=None, axis=1, r=0):
     return iinfo(ar, ks)
 
 
-def coinformation(ar, ks=None, r=0):
+def coinformation(ar, ks=None, r=None):
     """Coinformation from p-by-n data matrix.
 
     If p == 2, return an estimate of the mutual information between the
@@ -338,10 +274,10 @@ def coinformation(ar, ks=None, r=0):
     ----------
     ar : array-like
         p-by-n array of n samples from p discrete variables.
-    ks : 1D p-dimensional array, optional
+    ks : 1D array of length p, optional
         Alphabet size for each variable.
-    r : int, optional
-        If r > 0, return a generator yielding estimates for the p-choose-r
+    r : int or None, optional; 1<=r<=p.
+        If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of length r from the p variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
@@ -379,29 +315,23 @@ def mutual_information(ar, ks=None, axis=1):
     float
         Coinformation estimate.
 
+    Raises
+    ------
+    CardinalityError
+        If len(ks) != p.
+
     """
 
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar)
-    if axis == 0:
-        ar = ar.T
+    ar = _check_data(ar, axis)
+
     p = ar.shape[0]
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim > 0:  # pylint: disable=comparison-with-callable
-            if len(ks) != p:
-                raise CardinalityError('k should have len %r (%r)' %
-                                       (p, len(ks)))
-        else:
-            raise CardinalityError('ks cant be a scalar')
+    ks = _check_ks(ks, ar)
+    if ks.ndim == 0:
+        raise CardinalityError('ks cant be a scalar')
 
     if p > 2:
         h1 = list(from_data(ar, ks=ks, r=1))
@@ -411,7 +341,7 @@ def mutual_information(ar, ks=None, axis=1):
     return numpy.sum(from_data(ar, ks=ks, r=1)) - from_data(ar, ks=ks)
 
 
-def conditional_entropy(ar, c, ks=None, axis=1, r=0):
+def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     """
     Coditional entropy estimate from data array.
 
@@ -425,8 +355,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
         Alphabet size for each variable.
     axis : int, optional
         The sample-indexing axis
-    r : int, optional
-        If r > 0, return a generator yielding estimates for all possible
+    r : int or None, optional; 1<=r<=p-len(c).
+        If passed, return a generator yielding estimates for all possible
         combinations of r variables conditioning on the `c` variables.
         Indices are sorted as:
         list(x for x in collections.combinations(range(p), r=r+len(c))
@@ -437,19 +367,12 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
     float
         Conditional entropy estimate
 
-    Raises
-    ------
-    CardinalityError
-        If ks is array-like and len(ks) != p
-        If r > 0 and is a scalar.
-
     """
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar)
-    if axis == 0:
-        ar = ar.T
+    ar = _check_data(ar, axis)
+
     p = ar.shape[0]
 
     try:
@@ -460,16 +383,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
         return EstimatorInputError('The indices of conditioning variables'
                                    ' are not valid')
 
-    if ks is None:
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim:
-            if len(ks) != p:
-                raise CardinalityError('k should have len %s' % p)
+    ks = _check_ks(ks, ar)
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
@@ -478,11 +392,15 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
     counts = histogram(ar[c])
     hc = estimator(counts, k=ks)
 
-    if r > 0:
+    if r is not None:
         if ks.ndim == 0:
             raise CardinalityError('For combinations, ks cant be a scalar')
 
+        r = _check_r(r, p - len(c))
+
+        # include the c variables in the set
         r = r + len(c)
+
         indices = combinations(range(p), r=r)
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
@@ -495,10 +413,76 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=0):
     return estimator(counts, k=ks) - hc
 
 
-def _check_input_data(ar):
-    # check data shape
+def _nbins(data):
+    """
+    The number of unique elements along axis 0. If data is p-dimensional,
+    the num. of unique elements for each variable.
+    """
+    # reshape as a p-by-n array
+    return [len(numpy.unique(v)) for v in data]
+
+
+def _check_data(ar, axis):
+    """Check that input arrays are non-empty 2D arrays."""
+
     ar = numpy.atleast_2d(ar)
-    if ar.ndim != 2:
-        raise DataArrayError('input array has %s dimensions; must be 2D' %
+    if ar.ndim > 2:
+        raise DataArrayError('Input array has %s dimensions; must be 2D' %
                              ar.ndim)
+    p, n = ar.shape
+    if n == 0 or p == 0:
+        raise DataArrayError('Empty input array')
+
+    if axis == 0:
+        ar = ar.T
+
     return ar
+
+
+def _check_r(r, ar):
+    """
+    Raises
+    ------
+    CombinationError
+        For r values out of the interval [1, p].
+    """
+    if ar.shape:
+        p = ar.shape[0]
+    else:
+        p = ar
+    if r < 1 or r > p:
+        raise CombinationError('r values must be in the interval [1, %s]' % p)
+    return r
+
+
+def _check_ks(ks, ar):
+    """
+    Raises
+    ------
+    CardinalityError
+        If ks is array-like and len(ks) != p.
+    """
+
+    if ks is None:
+        # guess from data
+        ks = numpy.array([len(numpy.unique(v)) for v in ar])
+    else:
+        try:
+            ks = numpy.float64(ks)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+        if ks.ndim:
+            p = ar.shape[0]
+            if len(ks) != p:
+                raise CardinalityError('k should have len %s' % p)
+    return ks
+
+
+def iinfo(X, ks):
+    """Helper function for interaction information from data."""
+    info = 0.0
+    px = len(X)
+    for ri in range(1, px + 1):
+        sgn = (-1)**(px - ri)
+        info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
+    return info

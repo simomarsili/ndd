@@ -35,13 +35,13 @@ class CardinalityError(EstimatorInputError):
     """Invalid size of the sample space (cardinality)."""
 
 
-class NumericError(NddError):
-    """Numeric error during estimation."""
-
-
 class HistogramError(NddError):
     """Error during evaluation of histogram."""
 
 
 class DataArrayError(NddError):
-    """Input is not a valid data array"""
+    """Input is not a valid data array."""
+
+
+class CombinationError(NddError):
+    """r must be in the interval [1, p]."""

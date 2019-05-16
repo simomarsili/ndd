@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.3.2] - 2019-05-16
+### Changed
+- `r` (length of combinations) defaults to None
+
 ## [1.3] - 2019-05-08
 ### Changed
 - input data arrays must be p-by-n 2D ndarrays containing
