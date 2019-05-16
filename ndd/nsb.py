@@ -163,7 +163,7 @@ def histogram(data, axis=1, r=None):
 
 def from_data(ar, ks=None, axis=1, r=None):
     """
-    Given a p-by-n array of data, return an entropy estimate.
+    Entropy estimate from a p-by-n array of data.
 
     Paramaters
     ----------
