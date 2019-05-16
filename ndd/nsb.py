@@ -9,7 +9,7 @@ import numpy
 import ndd
 from ndd.estimators import Entropy, JSDivergence
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
-                            EstimatorInputError, NumericError)
+                            EstimatorInputError)
 
 __all__ = [
     'entropy', 'jensen_shannon_divergence', 'interaction_information',
@@ -67,7 +67,8 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S):
-        raise NumericError('NaN value')
+        logger.warning('nan value for entropy estimate')
+        S = numpy.nan
 
     if return_std:
         if err is not None and numpy.isnan(err):
@@ -127,7 +128,8 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     js = estimator.estimate_
 
     if numpy.isnan(js):
-        raise NumericError('NaN value')
+        logger.warning('nan value for JS divergence')
+        js = numpy.nan
 
     return js
 

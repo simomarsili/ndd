@@ -35,10 +35,6 @@ class CardinalityError(EstimatorInputError):
     """Invalid size of the sample space (cardinality)."""
 
 
-class NumericError(NddError):
-    """Numeric error during estimation."""
-
-
 class HistogramError(NddError):
     """Error during evaluation of histogram."""
 
