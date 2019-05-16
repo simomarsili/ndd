@@ -150,7 +150,7 @@ def histogram(data, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    data = _check_input_data(data, axis)
+    data = _check_data(data, axis)
 
     if r is not None:
         r = _check_r(r, data)
@@ -187,7 +187,7 @@ def from_data(ar, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar, axis)
+    ar = _check_data(ar, axis)
 
     # EntropyBasedEstimator objects are callable and return the fitted estimate
     estimator = Entropy()
@@ -248,7 +248,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar, axis)
+    ar = _check_data(ar, axis)
 
     ks = _check_ks(ks, ar)
     if ks.ndim == 0:
@@ -328,7 +328,7 @@ def mutual_information(ar, ks=None, axis=1):
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar, axis)
+    ar = _check_data(ar, axis)
 
     p = ar.shape[0]
 
@@ -375,7 +375,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    ar = _check_input_data(ar, axis)
+    ar = _check_data(ar, axis)
 
     p = ar.shape[0]
 
@@ -426,7 +426,7 @@ def _nbins(data):
     return [len(numpy.unique(v)) for v in data]
 
 
-def _check_input_data(ar, axis):
+def _check_data(ar, axis):
     """Check that input arrays are non-empty 2D arrays."""
 
     ar = numpy.atleast_2d(ar)
