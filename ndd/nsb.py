@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
-    Return a Bayesian estimate of the entropy from an array of counts.
+    Bayesian entropy estimate from an array of counts.
 
-    Return a Bayesian estimate of the entropy of an unknown discrete
+    Return a Bayesian estimate for the entropy of an unknown discrete
     distribution from an input array of counts pk.
 
     Parameters
@@ -32,10 +32,9 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     pk : array-like
         The number of occurrences of a set of bins.
     k : int or array-like, optional
-        Total number of bins (taking into account unobserved bins);
-        k >= len(pk). A float is a valid input for whole numbers (e.g. k=1.e3).
-        If an array, set k = numpy.prod(k).
-        Defaults to n_bins.
+        Total number of bins (including unobserved bins); k >= len(pk).
+        A float is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k). Defaults to len(pk).
     alpha : float, optional
         If alpha is not None, use a single Dirichlet prior with concentration
         parameter alpha (fixed alpha estimator). alpha > 0.0.
@@ -46,7 +45,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         If alpha is passed in combination with plugin=True, add
         alpha pseudocounts to each frequency count (pseudocount estimator).
     return_std : boolean, optional
-        If True, also return an approximated value for the standard deviation
+        If True, also return an approximation for the standard deviation
         over the entropy posterior.
 
     Returns
@@ -54,9 +53,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     entropy : float
         Entropy estimate.
     std : float, optional
-        Uncertainty in the entropy estimate
-        (approximated standard deviation over the entropy posterior).
-        Only if `return_std` is True.
+        Uncertainty in the entropy estimate. Only if `return_std` is True.
 
     Raises
     ------
