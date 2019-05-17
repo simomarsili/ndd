@@ -478,5 +478,5 @@ def iinfo(X, ks):
     px = len(X)
     for ri in range(1, px + 1):
         sgn = (-1)**(px - ri)
-        info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
-    return info
+        info += sgn * numpy.sum(from_data(X, ks=ks, r=ri))
+    return -info
