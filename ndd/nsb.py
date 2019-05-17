@@ -8,15 +8,15 @@ import logging
 
 import numpy
 
-import ndd
 from ndd.estimators import Entropy, JSDivergence
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
-                            EstimatorInputError)
+                            EstimatorInputError, PmfError)
 
 __all__ = [
     'entropy',
     'from_data',
     'jensen_shannon_divergence',
+    'kullback_leibler_divergence',
     'interaction_information',
     'coinformation',
     'mutual_information',
@@ -43,8 +43,9 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to len(pk).
     alpha : float, optional
-        If alpha is not None, use a single Dirichlet prior with concentration
-        parameter alpha (fixed alpha estimator). alpha > 0.0.
+        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
+        Use a single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
         distribution is estimated from the empirical frequencies over bins
@@ -153,8 +154,9 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to p.
     alpha : float, optional
-        If not None, the entropy estimator uses a single Dirichlet prior with
-        concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
+        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
+        Use a single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
     plugin : boolean, optional
         If True, use a 'plugin' estimator for the entropy.
         If alpha is passed in combination with plugin == True, add alpha
@@ -175,6 +177,62 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
         js = numpy.nan
 
     return js
+
+
+def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
+    """
+    Kullback-Leibler divergence given counts pk and a reference PMF qk.
+
+    Return an estimate of the Kullback-Leibler given an array of counts pk and
+    a reference PMF qk. The estimate (in nats) is computed as:
+    - S_p - sum(pk * log(qk)) / sum(pk)
+    where S_p is the entropy estimate from counts pk.
+
+    Parameters
+    ----------
+    pk : array_like
+        The number of occurrences of a set of bins.
+    qk : array_like
+        Reference PMF in sum(pk log(pk/qk). len(qk) = len(pk).
+        Must be a valid PMF (non-negative, normalized).
+    k : int or array-like, optional
+        Total number of bins (including unobserved bins); k >= p.
+        A float is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k). Defaults to len(pk).
+    alpha : float, optional
+        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
+        Use a single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
+    plugin : boolean, optional
+        If True, use a 'plugin' estimator for the entropy.
+        If alpha is passed in combination with plugin == True, add alpha
+        pseudoconts to the frequency counts in the plugin estimate.
+
+    Returns
+    -------
+    float
+        Kullback-Leibler divergence.
+
+    """
+
+    if is_pmf(qk):
+        log_qk = numpy.log(qk)
+    else:
+        raise PmfError('qk must be a valid PMF')
+
+    if len(log_qk) != len(pk):
+        raise PmfError('qk and pk must have the same length.')
+
+    if k == 1:  # single bin
+        kl = 0.0
+    else:
+        estimator = Entropy(alpha, plugin).fit(pk, k)
+        kl = -estimator.estimate_ - numpy.sum(pk * log_qk) / float(sum(pk))
+        if numpy.isnan(kl):
+            logger.warning('nan value for KL divergence')
+            kl = numpy.nan
+
+    return kl
 
 
 def interaction_information(ar, ks=None, axis=1, r=None):
@@ -421,7 +479,7 @@ def histogram(data, axis=1, r=None):
 
     if r is not None:
         r = _check_r(r, data)
-        return (ndd.histogram(d) for d in combinations(data, r=r))
+        return (histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
@@ -508,3 +566,11 @@ def coinfo(X, ks):
         sgn = (-1)**T
         info += sgn * numpy.sum(from_data(X, ks=ks, r=T))
     return -info
+
+
+def is_pmf(a):
+    """If a is a valid probability mass function."""
+    a = numpy.float64(a)
+    not_negative = numpy.all(a >= 0)
+    normalized = numpy.isclose(sum(a), 1.0)
+    return not_negative and normalized

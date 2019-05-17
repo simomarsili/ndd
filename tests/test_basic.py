@@ -96,7 +96,7 @@ def test_KLD():
     random.seed(SEED)
     qk = random.dirichlet([ALPHA] * P)
     pk = random.multinomial(N, qk)
-    estimator = ndd.estimators.KLDivergence()
+    estimator = ndd.kullback_leibler_divergence
     ref_result = -0.04299973796573253
     assert numpy.isclose(estimator(pk, qk), ref_result)
 
