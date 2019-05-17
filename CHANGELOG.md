@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Added
+- `ndd.kullback_leibler_divergence`
 
 ## [1.3.2] - 2019-05-16
 ### Changed
