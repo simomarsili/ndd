@@ -180,6 +180,12 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
 def interaction_information(ar, ks=None, axis=1, r=None):
     """Interaction information from data matrix.
 
+    See Eq.10 in:
+    Timme, Nicholas, et al.
+    "Synergy, redundancy, and multivariate information measures:
+    an experimentalist's perspective."
+    Journal of computational neuroscience 36.2 (2014): 119-140.
+
     Paramaters
     ----------
     ar : array-like
@@ -191,9 +197,6 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     r : int, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
-        If r == 1, return the entropy for each variable. If r == 2 return the
-        mutual information for each possible pair. If r > 2 return the
-        interaction information for each possible subset of length r.
         Combinations are ordered as: list(itertools.combinations(range(p), r)).
 
     Returns
@@ -230,6 +233,15 @@ def interaction_information(ar, ks=None, axis=1, r=None):
 def coinformation(ar, ks=None, r=None):
     """Coinformation from data matrix.
 
+    See Eq.11 in:
+    Timme, Nicholas, et al.
+    "Synergy, redundancy, and multivariate information measures:
+    an experimentalist's perspective."
+    Journal of computational neuroscience 36.2 (2014): 119-140.
+
+    The coinformation reduces to the entropy for a single variable and to the
+    mutual information for a pair of variables.
+
     Paramaters
     ----------
     ar : array-like
@@ -241,7 +253,7 @@ def coinformation(ar, ks=None, r=None):
         possible combinations of r variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
-        interaction information for each possible subset of length r.
+        coinformation for each possible subset of length r.
         Combinations are ordered as: list(itertools.combinations(range(p), r)).
 
     Returns
@@ -251,7 +263,7 @@ def coinformation(ar, ks=None, r=None):
 
     """
 
-    # change sign for odd #variables
+    # change sign for odd number of variables
     return (-1)**ar.shape[0] * interaction_information(ar=ar, ks=ks, r=r)
 
 
@@ -473,10 +485,26 @@ def _check_ks(ks, ar):
 
 
 def iinfo(X, ks):
-    """Helper function for interaction information from data."""
+    """Helper function for interaction information definition.
+
+    Ref: timme2014synergy
+    """
     info = 0.0
-    px = len(X)
-    for ri in range(1, px + 1):
-        sgn = (-1)**(px - ri)
-        info += sgn * numpy.sum(from_data(X, ks=ks, r=ri))
+    S = len(X)
+    for T in range(1, S + 1):
+        sgn = (-1)**(S - T)
+        info += sgn * numpy.sum(from_data(X, ks=ks, r=T))
+    return -info
+
+
+def coinfo(X, ks):
+    """Helper function for coinformation definition.
+
+    Ref: timme2014synergy
+    """
+    info = 0.0
+    S = len(X)
+    for T in range(1, S + 1):
+        sgn = (-1)**T
+        info += sgn * numpy.sum(from_data(X, ks=ks, r=T))
     return -info
