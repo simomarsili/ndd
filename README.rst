@@ -37,6 +37,7 @@ Information measures
 (as linear combinations of single Bayesian entropy estimates):
 
 * ndd.jensen_shannon_divergence
+* ndd.kullback_leibler_divergence
 * ndd.conditional_entropy
 * ndd.mutual_information
 * ndd.interaction_information
