@@ -2,10 +2,7 @@
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
 """
-Functions for entropy estimation.
-
-The module contains functions for the estimation of entropy and
-entropic information measures.
+Functions for entropy and information measures estimation.
 """
 import logging
 
@@ -17,9 +14,14 @@ from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
                             EstimatorInputError)
 
 __all__ = [
-    'entropy', 'jensen_shannon_divergence', 'interaction_information',
-    'coinformation', 'mutual_information', 'conditional_entropy', 'histogram',
-    'from_data'
+    'entropy',
+    'from_data',
+    'jensen_shannon_divergence',
+    'interaction_information',
+    'coinformation',
+    'mutual_information',
+    'conditional_entropy',
+    'histogram',
 ]
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
-    Bayesian entropy estimate from an array of counts.
+    Entropy estimate from an array of counts.
 
     Return a Bayesian estimate for the entropy of an unknown discrete
     distribution from an input array of counts pk.
@@ -60,11 +62,6 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     std : float, optional
         Uncertainty in the entropy estimate. Only if `return_std` is True.
 
-    Raises
-    ------
-    NumericError
-        If result is NaN
-
     """
 
     # pk is an array of counts
@@ -86,7 +83,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
 def from_data(ar, ks=None, axis=1, r=None):
     """
-    Entropy estimate from a p-by-n array of data.
+    Entropy estimate from data matrix.
 
     Paramaters
     ----------
@@ -95,10 +92,10 @@ def from_data(ar, ks=None, axis=1, r=None):
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 1.
     r : int, optional; ; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the p variables.
+        possible combinations of r variables.
 
     Returns
     -------
@@ -181,11 +178,7 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
 
 
 def interaction_information(ar, ks=None, axis=1, r=None):
-    """Interaction information from p-by-n data matrix.
-
-    If p == 2, return an estimate of the mutual information between the
-    variables corresponding to the two columns.
-
+    """Interaction information from data matrix.
 
     Paramaters
     ----------
@@ -197,7 +190,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         The sample-indexing axis
     r : int, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the p variables.
+        possible combinations of r variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
         interaction information for each possible subset of length r.
@@ -235,11 +228,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
 
 
 def coinformation(ar, ks=None, r=None):
-    """Coinformation from p-by-n data matrix.
-
-    If p == 2, return an estimate of the mutual information between the
-    variables corresponding to the two columns.
-
+    """Coinformation from data matrix.
 
     Paramaters
     ----------
@@ -249,7 +238,7 @@ def coinformation(ar, ks=None, r=None):
         Alphabet size for each variable.
     r : int or None, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the p variables.
+        possible combinations of r variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
         interaction information for each possible subset of length r.
@@ -314,7 +303,7 @@ def mutual_information(ar, ks=None, axis=1):
 
 def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     """
-    Coditional entropy estimate from data array.
+    Coditional entropy estimate from data matrix.
 
     Paramaters
     ----------
@@ -394,7 +383,7 @@ def _nbins(data):
 
 
 def histogram(data, axis=1, r=None):
-    """Compute an histogram from a data array. Wrapper to numpy.unique.
+    """Compute an histogram from a data matrix. Wrapper to numpy.unique.
 
     Parameters
     ----------
