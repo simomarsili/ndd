@@ -2,24 +2,26 @@
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
 """
-Functions for entropy estimation.
-
-The module contains functions for the estimation of entropy and
-entropic information measures.
+Functions for entropy and information measures estimation.
 """
 import logging
 
 import numpy
 
-import ndd
 from ndd.estimators import Entropy, JSDivergence
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
-                            EstimatorInputError)
+                            EstimatorInputError, PmfError)
 
 __all__ = [
-    'entropy', 'jensen_shannon_divergence', 'interaction_information',
-    'coinformation', 'mutual_information', 'conditional_entropy', 'histogram',
-    'from_data'
+    'entropy',
+    'from_data',
+    'jensen_shannon_divergence',
+    'kullback_leibler_divergence',
+    'interaction_information',
+    'coinformation',
+    'mutual_information',
+    'conditional_entropy',
+    'histogram',
 ]
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     """
-    Bayesian entropy estimate from an array of counts.
+    Entropy estimate from an array of counts.
 
     Return a Bayesian estimate for the entropy of an unknown discrete
     distribution from an input array of counts pk.
@@ -41,8 +43,9 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to len(pk).
     alpha : float, optional
-        If alpha is not None, use a single Dirichlet prior with concentration
-        parameter alpha (fixed alpha estimator). alpha > 0.0.
+        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
+        Use a single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
     plugin : boolean, optional
         If True, return a 'plugin' estimate of the entropy. The discrete
         distribution is estimated from the empirical frequencies over bins
@@ -59,11 +62,6 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         Entropy estimate.
     std : float, optional
         Uncertainty in the entropy estimate. Only if `return_std` is True.
-
-    Raises
-    ------
-    NumericError
-        If result is NaN
 
     """
 
@@ -86,7 +84,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
 def from_data(ar, ks=None, axis=1, r=None):
     """
-    Entropy estimate from a p-by-n array of data.
+    Entropy estimate from data matrix.
 
     Paramaters
     ----------
@@ -95,10 +93,10 @@ def from_data(ar, ks=None, axis=1, r=None):
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 1.
     r : int, optional; ; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the p variables.
+        possible combinations of r variables.
 
     Returns
     -------
@@ -156,8 +154,9 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to p.
     alpha : float, optional
-        If not None, the entropy estimator uses a single Dirichlet prior with
-        concentration parameter alpha (fixed alpha estimator). alpha > 0.0.
+        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
+        Use a single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
     plugin : boolean, optional
         If True, use a 'plugin' estimator for the entropy.
         If alpha is passed in combination with plugin == True, add alpha
@@ -180,12 +179,70 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     return js
 
 
+def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
+    """
+    Kullback-Leibler divergence given counts pk and a reference PMF qk.
+
+    Return an estimate of the Kullback-Leibler given an array of counts pk and
+    a reference PMF qk. The estimate (in nats) is computed as:
+    - S_p - sum(pk * log(qk)) / sum(pk)
+    where S_p is the entropy estimate from counts pk.
+
+    Parameters
+    ----------
+    pk : array_like
+        The number of occurrences of a set of bins.
+    qk : array_like
+        Reference PMF in sum(pk log(pk/qk). len(qk) = len(pk).
+        Must be a valid PMF (non-negative, normalized).
+    k : int or array-like, optional
+        Total number of bins (including unobserved bins); k >= p.
+        A float is a valid input for whole numbers (e.g. k=1.e3).
+        If an array, set k = numpy.prod(k). Defaults to len(pk).
+    alpha : float, optional
+        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
+        Use a single Dirichlet prior with concentration parameter alpha.
+        alpha > 0.0.
+    plugin : boolean, optional
+        If True, use a 'plugin' estimator for the entropy.
+        If alpha is passed in combination with plugin == True, add alpha
+        pseudoconts to the frequency counts in the plugin estimate.
+
+    Returns
+    -------
+    float
+        Kullback-Leibler divergence.
+
+    """
+
+    if is_pmf(qk):
+        log_qk = numpy.log(qk)
+    else:
+        raise PmfError('qk must be a valid PMF')
+
+    if len(log_qk) != len(pk):
+        raise PmfError('qk and pk must have the same length.')
+
+    if k == 1:  # single bin
+        kl = 0.0
+    else:
+        estimator = Entropy(alpha, plugin).fit(pk, k)
+        kl = -estimator.estimate_ - numpy.sum(pk * log_qk) / float(sum(pk))
+        if numpy.isnan(kl):
+            logger.warning('nan value for KL divergence')
+            kl = numpy.nan
+
+    return kl
+
+
 def interaction_information(ar, ks=None, axis=1, r=None):
-    """Interaction information from p-by-n data matrix.
+    """Interaction information from data matrix.
 
-    If p == 2, return an estimate of the mutual information between the
-    variables corresponding to the two columns.
-
+    See Eq.10 in:
+    Timme, Nicholas, et al.
+    "Synergy, redundancy, and multivariate information measures:
+    an experimentalist's perspective."
+    Journal of computational neuroscience 36.2 (2014): 119-140.
 
     Paramaters
     ----------
@@ -197,10 +254,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         The sample-indexing axis
     r : int, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the p variables.
-        If r == 1, return the entropy for each variable. If r == 2 return the
-        mutual information for each possible pair. If r > 2 return the
-        interaction information for each possible subset of length r.
+        possible combinations of r variables.
         Combinations are ordered as: list(itertools.combinations(range(p), r)).
 
     Returns
@@ -235,11 +289,16 @@ def interaction_information(ar, ks=None, axis=1, r=None):
 
 
 def coinformation(ar, ks=None, r=None):
-    """Coinformation from p-by-n data matrix.
+    """Coinformation from data matrix.
 
-    If p == 2, return an estimate of the mutual information between the
-    variables corresponding to the two columns.
+    See Eq.11 in:
+    Timme, Nicholas, et al.
+    "Synergy, redundancy, and multivariate information measures:
+    an experimentalist's perspective."
+    Journal of computational neuroscience 36.2 (2014): 119-140.
 
+    The coinformation reduces to the entropy for a single variable and to the
+    mutual information for a pair of variables.
 
     Paramaters
     ----------
@@ -249,10 +308,10 @@ def coinformation(ar, ks=None, r=None):
         Alphabet size for each variable.
     r : int or None, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
-        possible combinations of length r from the p variables.
+        possible combinations of r variables.
         If r == 1, return the entropy for each variable. If r == 2 return the
         mutual information for each possible pair. If r > 2 return the
-        interaction information for each possible subset of length r.
+        coinformation for each possible subset of length r.
         Combinations are ordered as: list(itertools.combinations(range(p), r)).
 
     Returns
@@ -262,7 +321,7 @@ def coinformation(ar, ks=None, r=None):
 
     """
 
-    # change sign for odd #variables
+    # change sign for odd number of variables
     return (-1)**ar.shape[0] * interaction_information(ar=ar, ks=ks, r=r)
 
 
@@ -314,7 +373,7 @@ def mutual_information(ar, ks=None, axis=1):
 
 def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     """
-    Coditional entropy estimate from data array.
+    Coditional entropy estimate from data matrix.
 
     Paramaters
     ----------
@@ -394,7 +453,7 @@ def _nbins(data):
 
 
 def histogram(data, axis=1, r=None):
-    """Compute an histogram from a data array. Wrapper to numpy.unique.
+    """Compute an histogram from a data matrix. Wrapper to numpy.unique.
 
     Parameters
     ----------
@@ -420,7 +479,7 @@ def histogram(data, axis=1, r=None):
 
     if r is not None:
         r = _check_r(r, data)
-        return (ndd.histogram(d) for d in combinations(data, r=r))
+        return (histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
@@ -484,10 +543,34 @@ def _check_ks(ks, ar):
 
 
 def iinfo(X, ks):
-    """Helper function for interaction information from data."""
+    """Helper function for interaction information definition.
+
+    Ref: timme2014synergy
+    """
     info = 0.0
-    px = len(X)
-    for ri in range(1, px + 1):
-        sgn = (-1)**(px - ri)
-        info -= sgn * numpy.sum(from_data(X, ks=ks, r=ri))
-    return info
+    S = len(X)
+    for T in range(1, S + 1):
+        sgn = (-1)**(S - T)
+        info += sgn * numpy.sum(from_data(X, ks=ks, r=T))
+    return -info
+
+
+def coinfo(X, ks):
+    """Helper function for coinformation definition.
+
+    Ref: timme2014synergy
+    """
+    info = 0.0
+    S = len(X)
+    for T in range(1, S + 1):
+        sgn = (-1)**T
+        info += sgn * numpy.sum(from_data(X, ks=ks, r=T))
+    return -info
+
+
+def is_pmf(a):
+    """If a is a valid probability mass function."""
+    a = numpy.float64(a)
+    not_negative = numpy.all(a >= 0)
+    normalized = numpy.isclose(sum(a), 1.0)
+    return not_negative and normalized

@@ -3,6 +3,7 @@
 # License: BSD 3 clause
 # pylint: disable=c-extension-no-member
 """Base EntropyEstimator class."""
+import abc
 import logging
 
 import numpy
@@ -160,7 +161,7 @@ class EntropyEstimatorMixin:
         return k
 
 
-class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
+class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin, abc.ABC):
     """Extend the BaseEstimator to estimators of entropy-derived quantities.
 
     Specific estimators should extend the EntropyBasedEstimator class with
@@ -236,6 +237,6 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
         """Estimator function name."""
         return self.estimator.__name__.split('_')[0]
 
+    @abc.abstractmethod
     def fit(self, pk, k=None):
         """Set the estimated parameters."""
-        raise NotImplementedError

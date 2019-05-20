@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.4] - 2019-05-20
+### Added
+- `ndd.kullback_leibler_divergence`
+
 ## [1.3.2] - 2019-05-16
 ### Changed
 - `r` (length of combinations) defaults to None
