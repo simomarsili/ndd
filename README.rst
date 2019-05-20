@@ -32,7 +32,7 @@ by computing an approximation for the posterior standard deviation::
   0.048675500725595504
 
 Information measures
-=============================
+====================
 **ndd** provide functions for the estimation of entropic information measures
 (as linear combinations of single Bayesian entropy estimates):
 
@@ -74,6 +74,9 @@ Clone the repo, install tests requirements and run the tests with `make`::
 
 Changes
 =======
+1.4 (2019-05-20)
+----------------
+- Added `jensen_kullback_leibler` function.
 
 1.3 (2019-05-08)
 ----------------
