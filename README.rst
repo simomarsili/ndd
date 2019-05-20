@@ -76,7 +76,7 @@ Changes
 =======
 1.4 (2019-05-20)
 ----------------
-- Added `jensen_kullback_leibler` function.
+- Added `kullback_leibler_divergence` function.
 
 1.3 (2019-05-08)
 ----------------
@@ -91,11 +91,11 @@ Changes
 ----------------
 Added:
 
-- `ndd.from_data`
-- `ndd.mutual_information`
-- `ndd.conditional_information`
-- `ndd.interaction_information`
-- `ndd.coinformation`
+- `from_data`
+- `mutual_information`
+- `conditional_information`
+- `interaction_information`
+- `coinformation`
 
 1.0 (2019-03-19)
 ----------------
