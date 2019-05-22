@@ -40,8 +40,7 @@ from collections import defaultdict
 
 import numpy
 
-from ndd.exceptions import \
-    EstimatorParameterError  # pylint: disable=ungrouped-imports
+from ndd.exceptions import EstimatorParameterError  # pylint: disable=C0412
 
 logger = logging.getLogger(__name__)
 
