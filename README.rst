@@ -36,12 +36,12 @@ Information measures
 **ndd** provide functions for the estimation of entropic information measures
 (as linear combinations of single Bayesian entropy estimates):
 
-* ndd.jensen_shannon_divergence
-* ndd.kullback_leibler_divergence
-* ndd.conditional_entropy
-* ndd.mutual_information
-* ndd.interaction_information
-* ndd.coinformation
+* jensen_shannon_divergence
+* kullback_leibler_divergence
+* conditional_entropy
+* mutual_information
+* interaction_information
+* coinformation
 
 
 See the functions' docstrings for details.
