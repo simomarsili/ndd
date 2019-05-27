@@ -13,3 +13,19 @@ install:
   - pip install tox
 script:
   - tox
+
+# safelist
+branches:
+  only:
+  - master
+  - develop
+
+deploy:
+  provider: pypi
+  user: simomarsili
+  password: $PYPI_PASS
+#  server: https://test.pypi.org/legacy/
+  distributions: "sdist"
+  on:
+    branch: master
+    condition: $TRAVIS_PYTHON_VERSION = "3.6"
