@@ -143,6 +143,14 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             Returns the instance itself.
 
         """
+        pk = self._check_pk(pk)
+        if k is None:
+            k = len(pk)
+        k = self._check_k(k)
+
+        zero = numpy.float64(0)
+        if k == 1:
+            return zero, zero
         self.estimate_, self.err_ = self.estimator(pk, k)
         return self
 
@@ -174,7 +182,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 class Plugin(EntropyEstimator):
     """Plugin entropy estimator class."""
 
-    def estimator(self, pk, k):
+    def estimator(self, pk, k=None):
         """Set the estimator."""
         return ndd.fnsb.plugin(pk, k), None
 
@@ -186,7 +194,7 @@ class Pseudo(EntropyEstimator):
         super().__init__()
         self.alpha = alpha
 
-    def estimator(self, pk, k):
+    def estimator(self, pk, k=None):
         """Set the estimator."""
         return ndd.fnsb.pseudo(pk, k, self.alpha), None
 
