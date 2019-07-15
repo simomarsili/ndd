@@ -15,6 +15,214 @@ from ndd.exceptions import AlphaError, CardinalityError, CountsError
 logger = logging.getLogger(__name__)
 
 
+class EntropyEstimator(BaseEstimator, abc.ABC):
+    """
+    Base class for entropy estimators.
+
+    Attributes
+    ----------
+    estimate_ : float
+        Entropy estimate
+    err_ : float or None
+        A measure of uncertainty in the estimate. None if not available.
+
+    """
+
+    def __init__(self):
+
+        self.estimate_ = None
+        self.err_ = None
+
+    def __call__(self, *args, **kwargs):
+        """Fit and return the estimated value."""
+        return self.fit(*args, **kwargs).estimate_
+
+    @staticmethod
+    def check_alpha(a):
+        """Check concentration parameter/#pseudocount.
+
+        Parameters
+        ----------
+        a : positive number
+            Concentration parameter or num. pseudocounts
+
+        Returns
+        -------
+        a : float64
+
+        Raises
+        ------
+        AlphaError
+            If a is not numeric or negative.
+
+        """
+        if a is None:
+            return a
+        try:
+            a = numpy.float64(a)
+        except ValueError:
+            raise AlphaError('alpha (%r) should be numeric.' % a)
+        if a < 0:
+            raise AlphaError('Negative alpha value: %r' % a)
+        return a
+
+    @staticmethod
+    def _check_pk(a):
+        """
+        Raises
+        ------
+        CountsError
+            If pk is not a valid array of counts.
+
+        """
+
+        a = numpy.float64(a).flatten()
+        not_integers = not numpy.all([x.is_integer() for x in a])
+        negative = numpy.any([a < 0])
+        if not_integers:
+            raise CountsError('counts array has non-integer values')
+        if negative:
+            raise CountsError('counts array has negative values')
+        return numpy.int32(a)
+
+    @staticmethod
+    def _check_k(k):
+        """
+        if k is None, set k = number of bins
+        if k is an integer, just check
+        ik an array set k = prod(k)
+
+        Raises
+        ------
+        CardinalityError
+            If k is not valid (wrong type, negative, too large...)
+
+        """
+        MAX_LOGK = 150 * numpy.log(2)
+
+        try:
+            k = numpy.float64(k)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+        if k.ndim:
+            # if k is a sequence, set k = prod(k)
+            if k.ndim > 1:
+                raise CardinalityError('k must be a scalar or 1D array')
+            logk = numpy.sum(numpy.log(x) for x in k)
+            if logk > MAX_LOGK:
+                # too large a number; backoff to n_bins?
+                # TODO: log warning
+                raise CardinalityError('k (%r) larger than %r' %
+                                       (numpy.exp(logk), numpy.exp(MAX_LOGK)))
+            k = numpy.prod(k)
+        else:
+            # if a scalar check size
+            if numpy.log(k) > MAX_LOGK:
+                raise CardinalityError('k (%r) larger than %r' %
+                                       (k, numpy.exp(MAX_LOGK)))
+        if not k.is_integer():
+            raise CardinalityError('k (%s) should be a whole number.' % k)
+        return k
+
+    def fit(self, pk, k):
+        """
+        Compute an entropy estimate from pk.
+
+        Parameters
+        ----------
+        pk : array_like, shape (n_bins,)
+            The number of occurrences of a set of bins.
+        k : int, optional
+            Number of bins. k >= len(pk).
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to len(pk).
+
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
+
+        """
+        self.estimate_, self.err_ = self.estimator(pk, k)
+        return self
+
+    @abc.abstractmethod
+    def estimator(self, pk, k):
+        """Entropy estimator function.
+
+        Return an entropy estimate given counts and the sample space size.
+
+        Parameters
+        ----------
+        pk : array-like
+            An array of non-negative integers (counts array).
+        k  : int or sequence
+            Size of the sample space.
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            If a sequence, set k = numpy.prod(k).
+
+        Returns
+        -------
+        estimate : float
+            Entropy estimate
+        err : float or None
+            A measure of uncertainty in the estimate. None if not available.
+
+        """
+
+
+class Plugin(EntropyEstimator):
+    """Plugin entropy estimator class."""
+
+    def estimator(self, pk, k):
+        """Set the estimator."""
+        return ndd.fnsb.plugin(pk, k), None
+
+
+class Pseudo(EntropyEstimator):
+    """Pseudoconts entropy estimator class."""
+
+    def __init__(self, alpha):
+        super().__init__()
+        self.alpha = alpha
+
+    def estimator(self, pk, k):
+        """Set the estimator."""
+        return ndd.fnsb.pseudo(pk, k, self.alpha), None
+
+
+class WW(EntropyEstimator):
+    """Pseudoconts entropy estimator class."""
+
+    def __init__(self, alpha):
+        super().__init__()
+        self.alpha = alpha
+
+    def estimator(self, pk, k):
+        """Set the estimator."""
+        return ndd.fnsb.dirichlet(pk, k, self.alpha), None
+
+
+class NSB(EntropyEstimator):
+    """NSB entropy estimator class."""
+
+    def estimator(self, pk, k):
+        """Set the estimator."""
+        return ndd.fnsb.nsb(pk, k)
+
+
+class NSBAsymptotic(EntropyEstimator):
+    """NSB entropy estimator class."""
+
+    def estimator(self, pk, k):
+        """Set the estimator."""
+        from scipy.special import digamma
+        n = sum(pk)
+        k1 = sum([1 for x in pk if x > 0])
+        return (numpy.euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
+                digamma(n - k1))
+
+
 class EntropyEstimatorMixin:
     """Mixin class for EntropyEstimator.
 
