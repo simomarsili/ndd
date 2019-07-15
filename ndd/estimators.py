@@ -6,12 +6,85 @@ import logging
 
 import numpy
 
-from ndd.base import EntropyBasedEstimator
+import ndd.fnsb
+from ndd.base import EntropyBasedEstimator, EntropyEstimator
 from ndd.exceptions import CountsError
 
 logger = logging.getLogger(__name__)
 
 __all__ = ['Entropy', 'JSDivergence']
+
+
+class Plugin(EntropyEstimator):
+    """Plugin entropy estimator class."""
+
+    def estimator(self, pk, k=None):
+        """Set the estimator."""
+        k = len(pk)
+        return ndd.fnsb.plugin(pk, k), None
+
+
+class Pseudo(EntropyEstimator):
+    """Pseudoconts entropy estimator class."""
+
+    def __init__(self, alpha):
+        super().__init__()
+        alpha = self.check_alpha(alpha)
+        self.alpha = alpha
+
+    def estimator(self, pk, k=None):
+        """Set the estimator."""
+        if k is None:
+            k = len(pk)
+        else:
+            k = self._check_k(k)
+        return ndd.fnsb.pseudo(pk, k, self.alpha), None
+
+
+class WW(EntropyEstimator):
+    """Pseudoconts entropy estimator class."""
+
+    def __init__(self, alpha):
+        super().__init__()
+        alpha = self.check_alpha(alpha)
+        self.alpha = alpha
+
+    def estimator(self, pk, k):
+        """Set the estimator."""
+        if k is None:
+            raise ValueError('WW estimator needs k parameter')
+        k = self._check_k(k)
+        return ndd.fnsb.dirichlet(pk, k, self.alpha), None
+
+
+class NSB(EntropyEstimator):
+    """NSB entropy estimator class."""
+
+    def estimator(self, pk, k):
+        """Set the estimator."""
+        if k is None:
+            raise ValueError('NSB estimator needs k parameter')
+        k = self._check_k(k)
+        return ndd.fnsb.nsb(pk, k)
+
+
+class NSBAsymptotic(EntropyEstimator):
+    """NSB entropy estimator class."""
+
+    def estimator(self, pk, k=None):
+        """Set the estimator."""
+        from scipy.special import digamma
+        n = sum(pk)  # samples
+        k1 = sum([1 for x in pk if x > 0])  # sampled bins
+        delta = n - k1
+        if delta == 0:
+            raise ValueError('NSBAsymptotic: No coincidences in data')
+        ratio = k1 / n
+        if ratio <= 0.9:
+            logger.warning('NSB asymptotic should be used in the '
+                           'under-sampled regime only.')
+        return (numpy.euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
+                digamma(delta)), None
 
 
 class Entropy(EntropyBasedEstimator):

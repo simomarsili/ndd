@@ -57,7 +57,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         """
         if a is None:
-            return a
+            raise AlphaError('%s: not a valid alpha value.')
         try:
             a = numpy.float64(a)
         except ValueError:
@@ -88,7 +88,6 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
     @staticmethod
     def _check_k(k):
         """
-        if k is None, set k = number of bins
         if k is an integer, just check
         ik an array set k = prod(k)
 
@@ -99,6 +98,9 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         """
         MAX_LOGK = 150 * numpy.log(2)
+
+        if k is None:
+            raise CardinalityError('%s: not a valid cardinality')
 
         try:
             k = numpy.float64(k)
@@ -124,7 +126,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             raise CardinalityError('k (%s) should be a whole number.' % k)
         return k
 
-    def fit(self, pk, k):
+    def fit(self, pk, k=None):
         """
         Compute an entropy estimate from pk.
 
@@ -177,58 +179,6 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             A measure of uncertainty in the estimate. None if not available.
 
         """
-
-
-class Plugin(EntropyEstimator):
-    """Plugin entropy estimator class."""
-
-    def estimator(self, pk, k=None):
-        """Set the estimator."""
-        return ndd.fnsb.plugin(pk, k), None
-
-
-class Pseudo(EntropyEstimator):
-    """Pseudoconts entropy estimator class."""
-
-    def __init__(self, alpha):
-        super().__init__()
-        self.alpha = alpha
-
-    def estimator(self, pk, k=None):
-        """Set the estimator."""
-        return ndd.fnsb.pseudo(pk, k, self.alpha), None
-
-
-class WW(EntropyEstimator):
-    """Pseudoconts entropy estimator class."""
-
-    def __init__(self, alpha):
-        super().__init__()
-        self.alpha = alpha
-
-    def estimator(self, pk, k):
-        """Set the estimator."""
-        return ndd.fnsb.dirichlet(pk, k, self.alpha), None
-
-
-class NSB(EntropyEstimator):
-    """NSB entropy estimator class."""
-
-    def estimator(self, pk, k):
-        """Set the estimator."""
-        return ndd.fnsb.nsb(pk, k)
-
-
-class NSBAsymptotic(EntropyEstimator):
-    """NSB entropy estimator class."""
-
-    def estimator(self, pk, k):
-        """Set the estimator."""
-        from scipy.special import digamma
-        n = sum(pk)
-        k1 = sum([1 for x in pk if x > 0])
-        return (numpy.euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
-                digamma(n - k1))
 
 
 class EntropyEstimatorMixin:
