@@ -124,6 +124,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
                                        (k, numpy.exp(MAX_LOGK)))
         if not k.is_integer():
             raise CardinalityError('k (%s) should be a whole number.' % k)
+
         return k
 
     def fit(self, pk, k=None):
@@ -146,13 +147,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         """
         pk = self._check_pk(pk)
-        if k is None:
-            k = len(pk)
-        k = self._check_k(k)
 
-        zero = numpy.float64(0)
-        if k == 1:
-            return zero, zero
         self.estimate_, self.err_ = self.estimator(pk, k)
         return self
 

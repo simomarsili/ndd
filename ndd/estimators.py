@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 __all__ = ['Entropy', 'JSDivergence']
 
+ZERO = numpy.float64(0)
+
 
 class Plugin(EntropyEstimator):
     """Plugin entropy estimator class."""
@@ -38,6 +40,8 @@ class Pseudo(EntropyEstimator):
             k = len(pk)
         else:
             k = self._check_k(k)
+        if k == 1:
+            return ZERO, ZERO
         return ndd.fnsb.pseudo(pk, k, self.alpha), None
 
 
@@ -54,6 +58,8 @@ class WW(EntropyEstimator):
         if k is None:
             raise ValueError('WW estimator needs k parameter')
         k = self._check_k(k)
+        if k == 1:
+            return ZERO, ZERO
         return ndd.fnsb.dirichlet(pk, k, self.alpha), None
 
 
@@ -65,6 +71,8 @@ class NSB(EntropyEstimator):
         if k is None:
             raise ValueError('NSB estimator needs k parameter')
         k = self._check_k(k)
+        if k == 1:
+            return ZERO, ZERO
         return ndd.fnsb.nsb(pk, k)
 
 
@@ -83,6 +91,8 @@ class NSBAsymptotic(EntropyEstimator):
         if ratio <= 0.9:
             logger.warning('NSB asymptotic should be used in the '
                            'under-sampled regime only.')
+        if k == 1:
+            return ZERO, ZERO
         return (numpy.euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
                 digamma(delta)), None
 
