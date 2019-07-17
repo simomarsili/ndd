@@ -29,7 +29,6 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
     """
 
     def __init__(self):
-
         self.estimate_ = None
         self.err_ = None
 
@@ -89,7 +88,8 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
     def _check_k(k):
         """
         if k is an integer, just check
-        ik an array set k = prod(k)
+        if an array set k = prod(k)
+        if None, return
 
         Raises
         ------
@@ -100,7 +100,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         MAX_LOGK = 150 * numpy.log(2)
 
         if k is None:
-            raise CardinalityError('%s: not a valid cardinality')
+            return None
 
         try:
             k = numpy.float64(k)
@@ -147,6 +147,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         """
         pk = self._check_pk(pk)
+        k = self._check_k(k)
 
         self.estimate_, self.err_ = self.estimator(pk, k)
         return self
@@ -161,7 +162,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         ----------
         pk : array-like
             An array of non-negative integers (counts array).
-        k  : int or sequence
+        k  : int or sequence or None
             Size of the sample space.
             Float values are valid input for whole numbers (e.g. k=1.e3).
             If a sequence, set k = numpy.prod(k).

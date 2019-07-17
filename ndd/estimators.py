@@ -23,11 +23,13 @@ class Plugin(EntropyEstimator):
     def estimator(self, pk, k=None):
         """Set the estimator."""
         k = len(pk)
+        if k == 1:
+            return ZERO, ZERO
         return ndd.fnsb.plugin(pk, k), None
 
 
-class Pseudo(EntropyEstimator):
-    """Pseudoconts entropy estimator class."""
+class PseudoPlugin(EntropyEstimator):
+    """Plugin estimator with pseudoconts class."""
 
     def __init__(self, alpha):
         super().__init__()
@@ -38,14 +40,29 @@ class Pseudo(EntropyEstimator):
         """Set the estimator."""
         if k is None:
             k = len(pk)
-        else:
-            k = self._check_k(k)
         if k == 1:
             return ZERO, ZERO
         return ndd.fnsb.pseudo(pk, k, self.alpha), None
 
 
-class WW(EntropyEstimator):
+class Miller(EntropyEstimator):
+    """Miller entropy estimator class."""
+
+    def estimator(self, pk, k=None):
+        """Set the estimator.
+
+        If k is None, set k = #bins with frequency > 0
+        (Miller-Madow).
+        """
+        if k is None:
+            k = sum(pk > 0)
+
+        plugin = Plugin()
+        n = sum(pk)
+        return plugin(pk) + 0.5 * (k - 1) / n, None
+
+
+class WolpertWolf(EntropyEstimator):
     """Pseudoconts entropy estimator class."""
 
     def __init__(self, alpha):
@@ -83,7 +100,7 @@ class NSBAsymptotic(EntropyEstimator):
         """Set the estimator."""
         from scipy.special import digamma
         n = sum(pk)  # samples
-        k1 = sum([1 for x in pk if x > 0])  # sampled bins
+        k1 = sum(pk > 0)  # sampled bins
         delta = n - k1
         if delta == 0:
             raise ValueError('NSBAsymptotic: No coincidences in data')
@@ -95,6 +112,24 @@ class NSBAsymptotic(EntropyEstimator):
             return ZERO, ZERO
         return (numpy.euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
                 digamma(delta)), None
+
+
+class Grassberger(EntropyEstimator):
+    """Grassberger estimator class."""
+
+    def estimator(self, pk, k=None):
+        """Set the estimator."""
+        from scipy.special import digamma
+
+        n = sum(pk)
+
+        estimate = numpy.log(n)
+        for x in pk:
+            if not x:
+                continue
+            estimate -= x * digamma(x) + (1 - 2 * (x % 2)) / (x + 1)
+
+        return estimate, None
 
 
 class Entropy(EntropyBasedEstimator):
