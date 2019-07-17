@@ -323,7 +323,7 @@ class EntropyEstimatorMixin:
         return k
 
 
-class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin, abc.ABC):
+class EntropyBasedEstimator(BaseEstimator, abc.ABC):
     """Extend the BaseEstimator to estimators of entropy-derived quantities.
 
     Specific estimators should extend the EntropyBasedEstimator class with
@@ -332,16 +332,7 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin, abc.ABC):
 
     Parameters
     ----------
-    alpha : float, optional
-        If not None: Wolpert-Wolf estimator function (fixed alpha).
-        A single Dirichlet prior with concentration parameter alpha.
-        alpha > 0.0.
-    plugin : boolean, optional
-        If True: 'plugin' estimator function.
-        The discrete distribution is estimated from the empirical frequencies
-        over bins and inserted into the entropy definition (plugin estimator).
-        If alpha is passed in combination with plugin=True, add
-        alpha pseudocounts to each frequency count (pseudocount estimator).
+    estimator : EntropyEstimator object
 
     Attributes
     ----------
@@ -352,10 +343,8 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin, abc.ABC):
 
     """
 
-    def __init__(self, alpha=None, plugin=False):
-        self.alpha = self.check_alpha(alpha)
-        self.plugin = plugin
-        self._estimator = None
+    def __init__(self, estimator):
+        self._estimator = estimator
         self._algorithm = None
 
         self.estimate_ = None
@@ -365,39 +354,23 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin, abc.ABC):
         """Fit and return the estimated value."""
         return self.fit(*args, **kwargs).estimate_
 
-    @staticmethod
-    def check_alpha(a):
-        """Check concentration parameter/#pseudocount.
+    @property
+    def estimator(self):
+        """EntropyEstimator object."""
+        return self._estimator
 
-        Parameters
-        ----------
-        a : positive number
-            Concentration parameter or num. pseudocounts
-
-        Returns
-        -------
-        a : float64
-
-        Raises
-        ------
-        AlphaError
-            If a is not numeric or negative.
-
-        """
-        if a is None:
-            return a
-        try:
-            a = numpy.float64(a)
-        except ValueError:
-            raise AlphaError('alpha (%r) should be numeric.' % a)
-        if a < 0:
-            raise AlphaError('Negative alpha value: %r' % a)
-        return a
+    @estimator.setter
+    def estimator(self, obj):
+        """Estimator setter."""
+        if isinstance(obj, EntropyEstimator):
+            self._estimator = obj
+        else:
+            raise TypeError('Not a EntropyEstimator object.')
 
     @property
     def algorithm(self):
         """Estimator function name."""
-        return self.estimator.__name__.split('_')[0]
+        return self.estimator.__class__.__name__
 
     @abc.abstractmethod
     def fit(self, pk, k=None):

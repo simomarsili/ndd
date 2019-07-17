@@ -142,16 +142,7 @@ class JSDivergence(EntropyBasedEstimator):
 
     Parameters
     ----------
-    alpha : float, optional
-        If alpha is not None: Wolpert-Wolf estimator (fixed alpha).
-        A single Dirichlet prior with concentration parameter alpha.
-        alpha > 0.0.
-    plugin : boolean, optional
-        If True: 'plugin' estimator.
-        The discrete distribution is estimated from the empirical frequencies
-        over bins and inserted into the entropy definition (plugin estimator).
-        If alpha is passed in combination with plugin=True, add
-        alpha pseudocounts to each frequency count (pseudocount estimator).
+    estimator : EntropyEstimator object
 
     """
 
@@ -184,10 +175,11 @@ class JSDivergence(EntropyBasedEstimator):
             raise CountsError('counts array must be 2D.')
         ws = numpy.float64(pk.sum(axis=1))
         ws /= ws.sum()
+        if k is None:
+            k = pk.shape[1]
         if k == 1:  # single bin
             self.estimate_ = 0.0
         else:
-            self.estimate_ = self.entropy_estimate(pk.sum(axis=0), k)[0] - sum(
-                ws[i] * self.entropy_estimate(x, k)[0]
-                for i, x in enumerate(pk))
+            self.estimate_ = self.estimator(pk.sum(axis=0), k) - sum(
+                ws[i] * self.estimator(x, k) for i, x in enumerate(pk))
         return self
