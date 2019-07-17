@@ -13,7 +13,7 @@ from ndd.exceptions import CountsError
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['Entropy', 'JSDivergence']
+__all__ = ['JSDivergence']
 
 
 class Plugin(EntropyEstimator):
@@ -133,49 +133,6 @@ class Grassberger(EntropyEstimator):
         estimate /= n
 
         return estimate, None
-
-
-class Entropy(EntropyBasedEstimator):
-    """Entropy estimator class.
-
-    Default: use the NSB estimator function.
-
-    Parameters
-    ----------
-    alpha : float, optional
-        If not None: Wolpert-Wolf estimator (fixed alpha).
-        A single Dirichlet prior with concentration parameter alpha.
-        alpha > 0.0.
-    plugin : boolean, optional
-        If True: 'plugin' estimator.
-        The discrete distribution is estimated from the empirical frequencies
-        over bins and inserted into the entropy definition (plugin estimator).
-        If alpha is passed in combination with plugin=True, add
-        alpha pseudocounts to each frequency count (pseudocount estimator).
-
-    """
-
-    def fit(self, pk, k=None):
-        """
-        Compute an entropy estimate from pk.
-
-        Parameters
-        ----------
-        pk : array_like, shape (n_bins,)
-            The number of occurrences of a set of bins.
-        k : int, optional
-            Number of bins. k >= len(pk).
-            Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to len(pk).
-
-        Returns
-        -------
-        self : object
-            Returns the instance itself.
-
-        """
-        self.estimate_, self.err_ = self.entropy_estimate(pk, k)
-        return self
 
 
 class JSDivergence(EntropyBasedEstimator):

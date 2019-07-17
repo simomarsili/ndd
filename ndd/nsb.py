@@ -8,8 +8,7 @@ import logging
 
 import numpy
 
-from ndd.estimators import (NSB, Entropy, JSDivergence, Plugin, PseudoPlugin,
-                            WolpertWolf)
+from ndd.estimators import NSB, JSDivergence, Plugin, PseudoPlugin, WolpertWolf
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
                             EstimatorInputError, PmfError)
 
@@ -66,17 +65,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     """
 
-    # select the appropriate estimator
-    if plugin:
-        if alpha is None:
-            estimator = Plugin()
-        else:
-            estimator = PseudoPlugin(alpha)
-    else:
-        if alpha is None:
-            estimator = NSB()
-        else:
-            estimator = WolpertWolf(alpha)
+    estimator = select_estimator(alpha=alpha, plugin=plugin)
 
     estimator = estimator.fit(pk, k)
     S, err = estimator.estimate_, estimator.err_
@@ -121,8 +110,8 @@ def from_data(ar, ks=None, axis=1, r=None):
     # check data shape
     ar = _check_data(ar, axis)
 
-    # EntropyBasedEstimator objects are callable and return the fitted estimate
-    estimator = Entropy()
+    # EntropyEstimator objects are callable and return the fitted estimate
+    estimator = NSB()
 
     ks = _check_ks(ks, ar)
 
@@ -236,13 +225,16 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
         raise PmfError('qk and pk must have the same length.')
 
     if k == 1:  # single bin
-        kl = 0.0
-    else:
-        estimator = Entropy(alpha, plugin).fit(pk, k)
-        kl = -estimator.estimate_ - numpy.sum(pk * log_qk) / float(sum(pk))
-        if numpy.isnan(kl):
-            logger.warning('nan value for KL divergence')
-            kl = numpy.nan
+        return 0.0
+    if k is None:
+        k = len(pk)
+
+    estimator = select_estimator(alpha, plugin)
+    estimator = estimator.fit(pk, k)
+    kl = -estimator.estimate_ - numpy.sum(pk * log_qk) / float(sum(pk))
+    if numpy.isnan(kl):
+        logger.warning('nan value for KL divergence')
+        kl = numpy.nan
 
     return kl
 
@@ -427,8 +419,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
 
     ks = _check_ks(ks, ar)
 
-    # EntropyBasedEstimator objects are callable and return the fitted estimate
-    estimator = Entropy()
+    # EntropyEstimator objects are callable and return the fitted estimate
+    estimator = NSB()
 
     # Entropy of features on which we are conditioning
     counts = histogram(ar[c])
@@ -586,3 +578,18 @@ def is_pmf(a):
     not_negative = numpy.all(a >= 0)
     normalized = numpy.isclose(sum(a), 1.0)
     return not_negative and normalized
+
+
+def select_estimator(alpha, plugin):
+    """Select the appropriate estimator."""
+    if plugin:
+        if alpha is None:
+            estimator = Plugin()
+        else:
+            estimator = PseudoPlugin(alpha)
+    else:
+        if alpha is None:
+            estimator = NSB()
+        else:
+            estimator = WolpertWolf(alpha)
+    return estimator
