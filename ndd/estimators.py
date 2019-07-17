@@ -5,6 +5,7 @@
 import logging
 
 import numpy
+from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
 from ndd.base import EntropyBasedEstimator, EntropyEstimator
@@ -14,22 +15,20 @@ logger = logging.getLogger(__name__)
 
 __all__ = ['Entropy', 'JSDivergence']
 
-ZERO = numpy.float64(0)
-
 
 class Plugin(EntropyEstimator):
-    """Plugin entropy estimator class."""
+    """Plugin entropy estimator."""
 
     def estimator(self, pk, k=None):
         """Set the estimator."""
         k = len(pk)
         if k == 1:
-            return ZERO, ZERO
+            return PZERO, PZERO
         return ndd.fnsb.plugin(pk, k), None
 
 
 class PseudoPlugin(EntropyEstimator):
-    """Plugin estimator with pseudoconts class."""
+    """Plugin estimator with pseudoconts."""
 
     def __init__(self, alpha):
         super().__init__()
@@ -41,7 +40,7 @@ class PseudoPlugin(EntropyEstimator):
         if k is None:
             k = len(pk)
         if k == 1:
-            return ZERO, ZERO
+            return PZERO, PZERO
         return ndd.fnsb.pseudo(pk, k, self.alpha), None
 
 
@@ -76,7 +75,7 @@ class WolpertWolf(EntropyEstimator):
             raise ValueError('WW estimator needs k parameter')
         k = self._check_k(k)
         if k == 1:
-            return ZERO, ZERO
+            return PZERO, PZERO
         return ndd.fnsb.dirichlet(pk, k, self.alpha), None
 
 
@@ -89,7 +88,7 @@ class NSB(EntropyEstimator):
             raise ValueError('NSB estimator needs k parameter')
         k = self._check_k(k)
         if k == 1:
-            return ZERO, ZERO
+            return PZERO, PZERO
         return ndd.fnsb.nsb(pk, k)
 
 
@@ -109,13 +108,18 @@ class NSBAsymptotic(EntropyEstimator):
             logger.warning('NSB asymptotic should be used in the '
                            'under-sampled regime only.')
         if k == 1:
-            return ZERO, ZERO
-        return (numpy.euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
+            return PZERO, PZERO
+        return (euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
                 digamma(delta)), None
 
 
 class Grassberger(EntropyEstimator):
-    """Grassberger estimator class."""
+    """Grassberger 1988 estimator class.
+
+    see:
+    http://hornacek.coa.edu/dave/Junk/entropy.estimation.pdf
+    https://www.sciencedirect.com/science/article/abs/pii/0375960188901934
+    """
 
     def estimator(self, pk, k=None):
         """Set the estimator."""
@@ -123,11 +127,12 @@ class Grassberger(EntropyEstimator):
 
         n = sum(pk)
 
-        estimate = numpy.log(n)
+        estimate = n * numpy.log(n)
         for x in pk:
             if not x:
                 continue
             estimate -= x * digamma(x) + (1 - 2 * (x % 2)) / (x + 1)
+        estimate /= n
 
         return estimate, None
 
