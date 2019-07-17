@@ -20,7 +20,7 @@ class Plugin(EntropyEstimator):
     """Plugin entropy estimator."""
 
     def estimator(self, pk, k=None):
-        """Set the estimator."""
+        """Estimator definition."""
         k = len(pk)
         if k == 1:
             return PZERO, PZERO
@@ -36,7 +36,7 @@ class PseudoPlugin(EntropyEstimator):
         self.alpha = alpha
 
     def estimator(self, pk, k=None):
-        """Set the estimator."""
+        """Estimator definition."""
         if k is None:
             k = len(pk)
         if k == 1:
@@ -48,7 +48,7 @@ class Miller(EntropyEstimator):
     """Miller entropy estimator class."""
 
     def estimator(self, pk, k=None):
-        """Set the estimator.
+        """Estimator definition.
 
         If k is None, set k = #bins with frequency > 0
         (Miller-Madow).
@@ -70,9 +70,9 @@ class WolpertWolf(EntropyEstimator):
         self.alpha = alpha
 
     def estimator(self, pk, k):
-        """Set the estimator."""
+        """Estimator definition."""
         if k is None:
-            raise ValueError('WW estimator needs k parameter')
+            raise ValueError('Wolpert-Wolf estimator needs k')
         k = self._check_k(k)
         if k == 1:
             return PZERO, PZERO
@@ -83,9 +83,9 @@ class NSB(EntropyEstimator):
     """NSB entropy estimator class."""
 
     def estimator(self, pk, k):
-        """Set the estimator."""
+        """Estimator definition."""
         if k is None:
-            raise ValueError('NSB estimator needs k parameter')
+            raise ValueError('NSB estimator needs k')
         k = self._check_k(k)
         if k == 1:
             return PZERO, PZERO
@@ -96,10 +96,10 @@ class NSBAsymptotic(EntropyEstimator):
     """NSB entropy estimator class."""
 
     def estimator(self, pk, k=None):
-        """Set the estimator."""
+        """Estimator definition."""
         from scipy.special import digamma
-        n = sum(pk)  # samples
-        k1 = sum(pk > 0)  # sampled bins
+        n = sum(pk)  # #samples
+        k1 = sum(pk > 0)  # #sampled bins
         delta = n - k1
         if delta == 0:
             raise ValueError('NSBAsymptotic: No coincidences in data')
@@ -122,7 +122,7 @@ class Grassberger(EntropyEstimator):
     """
 
     def estimator(self, pk, k=None):
-        """Set the estimator."""
+        """Estimator definition."""
         from scipy.special import digamma
 
         n = sum(pk)
