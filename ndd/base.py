@@ -100,7 +100,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         MAX_LOGK = 150 * numpy.log(2)
 
         if k is None:
-            return None
+            return k
 
         try:
             k = numpy.float64(k)
