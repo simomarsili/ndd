@@ -73,7 +73,6 @@ class WolpertWolf(EntropyEstimator):
         """Estimator definition."""
         if k is None:
             raise ValueError('Wolpert-Wolf estimator needs k')
-        k = self._check_k(k)
         if k == 1:
             return PZERO, PZERO
         return ndd.fnsb.dirichlet(pk, k, self.alpha), None
@@ -86,7 +85,6 @@ class NSB(EntropyEstimator):
         """Estimator definition."""
         if k is None:
             raise ValueError('NSB estimator needs k')
-        k = self._check_k(k)
         if k == 1:
             return PZERO, PZERO
         return ndd.fnsb.nsb(pk, k)

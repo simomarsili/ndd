@@ -66,7 +66,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         return a
 
     @staticmethod
-    def _check_pk(a):
+    def check_pk(a):
         """
         Raises
         ------
@@ -85,7 +85,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         return numpy.int32(a)
 
     @staticmethod
-    def _check_k(k):
+    def check_k(k):
         """
         if k is an integer, just check
         if an array set k = prod(k)
@@ -146,8 +146,8 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             Returns the instance itself.
 
         """
-        pk = self._check_pk(pk)
-        k = self._check_k(k)
+        pk = self.check_pk(pk)
+        k = self.check_k(k)
 
         self.estimate_, self.err_ = self.estimator(pk, k)
         return self

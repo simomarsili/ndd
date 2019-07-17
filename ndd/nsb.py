@@ -8,7 +8,8 @@ import logging
 
 import numpy
 
-from ndd.estimators import Entropy, JSDivergence
+from ndd.estimators import (NSB, Entropy, JSDivergence, Plugin, PseudoPlugin,
+                            WolpertWolf)
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
                             EstimatorInputError, PmfError)
 
@@ -65,8 +66,19 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     """
 
-    # pk is an array of counts
-    estimator = Entropy(alpha, plugin).fit(pk, k)
+    # select the appropriate estimator
+    if plugin:
+        if alpha is None:
+            estimator = Plugin()
+        else:
+            estimator = PseudoPlugin(alpha)
+    else:
+        if alpha is None:
+            estimator = NSB()
+        else:
+            estimator = WolpertWolf(alpha)
+
+    estimator = estimator.fit(pk, k)
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S):
