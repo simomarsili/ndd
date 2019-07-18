@@ -135,6 +135,25 @@ class Grassberger(EntropyEstimator):
         return estimate
 
 
+class UnderWell(EntropyEstimator):
+    """Combination of two estimators.
+
+    Combination of an estimator for the under-sampled regime (asymptotic NSB)
+    and another for the well-sampled regime (GRassberger)
+    """
+
+    def estimator(self, pk, k=None):
+        """Estimator definition."""
+        k1 = len(pk > 0)
+        n = sum(pk)
+        ratio = k1 / n
+
+        under_sampled_estimator = NSBAsymptotic()
+        well_sampled_estimator = Grassberger()
+        return (ratio**2 * under_sampled_estimator(pk) +
+                (1 - ratio**2) * well_sampled_estimator(pk))
+
+
 class JSDivergence(EntropyBasedEstimator):
     """Jensen-Shannon divergence estimator.
 
