@@ -8,7 +8,7 @@ import logging
 
 import numpy
 
-from ndd.base import JSDivergence
+from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, PseudoPlugin, WolpertWolf
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
                             EstimatorInputError, PmfError)
