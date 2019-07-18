@@ -11,6 +11,8 @@ import numpy
 from ndd.base_estimator import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError
 
+__all__ = ['EntropyEstimator', 'DivergenceEstimator']
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         Parameters
         ----------
         a : positive number
-            Concentration parameter or num. pseudocounts
+            Concentration parameter or num. pseudocounts.
 
         Returns
         -------
@@ -56,7 +58,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         Raises
         ------
         AlphaError
-            If a is not numeric or negative.
+            If a is not numeric or <=0.
 
         """
         error_msg = 'alpha must be a positive number (got %r).' % a
@@ -66,7 +68,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             a = numpy.float64(a)
         except ValueError:
             raise AlphaError(error_msg)
-        if a < 0:
+        if a <= 0:
             raise AlphaError(error_msg)
         return a
 
@@ -184,8 +186,8 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         """
 
 
-class MultiPMFEstimator(EntropyEstimator, abc.ABC):
-    """Base class for estimators of entropy-derived funcs from multiple PMF."""
+class DivergenceEstimator(EntropyEstimator, abc.ABC):
+    """Base class for estimators of divergences."""
 
     def __init__(self, entropy_estimator):
         super().__init__()
@@ -267,24 +269,27 @@ class MultiPMFEstimator(EntropyEstimator, abc.ABC):
 
     @abc.abstractmethod
     def estimator(self, pk, k):
-        """Entropy estimator function.
-
-        Return an entropy estimate given counts and the sample space size.
+        """Divergence estimator function.
 
         Parameters
         ----------
-        pk : array-like
-            An array of non-negative integers (counts array).
-        k  : int or sequence or None
-            Size of the sample space.
+        pk : array_like
+            n-by-p array. Different rows correspond to counts from different
+            distributions with the same discrete sample space.
+
+        k : int, optional
+            Number of bins. k >= p if pk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            If a sequence, set k = numpy.prod(k).
+            Defaults to pk.shape[1].
 
         Returns
         -------
-        estimate : float
-            Entropy estimate
-        err : float or None
-            A measure of uncertainty in the estimate. None if not available.
+        self : object
+            Returns the instance itself.
+
+        Raises
+        ------
+        CountsError
+            If pk is not a 2D array.
 
         """

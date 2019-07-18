@@ -8,18 +8,32 @@ import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
-from ndd.base import EntropyEstimator, MultiPMFEstimator
+from ndd.base import DivergenceEstimator, EntropyEstimator
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['JSDivergence']
+__all__ = [
+    'Plugin', 'PseudoPlugin', 'Miller', 'WolpertWolf', 'NSB', 'AsymptoticNSB',
+    'JSDivergence'
+]
 
 
 class Plugin(EntropyEstimator):
     """Plugin entropy estimator."""
 
     def estimator(self, pk, k=None):
-        """Estimator definition."""
+        """
+        Parameters
+        ----------
+        pk : array-like
+            The number of occurrences of a set of bins.
+
+        Returns
+        -------
+        float
+            Entropy estimate.
+
+        """
         k = len(pk)
         if k == 1:
             return PZERO, PZERO
@@ -27,30 +41,75 @@ class Plugin(EntropyEstimator):
 
 
 class PseudoPlugin(EntropyEstimator):
-    """Plugin estimator with pseudoconts."""
+    """Plugin estimator with pseudoconts.
+
+    Parameters
+    ----------
+    alpha : float
+        Add alpha pseudocounts to each frequency count. alpha >= 0.
+        Defaults to zero pseudocounts (plugin estimator).
+
+    Returns
+    -------
+    float
+        Entropy estimate.
+
+    """
 
     def __init__(self, alpha):
         super().__init__()
-        alpha = self.check_alpha(alpha)
+        if not alpha:
+            alpha = PZERO
+        else:
+            alpha = self.check_alpha(alpha)
         self.alpha = alpha
 
     def estimator(self, pk, k=None):
-        """Estimator definition."""
+        """
+        Parameters
+        ----------
+        pk : array-like
+            The number of occurrences of a set of bins.
+        k : int or array-like, optional
+            Total number of bins (including unobserved bins); k >= len(pk).
+            A float is a valid input for whole numbers (e.g. k=1.e3).
+            If an array, set k = numpy.prod(k). Defaults to len(pk).
+
+        Returns
+        -------
+        float
+            Entropy estimate.
+
+        """
         if k is None:
             k = len(pk)
         if k == 1:
             return PZERO, PZERO
+        if not self.alpha:
+            return Plugin()(pk)
         return ndd.fnsb.pseudo(pk, k, self.alpha)
 
 
 class Miller(EntropyEstimator):
-    """Miller entropy estimator class."""
+    """Miller entropy estimator."""
 
     def estimator(self, pk, k=None):
-        """Estimator definition.
+        """
+        Parameters
+        ----------
+        pk : array-like
+            The number of occurrences of a set of bins.
+        k : int or array-like, optional
+            Total number of accessible bins (including unobserved bins)
+            A float is a valid input for whole numbers (e.g. k=1.e3).
+            If an array, set k = numpy.prod(k). Defaults to len(pk).
+            If k is None, set k = #bins with frequency > 0 (Miller-Madow).
 
-        If k is None, set k = #bins with frequency > 0
-        (Miller-Madow).
+        Returns
+        -------
+        float
+            Entropy estimate.
+
         """
         if k is None:
             k = sum(pk > 0)
@@ -61,7 +120,19 @@ class Miller(EntropyEstimator):
 
 
 class WolpertWolf(EntropyEstimator):
-    """Pseudoconts entropy estimator class."""
+    """
+    Wolpert-Wolf (single Dirichlet prior) estimator.
+
+    See:
+    "Estimating functions of probability distributions from a finite set of
+    samples"
+    Wolpert, David H and Wolf, David R
+
+    Parameters
+    ----------
+    alpha : float
+        Concentration parameter. alpha > 0.0.
+    """
 
     def __init__(self, alpha):
         super().__init__()
@@ -69,7 +140,23 @@ class WolpertWolf(EntropyEstimator):
         self.alpha = alpha
 
     def estimator(self, pk, k):
-        """Estimator definition."""
+        """
+        Parameters
+        ----------
+        pk : array-like
+            The number of occurrences of a set of bins.
+        k : int or array-like, optional
+            Total number of bins (including unobserved bins); k >= len(pk).
+            A float is a valid input for whole numbers (e.g. k=1.e3).
+            If an array, set k = numpy.prod(k). Defaults to len(pk).
+            If k is None, set k = #bins with frequency > 0 (Miller-Madow).
+
+        Returns
+        -------
+        float
+            Entropy estimate.
+
+        """
         if k is None:
             raise ValueError('Wolpert-Wolf estimator needs k')
         if k == 1:
@@ -78,10 +165,26 @@ class WolpertWolf(EntropyEstimator):
 
 
 class NSB(EntropyEstimator):
-    """NSB entropy estimator class."""
+    """NSB entropy estimator."""
 
     def estimator(self, pk, k):
-        """Estimator definition."""
+        """
+        Parameters
+        ----------
+        pk : array-like
+            The number of occurrences of a set of bins.
+        k : int or array-like, optional
+            Total number of bins (including unobserved bins); k >= len(pk).
+            A float is a valid input for whole numbers (e.g. k=1.e3).
+            If an array, set k = numpy.prod(k). Defaults to len(pk).
+            If k is None, set k = #bins with frequency > 0 (Miller-Madow).
+
+        Returns
+        -------
+        float
+            Entropy estimate.
+
+        """
         if k is None:
             raise ValueError('NSB estimator needs k')
         if k == 1:
@@ -89,11 +192,31 @@ class NSB(EntropyEstimator):
         return ndd.fnsb.nsb(pk, k)
 
 
-class NSBAsymptotic(EntropyEstimator):
-    """NSB entropy estimator class."""
+class AsymptoticNSB(EntropyEstimator):
+    """
+    Asymptotic NSB estimator for countably infinite distributions.
+
+    Specifical for the under-sampled regime (k/N approx. 1, where k is the
+    number of distinct symbols in the samples and N the number of samples)
+
+    See:
+    "Coincidences and estimation of entropies of random variables with large
+    cardinalities."
+    I. Nemenman.
+    """
 
     def estimator(self, pk, k=None):
-        """Estimator definition."""
+        """
+        Parameters
+        ----------
+        pk : array-like
+            The number of occurrences of a set of bins.
+
+        Returns
+        -------
+        float
+            Entropy estimate.
+        """
         from scipy.special import digamma
         n = sum(pk)  # #samples
         k1 = sum(pk > 0)  # #sampled bins
@@ -147,13 +270,13 @@ class UnderWell(EntropyEstimator):
         n = sum(pk)
         ratio = k1 / n
 
-        under_sampled_estimator = NSBAsymptotic()
+        under_sampled_estimator = AsymptoticNSB()
         well_sampled_estimator = Grassberger()
         return (ratio**2 * under_sampled_estimator(pk) +
                 (1 - ratio**2) * well_sampled_estimator(pk))
 
 
-class JSDivergence(MultiPMFEstimator):
+class JSDivergence(DivergenceEstimator):
     """Jensen-Shannon divergence estimator.
 
     Parameters
@@ -164,7 +287,7 @@ class JSDivergence(MultiPMFEstimator):
 
     def estimator(self, pk, k=None):
         """
-        Attributes
+        Parameters
         ----------
         pk : array_like
             n-by-p array. Different rows correspond to counts from different
