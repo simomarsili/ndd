@@ -8,7 +8,8 @@ import logging
 
 import numpy
 
-from ndd.estimators import NSB, JSDivergence, Plugin, PseudoPlugin, WolpertWolf
+from ndd.base import JSDivergence
+from ndd.estimators import NSB, Plugin, PseudoPlugin, WolpertWolf
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
                             EstimatorInputError, PmfError)
 
@@ -170,7 +171,8 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
 
     """
 
-    estimator = JSDivergence(alpha, plugin).fit(pk, k)
+    entropy_estimator = select_estimator(alpha, plugin)
+    estimator = JSDivergence(entropy_estimator).fit(pk, k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
