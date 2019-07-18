@@ -146,7 +146,12 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         pk = self.check_pk(pk)
         k = self.check_k(k)
 
-        self.estimate_, self.err_ = self.estimator(pk, k)
+        estimate = self.estimator(pk, k)
+        try:
+            self.estimate_, self.err_ = estimate
+        except TypeError:
+            self.estimate_ = estimate
+
         return self
 
     @abc.abstractmethod

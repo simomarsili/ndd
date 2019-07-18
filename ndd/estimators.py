@@ -24,7 +24,7 @@ class Plugin(EntropyEstimator):
         k = len(pk)
         if k == 1:
             return PZERO, PZERO
-        return ndd.fnsb.plugin(pk, k), None
+        return ndd.fnsb.plugin(pk, k)
 
 
 class PseudoPlugin(EntropyEstimator):
@@ -41,7 +41,7 @@ class PseudoPlugin(EntropyEstimator):
             k = len(pk)
         if k == 1:
             return PZERO, PZERO
-        return ndd.fnsb.pseudo(pk, k, self.alpha), None
+        return ndd.fnsb.pseudo(pk, k, self.alpha)
 
 
 class Miller(EntropyEstimator):
@@ -58,7 +58,7 @@ class Miller(EntropyEstimator):
 
         plugin = Plugin()
         n = sum(pk)
-        return plugin(pk) + 0.5 * (k - 1) / n, None
+        return plugin(pk) + 0.5 * (k - 1) / n
 
 
 class WolpertWolf(EntropyEstimator):
@@ -75,7 +75,7 @@ class WolpertWolf(EntropyEstimator):
             raise ValueError('Wolpert-Wolf estimator needs k')
         if k == 1:
             return PZERO, PZERO
-        return ndd.fnsb.dirichlet(pk, k, self.alpha), None
+        return ndd.fnsb.dirichlet(pk, k, self.alpha)
 
 
 class NSB(EntropyEstimator):
@@ -108,7 +108,7 @@ class NSBAsymptotic(EntropyEstimator):
         if k == 1:
             return PZERO, PZERO
         return (euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
-                digamma(delta)), None
+                digamma(delta))
 
 
 class Grassberger(EntropyEstimator):
@@ -132,7 +132,7 @@ class Grassberger(EntropyEstimator):
             estimate -= x * digamma(x) + (1 - 2 * (x % 2)) / (x + 1)
         estimate /= n
 
-        return estimate, None
+        return estimate
 
 
 class JSDivergence(EntropyBasedEstimator):
