@@ -112,7 +112,7 @@ class NSBAsymptotic(EntropyEstimator):
 
 
 class Grassberger(EntropyEstimator):
-    """Grassberger 1988 estimator class.
+    """Grassberger 1988 estimator.
 
     see:
     http://hornacek.coa.edu/dave/Junk/entropy.estimation.pdf
@@ -136,7 +136,7 @@ class Grassberger(EntropyEstimator):
 
 
 class JSDivergence(EntropyBasedEstimator):
-    """Jensen-Shannon divergence estimator class.
+    """Jensen-Shannon divergence estimator.
 
     Default: use the NSB estimator function.
 

@@ -55,14 +55,15 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             If a is not numeric or negative.
 
         """
+        error_msg = 'alpha must be a positive number (got %r).' % a
         if a is None:
-            raise AlphaError('%s: not a valid alpha value.')
+            raise AlphaError(error_msg)
         try:
             a = numpy.float64(a)
         except ValueError:
-            raise AlphaError('alpha (%r) should be numeric.' % a)
+            raise AlphaError(error_msg)
         if a < 0:
-            raise AlphaError('Negative alpha value: %r' % a)
+            raise AlphaError(error_msg)
         return a
 
     @staticmethod
@@ -101,11 +102,10 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         if k is None:
             return k
-
         try:
             k = numpy.float64(k)
         except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
+            raise CardinalityError('%r is not a valid cardinality' % k)
         if k.ndim:
             # if k is a sequence, set k = prod(k)
             if k.ndim > 1:
@@ -114,16 +114,14 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             if logk > MAX_LOGK:
                 # too large a number; backoff to n_bins?
                 # TODO: log warning
-                raise CardinalityError('k (%r) larger than %r' %
-                                       (numpy.exp(logk), numpy.exp(MAX_LOGK)))
+                raise CardinalityError('k must be smaller than 2^150 ')
             k = numpy.prod(k)
         else:
             # if a scalar check size
             if numpy.log(k) > MAX_LOGK:
-                raise CardinalityError('k (%r) larger than %r' %
-                                       (k, numpy.exp(MAX_LOGK)))
+                raise CardinalityError('k must be smaller than 2^150 ')
         if not k.is_integer():
-            raise CardinalityError('k (%s) should be a whole number.' % k)
+            raise CardinalityError('k must be a whole number (got %r).' % k)
 
         return k
 
