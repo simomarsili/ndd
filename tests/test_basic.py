@@ -102,12 +102,11 @@ def test_KLD():
 
 
 def test_JSD():
-    from ndd.estimators import NSB
     ALPHA, N, P = 1.0, 100, 20
     random.seed(SEED)
     pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
-    estimator = ndd.divergence.JSDivergence(entropy_estimator=NSB())
+    estimator = ndd.divergence.JSDivergence()
     ref_result = -0.01804523405829217
     assert numpy.isclose(estimator(counts), ref_result)
 
