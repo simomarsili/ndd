@@ -129,6 +129,17 @@ Some refs::
     year={2002}
   }
 
+  @article{paninski2003estimation,
+    title={Estimation of entropy and mutual information},
+    author={Paninski, Liam},
+    journal={Neural computation},
+    volume={15},
+    number={6},
+    pages={1191--1253},
+    year={2003},
+    publisher={MIT Press}
+  }
+
   @article{nemenman2004entropy,
     title={Entropy and information in neural spike trains: Progress on the sampling problem},
     author={Nemenman, Ilya and Bialek, William and van Steveninck, Rob de Ruyter},
@@ -138,6 +149,17 @@ Some refs::
     pages={056111},
     year={2004},
     publisher={APS}
+  }
+
+  @article{nemenman2011coincidences,
+    title={Coincidences and estimation of entropies of random variables with large cardinalities},
+    author={Nemenman, Ilya},
+    journal={Entropy},
+    volume={13},
+    number={12},
+    pages={2013--2023},
+    year={2011},
+    publisher={Molecular Diversity Preservation International}
   }
 
   @article{archer2013bayesian,
@@ -150,6 +172,18 @@ Some refs::
     year={2013},
     publisher={Multidisciplinary Digital Publishing Institute}
   }
+
+  @article{archer2014bayesian,
+    title={Bayesian entropy estimation for countable discrete distributions},
+    author={Archer, Evan and Park, Il Memming and Pillow, Jonathan W},
+    journal={The Journal of Machine Learning Research},
+    volume={15},
+    number={1},
+    pages={2833--2868},
+    year={2014},
+    publisher={JMLR. org}
+  }
+
 
 and interesting links:
 
