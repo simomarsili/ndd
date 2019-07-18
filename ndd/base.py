@@ -35,6 +35,11 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         """Fit and return the estimated value."""
         return self.fit(*args, **kwargs).estimate_
 
+    @property
+    def algorithm(self):
+        """Estimator function name."""
+        return self.__class__.__name__
+
     @staticmethod
     def check_alpha(a):
         """Check concentration parameter/#pseudocount.
@@ -179,55 +184,107 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         """
 
 
-class EntropyBasedEstimator(BaseEstimator, abc.ABC):
-    """Extend the BaseEstimator to estimators of entropy-derived quantities.
+class MultiPMFEstimator(EntropyEstimator, abc.ABC):
+    """Base class for estimators of entropy-derived funcs from multiple PMF."""
 
-    Specific estimators should extend the EntropyBasedEstimator class with
-    a fit() method. The fit() method must set the estimator object attributes
-    estimate_ and err_ (using the entropy_estimate method).
-
-    Parameters
-    ----------
-    estimator : EntropyEstimator object
-
-    Attributes
-    ----------
-    estimate_ : float
-        Entropy estimate
-    err_ : float or None
-        A measure of uncertainty in the estimate. None if not available.
-
-    """
-
-    def __init__(self, estimator):
-        self._estimator = estimator
-        self._algorithm = None
-
-        self.estimate_ = None
-        self.err_ = None
-
-    def __call__(self, *args, **kwargs):
-        """Fit and return the estimated value."""
-        return self.fit(*args, **kwargs).estimate_
+    def __init__(self, entropy_estimator):
+        super().__init__()
+        self._entropy_estimator = entropy_estimator
 
     @property
-    def estimator(self):
+    def entropy_estimator(self):
         """EntropyEstimator object."""
-        return self._estimator
+        return self._entropy_estimator
 
-    @estimator.setter
-    def estimator(self, obj):
-        """Estimator setter."""
+    @entropy_estimator.setter
+    def entropy_estimator(self, obj):
+        """Entropy estimator setter."""
         if isinstance(obj, EntropyEstimator):
-            self._estimator = obj
+            self._entropy_estimator = obj
         else:
             raise TypeError('Not a EntropyEstimator object.')
 
     @property
     def algorithm(self):
         """Estimator function name."""
-        return self.estimator.__class__.__name__
+        return self.entropy_estimator.__class__.__name__
+
+    @staticmethod
+    def check_pk(a):
+        """
+        Raises
+        ------
+        CountsError
+            If pk is not a valid array of counts.
+
+        """
+
+        a = numpy.float64(a)
+        not_integers = not numpy.all([x.is_integer() for x in a.flatten()])
+        negative = numpy.any([a < 0])
+        if len(a.shape) != 2:
+            raise CountsError('counts array must be 2D.')
+        if not_integers:
+            raise CountsError('counts array has non-integer values')
+        if negative:
+            raise CountsError('counts array has negative values')
+        return numpy.int32(a)
+
+    def fit(self, pk, k=None):
+        """
+        Attributes
+        ----------
+        pk : array_like
+            n-by-p array. Different rows correspond to counts from different
+            distributions with the same discrete sample space.
+
+        k : int, optional
+            Number of bins. k >= p if pk is n-by-p.
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            Defaults to pk.shape[1].
+
+        Returns
+        -------
+        self : object
+            Returns the instance itself.
+
+        Raises
+        ------
+        CountsError
+            If pk is not a 2D array.
+
+        """
+        pk = self.check_pk(pk)
+        k = self.check_k(k)
+
+        estimate = self.estimator(pk, k)
+        try:
+            self.estimate_, self.err_ = estimate
+        except TypeError:
+            self.estimate_ = estimate
+
+        return self
 
     @abc.abstractmethod
-    def fit(self, pk, k=None):
-        """Set the estimated parameters."""
+    def estimator(self, pk, k):
+        """Entropy estimator function.
+
+        Return an entropy estimate given counts and the sample space size.
+
+        Parameters
+        ----------
+        pk : array-like
+            An array of non-negative integers (counts array).
+        k  : int or sequence or None
+            Size of the sample space.
+            Float values are valid input for whole numbers (e.g. k=1.e3).
+            If a sequence, set k = numpy.prod(k).
+
+        Returns
+        -------
+        estimate : float
+            Entropy estimate
+        err : float or None
+            A measure of uncertainty in the estimate. None if not available.
+
+        """

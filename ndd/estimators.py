@@ -8,8 +8,7 @@ import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
-from ndd.base import EntropyBasedEstimator, EntropyEstimator
-from ndd.exceptions import CountsError
+from ndd.base import EntropyEstimator, MultiPMFEstimator
 
 logger = logging.getLogger(__name__)
 
@@ -154,18 +153,16 @@ class UnderWell(EntropyEstimator):
                 (1 - ratio**2) * well_sampled_estimator(pk))
 
 
-class JSDivergence(EntropyBasedEstimator):
+class JSDivergence(MultiPMFEstimator):
     """Jensen-Shannon divergence estimator.
-
-    Default: use the NSB estimator function.
 
     Parameters
     ----------
-    estimator : EntropyEstimator object
+    entropy_estimator : EntropyEstimator object
 
     """
 
-    def fit(self, pk, k=None):
+    def estimator(self, pk, k=None):
         """
         Attributes
         ----------
@@ -189,16 +186,14 @@ class JSDivergence(EntropyBasedEstimator):
             If pk is not a 2D array.
 
         """
-        pk = numpy.int32(pk)
-        if pk.ndim != 2:
-            raise CountsError('counts array must be 2D.')
+
         ws = numpy.float64(pk.sum(axis=1))
         ws /= ws.sum()
         if k is None:
             k = pk.shape[1]
         if k == 1:  # single bin
-            self.estimate_ = 0.0
-        else:
-            self.estimate_ = self.estimator(pk.sum(axis=0), k) - sum(
-                ws[i] * self.estimator(x, k) for i, x in enumerate(pk))
-        return self
+            return PZERO
+
+        return (self.entropy_estimator(pk.sum(axis=0), k) -
+                sum(ws[i] * self.entropy_estimator(x, k)
+                    for i, x in enumerate(pk)))
