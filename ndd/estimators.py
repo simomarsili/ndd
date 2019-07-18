@@ -36,6 +36,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
     def __init__(self):
         self.estimate_ = None
         self.err_ = None
+        self.input_data_ndim = 1
 
     def __call__(self, *args, **kwargs):
         """Fit and return the estimated value."""
@@ -76,8 +77,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             raise AlphaError(error_msg)
         return a
 
-    @staticmethod
-    def check_pk(a, ndim=1):
+    def check_pk(self, a):
         """
         Raises
         ------
@@ -88,8 +88,10 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         a = numpy.float64(a)
         # check ndim
-        if a.ndim != ndim:  # pylint: disable=comparison-with-callable
-            raise CountsError('counts array must be %s-dimensional' % ndim)
+        # pylint: disable=comparison-with-callable
+        if a.ndim != self.input_data_ndim:
+            raise CountsError('counts array must be %s-dimensional' %
+                              self.input_data_ndim)
         not_integers = not numpy.all([x.is_integer() for x in a.flat])
         negative = numpy.any([a < 0])
         if not_integers:

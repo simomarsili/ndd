@@ -21,6 +21,7 @@ class DivergenceEstimator(EntropyEstimator, abc.ABC):
 
     def __init__(self, entropy_estimator):
         super().__init__()
+        self.input_data_ndim = 2
         self._entropy_estimator = entropy_estimator
 
     @property
