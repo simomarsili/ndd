@@ -108,8 +108,11 @@ and interesting links:
 - [Il Memming Park on discrete entropy estimators](https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/)
 
 """
+import inspect
+
 import pkg_resources
 
+import ndd.estimators
 from ndd.nsb import entropy  # pylint: disable=unused-import
 from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
                      interaction_information, jensen_shannon_divergence,
@@ -122,3 +125,9 @@ __all__ = [
     'interaction_information', 'coinformation', 'mutual_information',
     'conditional_entropy', 'histogram', 'from_data'
 ]
+
+entropy_estimators = {
+    name: var
+    for name, var in ndd.estimators.__dict__.items() if inspect.isclass(var)
+    and issubclass(var, ndd.estimators.EntropyEstimator)
+}
