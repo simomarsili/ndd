@@ -2,14 +2,16 @@
 # Author: Simone Marsili
 # License: BSD 3 clause
 # pylint: disable=c-extension-no-member
-"""Classes for computing divergences between distributions."""
+"""Compute divergences between distributions."""
 import abc
 import logging
 
 import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
-from ndd.estimators import NSB, EntropyEstimator
+import ndd
+from ndd.estimators import EntropyEstimator
+from ndd.exceptions import NddError
 
 __all__ = ['DivergenceEstimator', 'JSDivergence']
 
@@ -19,11 +21,16 @@ logger = logging.getLogger(__name__)
 class DivergenceEstimator(EntropyEstimator, abc.ABC):
     """Base class for estimators of divergences."""
 
-    def __init__(self, entropy_estimator=NSB()):
+    def __init__(self, entropy='NSB'):
         """Default entropy estimator is NSB."""
         super().__init__()
         self.input_data_ndim = 2
-        self._entropy_estimator = entropy_estimator
+        try:
+            self._entropy_estimator = ndd.entropy_estimators[entropy]()
+        except KeyError:
+            raise NddError(
+                'Unknown entropy estimator; valid options are:\n%s' %
+                ', '.join(list(ndd.entropy_estimators.keys())))
 
     @property
     def entropy_estimator(self):
