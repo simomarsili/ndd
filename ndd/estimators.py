@@ -140,6 +140,17 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         return k
 
+    def check_args(fit_function):  # pylint: disable=no-self-argument
+        """Check fit input args."""
+
+        def wrapper(self, pk, *, k=None):
+            pk = self.check_pk(pk)
+            k = self.check_k(k)
+            return fit_function(self, pk, k=k)
+
+        return wrapper
+
+    @check_args
     def fit(self, pk, *, k=None):
         """
         Compute an entropy estimate from pk.
@@ -159,9 +170,6 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             Returns the instance itself.
 
         """
-        pk = self.check_pk(pk)
-        k = self.check_k(k)
-
         estimate = self.estimator(pk, k)
         try:
             self.estimate_, self.err_ = estimate
