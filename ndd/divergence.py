@@ -10,7 +10,7 @@ import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
 import ndd
-from ndd.estimators import EntropyEstimator
+from ndd.estimators import EntropyEstimator, check_input
 from ndd.exceptions import NddError
 
 __all__ = ['DivergenceEstimator', 'JSDivergence']
@@ -51,9 +51,8 @@ class DivergenceEstimator(EntropyEstimator, abc.ABC):
         return self.entropy_estimator.__class__.__name__
 
     @abc.abstractmethod
-    def estimator(self, pk, k):
-        """Divergence estimator function.
-
+    def fit(self, pk, *, k=None):
+        """
         Parameters
         ----------
         pk : array_like
@@ -87,7 +86,8 @@ class JSDivergence(DivergenceEstimator):
 
     """
 
-    def estimator(self, pk, k=None):
+    @check_input
+    def fit(self, pk, *, k=None):
         """
         Parameters
         ----------
@@ -119,6 +119,7 @@ class JSDivergence(DivergenceEstimator):
         if k == 1:  # single bin
             return PZERO
 
-        return (self.entropy_estimator(pk.sum(axis=0), k=k) -
-                sum(ws[i] * self.entropy_estimator(x, k=k)
-                    for i, x in enumerate(pk)))
+        self.estimate_ = (self.entropy_estimator(pk.sum(axis=0), k=k) -
+                          sum(ws[i] * self.entropy_estimator(x, k=k)
+                              for i, x in enumerate(pk)))
+        return self

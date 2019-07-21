@@ -20,6 +20,17 @@ __all__ = [
 ]
 
 
+def check_input(fit_function):  # pylint: disable=no-self-argument
+    """Check fit input args."""
+
+    def wrapper(self, pk, *, k=None):
+        pk = self.check_pk(pk)
+        k = self.check_k(k)
+        return fit_function(self, pk, k=k)
+
+    return wrapper
+
+
 class EntropyEstimator(BaseEstimator, abc.ABC):
     """
     Base class for entropy estimators.
@@ -140,17 +151,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         return k
 
-    def check_input(fit_function):  # pylint: disable=no-self-argument
-        """Check fit input args."""
-
-        def wrapper(self, pk, *, k=None):
-            pk = self.check_pk(pk)
-            k = self.check_k(k)
-            return fit_function(self, pk, k=k)
-
-        return wrapper
-
-    @check_input
+    @abc.abstractmethod
     def fit(self, pk, *, k=None):
         """
         Compute an entropy estimate from pk.
@@ -170,43 +171,13 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
             Returns the instance itself.
 
         """
-        estimate = self.estimator(pk, k)
-        try:
-            self.estimate_, self.err_ = estimate
-        except TypeError:
-            self.estimate_ = estimate
-
-        return self
-
-    @abc.abstractmethod
-    def estimator(self, pk, k):
-        """Entropy estimator function.
-
-        Return an entropy estimate given counts and the sample space size.
-
-        Parameters
-        ----------
-        pk : array-like
-            An array of non-negative integers (counts array).
-        k  : int or sequence or None
-            Size of the sample space.
-            Float values are valid input for whole numbers (e.g. k=1.e3).
-            If a sequence, set k = numpy.prod(k).
-
-        Returns
-        -------
-        estimate : float
-            Entropy estimate
-        err : float or None
-            A measure of uncertainty in the estimate. None if not available.
-
-        """
 
 
 class Plugin(EntropyEstimator):
     """Plugin entropy estimator."""
 
-    def estimator(self, pk, k=None):
+    @check_input
+    def fit(self, pk, *, k=None):
         """
         Parameters
         ----------
@@ -221,8 +192,9 @@ class Plugin(EntropyEstimator):
         """
         k = len(pk)
         if k == 1:
-            return PZERO, PZERO
-        return ndd.fnsb.plugin(pk, k)
+            self.estimate_, self.err_ = PZERO, PZERO
+        self.estimate_ = ndd.fnsb.plugin(pk, k)
+        return self
 
 
 class PseudoPlugin(EntropyEstimator):
@@ -249,7 +221,8 @@ class PseudoPlugin(EntropyEstimator):
             alpha = self.check_alpha(alpha)
         self.alpha = alpha
 
-    def estimator(self, pk, k=None):
+    @check_input
+    def fit(self, pk, *, k=None):
         """
         Parameters
         ----------
@@ -269,16 +242,18 @@ class PseudoPlugin(EntropyEstimator):
         if k is None:
             k = len(pk)
         if k == 1:
-            return PZERO, PZERO
+            self.estimate_, self.err_ = PZERO, PZERO
         if not self.alpha:
-            return Plugin()(pk)
-        return ndd.fnsb.pseudo(pk, k, self.alpha)
+            self.estimate_ = Plugin()(pk)
+        self.estimate_ = ndd.fnsb.pseudo(pk, k, self.alpha)
+        return self
 
 
 class Miller(EntropyEstimator):
     """Miller entropy estimator."""
 
-    def estimator(self, pk, k=None):
+    @check_input
+    def fit(self, pk, *, k=None):
         """
         Parameters
         ----------
@@ -301,7 +276,8 @@ class Miller(EntropyEstimator):
 
         plugin = Plugin()
         n = sum(pk)
-        return plugin(pk) + 0.5 * (k - 1) / n
+        self.estimate_ = plugin(pk) + 0.5 * (k - 1) / n
+        return self
 
 
 class WolpertWolf(EntropyEstimator):
@@ -324,7 +300,8 @@ class WolpertWolf(EntropyEstimator):
         alpha = self.check_alpha(alpha)
         self.alpha = alpha
 
-    def estimator(self, pk, k):
+    @check_input
+    def fit(self, pk, *, k):
         """
         Parameters
         ----------
@@ -345,14 +322,16 @@ class WolpertWolf(EntropyEstimator):
         if k is None:
             raise ValueError('Wolpert-Wolf estimator needs k')
         if k == 1:
-            return PZERO, PZERO
-        return ndd.fnsb.dirichlet(pk, k, self.alpha)
+            self.estimate_, self.err_ = PZERO, PZERO
+        self.estimate_ = ndd.fnsb.dirichlet(pk, k, self.alpha)
+        return self
 
 
 class NSB(EntropyEstimator):
     """NSB entropy estimator."""
 
-    def estimator(self, pk, k):
+    @check_input
+    def fit(self, pk, *, k):
         """
         Parameters
         ----------
@@ -373,8 +352,9 @@ class NSB(EntropyEstimator):
         if k is None:
             raise ValueError('NSB estimator needs k')
         if k == 1:
-            return PZERO, PZERO
-        return ndd.fnsb.nsb(pk, k)
+            self.estimate_, self.err_ = PZERO, PZERO
+        self.estimate_, self.err_ = ndd.fnsb.nsb(pk, k)
+        return self
 
 
 class AsymptoticNSB(EntropyEstimator):
@@ -390,7 +370,8 @@ class AsymptoticNSB(EntropyEstimator):
     I. Nemenman.
     """
 
-    def estimator(self, pk, k=None):
+    @check_input
+    def fit(self, pk, *, k=None):
         """
         Parameters
         ----------
@@ -413,9 +394,10 @@ class AsymptoticNSB(EntropyEstimator):
             logger.warning('NSB asymptotic should be used in the '
                            'under-sampled regime only.')
         if k == 1:
-            return PZERO, PZERO
-        return (euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
-                digamma(delta))
+            self.estimate_, self.err_ = PZERO, PZERO
+        self.estimate_ = (euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
+                          digamma(delta))
+        return self
 
 
 class Grassberger(EntropyEstimator):
@@ -426,7 +408,8 @@ class Grassberger(EntropyEstimator):
     https://www.sciencedirect.com/science/article/abs/pii/0375960188901934
     """
 
-    def estimator(self, pk, k=None):
+    @check_input
+    def fit(self, pk, *, k=None):  # pylint: disable=unused-argument
         """Estimator definition."""
         from scipy.special import digamma
 
@@ -439,7 +422,8 @@ class Grassberger(EntropyEstimator):
             estimate -= x * digamma(x) + (1 - 2 * (x % 2)) / (x + 1)
         estimate /= n
 
-        return estimate
+        self.estimate_ = estimate
+        return self
 
 
 class UnderWell(EntropyEstimator):
@@ -449,7 +433,8 @@ class UnderWell(EntropyEstimator):
     and another for the well-sampled regime (GRassberger)
     """
 
-    def estimator(self, pk, k=None):
+    @check_input
+    def fit(self, pk, *, k=None):  # pylint: disable=unused-argument
         """Estimator definition."""
         k1 = len(pk > 0)
         n = sum(pk)
@@ -457,5 +442,6 @@ class UnderWell(EntropyEstimator):
 
         under_sampled_estimator = AsymptoticNSB()
         well_sampled_estimator = Grassberger()
-        return (ratio**2 * under_sampled_estimator(pk) +
-                (1 - ratio**2) * well_sampled_estimator(pk))
+        self.estimate_ = (ratio**2 * under_sampled_estimator(pk) +
+                          (1 - ratio**2) * well_sampled_estimator(pk))
+        return self
