@@ -68,7 +68,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     estimator = select_estimator(alpha=alpha, plugin=plugin)
 
-    estimator = estimator.fit(pk, k)
+    estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S):
@@ -125,8 +125,8 @@ def from_data(ar, ks=None, axis=1, r=None):
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
         return (
-            estimator(*args)
-            for args in zip(counts_combinations, alphabet_size_combinations))
+            estimator(pk, k=k)
+            for pk, k in zip(counts_combinations, alphabet_size_combinations))
 
     counts = histogram(ar)
     return estimator(counts, k=ks)
@@ -232,7 +232,7 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
         k = len(pk)
 
     estimator = select_estimator(alpha, plugin)
-    estimator = estimator.fit(pk, k)
+    estimator = estimator.fit(pk, k=k)
     kl = -estimator.estimate_ - numpy.sum(pk * log_qk) / float(sum(pk))
     if numpy.isnan(kl):
         logger.warning('nan value for KL divergence')

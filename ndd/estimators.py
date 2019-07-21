@@ -38,9 +38,9 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
         self.err_ = None
         self.input_data_ndim = 1
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, pk, *, k=None):
         """Fit and return the estimated value."""
-        return self.fit(*args, **kwargs).estimate_
+        return self.fit(pk, k=k).estimate_
 
     @property
     def algorithm(self):
@@ -140,7 +140,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         return k
 
-    def fit(self, pk, k=None):
+    def fit(self, pk, *, k=None):
         """
         Compute an entropy estimate from pk.
 

@@ -119,6 +119,6 @@ class JSDivergence(DivergenceEstimator):
         if k == 1:  # single bin
             return PZERO
 
-        return (self.entropy_estimator(pk.sum(axis=0), k) -
-                sum(ws[i] * self.entropy_estimator(x, k)
+        return (self.entropy_estimator(pk.sum(axis=0), k=k) -
+                sum(ws[i] * self.entropy_estimator(x, k=k)
                     for i, x in enumerate(pk)))
