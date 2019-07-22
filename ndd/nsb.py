@@ -9,7 +9,7 @@ import logging
 import numpy
 
 from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, Plugin, PseudoPlugin, WolpertWolf
+from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
                             EstimatorInputError, PmfError)
 
@@ -172,7 +172,7 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
     """
 
     entropy_estimator = select_estimator(alpha, plugin)
-    estimator = JSDivergence(entropy_estimator).fit(pk, k)
+    estimator = JSDivergence(entropy_estimator).fit(pk, k=k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
@@ -223,6 +223,9 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
     else:
         raise PmfError('qk must be a valid PMF')
 
+    if sum(numpy.isinf(log_qk)) > 0:
+        raise PmfError('qk must be positive')
+
     if len(log_qk) != len(pk):
         raise PmfError('qk and pk must have the same length.')
 
@@ -232,8 +235,8 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
         k = len(pk)
 
     estimator = select_estimator(alpha, plugin)
-    estimator = estimator.fit(pk, k=k)
-    kl = -estimator.estimate_ - numpy.sum(pk * log_qk) / float(sum(pk))
+    estimate = estimator.fit(pk, k=k).estimate_
+    kl = -1 * estimate - numpy.sum(pk * log_qk) / float(sum(pk))
     if numpy.isnan(kl):
         logger.warning('nan value for KL divergence')
         kl = numpy.nan
@@ -585,10 +588,7 @@ def is_pmf(a):
 def select_estimator(alpha, plugin):
     """Select the appropriate estimator."""
     if plugin:
-        if alpha is None:
-            estimator = Plugin()
-        else:
-            estimator = PseudoPlugin(alpha)
+        estimator = Plugin(alpha)
     else:
         if alpha is None:
             estimator = NSB()

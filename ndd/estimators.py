@@ -15,8 +15,8 @@ from ndd.exceptions import AlphaError, CardinalityError, CountsError
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'EntropyEstimator', 'Plugin', 'PseudoPlugin', 'Miller', 'WolpertWolf',
-    'NSB', 'AsymptoticNSB'
+    'EntropyEstimator', 'Plugin', 'Miller', 'WolpertWolf', 'NSB',
+    'AsymptoticNSB'
 ]
 
 
@@ -174,31 +174,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
 
 class Plugin(EntropyEstimator):
-    """Plugin entropy estimator."""
-
-    @check_input
-    def fit(self, pk, *, k=None):
-        """
-        Parameters
-        ----------
-        pk : array-like
-            The number of occurrences of a set of bins.
-
-        Returns
-        -------
-        float
-            Entropy estimate.
-
-        """
-        k = len(pk)
-        if k == 1:
-            self.estimate_, self.err_ = PZERO, PZERO
-        self.estimate_ = ndd.fnsb.plugin(pk, k)
-        return self
-
-
-class PseudoPlugin(EntropyEstimator):
-    """Plugin estimator with pseudoconts.
+    """Plugin entropy estimator.
 
     Parameters
     ----------
@@ -213,7 +189,7 @@ class PseudoPlugin(EntropyEstimator):
 
     """
 
-    def __init__(self, alpha):
+    def __init__(self, alpha=None):
         super().__init__()
         if not alpha:
             self.alpha = PZERO
@@ -242,9 +218,10 @@ class PseudoPlugin(EntropyEstimator):
             k = len(pk)
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
-        if not self.alpha:
-            self.estimate_ = Plugin()(pk)
-        self.estimate_ = ndd.fnsb.pseudo(pk, k, self.alpha)
+        if self.alpha:
+            self.estimate_ = ndd.fnsb.pseudo(pk, k, self.alpha)
+        else:
+            self.estimate_ = ndd.fnsb.plugin(pk, k)
         return self
 
 
