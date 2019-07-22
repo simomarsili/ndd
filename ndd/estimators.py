@@ -23,10 +23,10 @@ __all__ = [
 def check_input(fit_function):  # pylint: disable=no-self-argument
     """Check fit input args."""
 
-    def wrapper(self, pk, *, k=None):
-        pk = self.check_pk(pk)
-        k = self.check_k(k)
-        return fit_function(self, pk, k=k)
+    def wrapper(obj, pk, *, k=None):
+        pk = obj.check_pk(pk)
+        k = obj.check_k(k)
+        return fit_function(obj, pk, k=k)
 
     return wrapper
 
