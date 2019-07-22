@@ -216,10 +216,9 @@ class PseudoPlugin(EntropyEstimator):
     def __init__(self, alpha):
         super().__init__()
         if not alpha:
-            alpha = PZERO
+            self.alpha = PZERO
         else:
-            alpha = self.check_alpha(alpha)
-        self.alpha = alpha
+            self.alpha = self.check_alpha(alpha)
 
     @check_input
     def fit(self, pk, *, k=None):
@@ -297,8 +296,7 @@ class WolpertWolf(EntropyEstimator):
 
     def __init__(self, alpha):
         super().__init__()
-        alpha = self.check_alpha(alpha)
-        self.alpha = alpha
+        self.alpha = self.check_alpha(alpha)
 
     @check_input
     def fit(self, pk, *, k):
