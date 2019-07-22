@@ -236,7 +236,7 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
 
     estimator = select_estimator(alpha, plugin)
     estimate = estimator.fit(pk, k=k).estimate_
-    kl = -1 * estimate - numpy.sum(pk * log_qk) / float(sum(pk))
+    kl = -(estimate + numpy.sum(pk * log_qk) / float(sum(pk)))
     if numpy.isnan(kl):
         logger.warning('nan value for KL divergence')
         kl = numpy.nan
