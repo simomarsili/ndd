@@ -60,7 +60,8 @@ class DataArray(numpy.ndarray):
         p = self.shape[0]  # pylint: disable=unsubscriptable-object
         if value.ndim == 0:
             value = numpy.ones(p) * value
-        elif len(value) != p:
-            raise CardinalityError('k should have len %s' % p)
 
-        self._ks = value
+        if numpy.all(value >= self.ks):
+            self._ks = value
+        else:
+            raise CardinalityError('ks cannot be set')
