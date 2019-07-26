@@ -2,7 +2,7 @@
 """Contains DataArray class."""
 import numpy
 
-from ndd.exceptions import DataArrayError
+from ndd.exceptions import CardinalityError, DataArrayError
 
 
 class DataArray(numpy.ndarray):
@@ -52,4 +52,15 @@ class DataArray(numpy.ndarray):
         """
         Set ks values.
         """
+        try:
+            value = numpy.float64(value)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+
+        p = self.shape[0]  # pylint: disable=unsubscriptable-object
+        if value.ndim == 0:
+            value = numpy.ones(p) * value
+        elif len(value) != p:
+            raise CardinalityError('k should have len %s' % p)
+
         self._ks = value

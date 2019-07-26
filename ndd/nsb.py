@@ -11,8 +11,7 @@ import numpy
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
-from ndd.exceptions import (CardinalityError, CombinationError,
-                            EstimatorInputError, NddError, PmfError)
+from ndd.exceptions import CombinationError, EstimatorInputError, PmfError
 
 __all__ = [
     'entropy',
@@ -117,7 +116,7 @@ def from_data(ar, ks=None, axis=1, r=None):
     estimator = NSB()
 
     if ks is not None:
-        ar.ks = _check_ks(ks, ar)
+        ar.ks = ks
 
     if r is not None:
         r = _check_r(r, ar)
@@ -284,23 +283,17 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     ar = DataArray(ar, axis)
 
     if ks is not None:
-        ks = _check_ks(ks, ar)
         ar.ks = ks
-    else:
-        ks = ar.ks
-
-    if ks.ndim == 0:
-        raise CardinalityError('ks cant be a scalar')
 
     if r is not None:
         r = _check_r(r, ar)
 
         data_combinations = combinations(ar, r=r)
-        alphabet_size_combinations = (x for x in combinations(ks, r=r))
+        alphabet_size_combinations = (x for x in combinations(ar.ks, r=r))
         return (iinfo(*args)
                 for args in zip(data_combinations, alphabet_size_combinations))
 
-    return iinfo(ar, ks)
+    return iinfo(ar, ar.ks)
 
 
 def coinformation(ar, ks=None, r=None):
@@ -375,20 +368,14 @@ def mutual_information(ar, ks=None, axis=1):
     p = ar.shape[0]
 
     if ks is not None:
-        ks = _check_ks(ks, ar)
         ar.ks = ks
-    else:
-        ks = ar.ks
-
-    if ks.ndim == 0:
-        raise CardinalityError('ks cant be a scalar')
 
     if p > 2:
-        h1 = list(from_data(ar, ks=ks, r=1))
-        return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]], ks=ks[[i1, i2]])
+        h1 = list(from_data(ar, r=1))
+        return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]])
                 for i1, i2 in combinations(range(p), 2))
 
-    return numpy.sum(from_data(ar, ks=ks, r=1)) - from_data(ar, ks=ks)
+    return numpy.sum(from_data(ar, r=1)) - from_data(ar)
 
 
 def conditional_entropy(ar, c, ks=None, axis=1, r=None):
@@ -434,21 +421,16 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
                                    ' are not valid')
 
     if ks is not None:
-        ks = _check_ks(ks, ar)
         ar.ks = ks
-    else:
-        ks = ar.ks
 
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
 
     # Entropy of features on which we are conditioning
     counts = histogram(ar[c])
-    hc = estimator(counts, k=ks)
+    hc = estimator(counts, k=ar.ks)
 
     if r is not None:
-        if ks.ndim == 0:
-            raise CardinalityError('For combinations, ks cant be a scalar')
 
         r = _check_r(r, p - len(c))
 
@@ -458,13 +440,13 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         indices = combinations(range(p), r=r)
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ks, r=r))
+                                      for x in combinations(ar.ks, r=r))
         return (estimator(*args) - hc for ids, *args in zip(
             indices, counts_combinations, alphabet_size_combinations)
                 if set(c) <= set(ids))
 
     counts = histogram(ar)
-    return estimator(counts, k=ks) - hc
+    return estimator(counts, k=ar.ks) - hc
 
 
 def _nbins(data):
@@ -524,36 +506,6 @@ def _check_r(r, ar):
     if r < 1 or r > p:
         raise CombinationError('r values must be in the interval [1, %s]' % p)
     return r
-
-
-def _check_ks(ks, ar):
-    """
-    Parameters
-    ----------
-    ks : int or array-like
-        Number of classes for variable.
-    ar : DataArray object
-
-    Raises
-    ------
-    CardinalityError
-        If ks is array-like and len(ks) != p.
-    """
-
-    try:
-        ks = numpy.float64(ks)
-    except ValueError:
-        raise CardinalityError('%s: not a valid cardinality')
-
-    if not isinstance(ar, DataArray):
-        raise NddError('not a DataArray object')
-
-    p = ar.shape[0]
-    if ks.ndim == 0:
-        ks = numpy.ones(p) * ks
-    if len(ks) != p:
-        raise CardinalityError('k should have len %s' % p)
-    return ks
 
 
 def iinfo(X, ks):
