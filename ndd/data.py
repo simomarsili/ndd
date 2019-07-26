@@ -6,6 +6,8 @@ import numpy
 
 from ndd.exceptions import CardinalityError, DataArrayError
 
+# from numbers import Integral
+
 
 class DataArray(numpy.ndarray):
     """
@@ -19,6 +21,9 @@ class DataArray(numpy.ndarray):
     #  pylint: disable=protected-access
 
     def __new__(cls, ar, axis):
+        if isinstance(ar, cls):
+            return ar
+
         ar = numpy.atleast_2d(ar)
 
         if not ar.size:
@@ -46,7 +51,10 @@ class DataArray(numpy.ndarray):
         Alphabet size for each variable.
         """
         if self._ks is None:
-            self._ks = numpy.array([len(numpy.unique(v)) for v in self])
+            if self.ndim == 1:
+                self._ks = len(numpy.unique(self))
+            else:
+                self._ks = numpy.array([len(numpy.unique(v)) for v in self])
         return self._ks
 
     @ks.setter
@@ -66,6 +74,7 @@ class DataArray(numpy.ndarray):
         if numpy.all(value >= self.ks):
             self._ks = value
         else:
+
             raise CardinalityError('ks cannot be set')
 
     def __getitem__(self, index):
