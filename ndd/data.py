@@ -20,7 +20,7 @@ class DataArray(numpy.ndarray):
     #  pylint: disable=attribute-defined-outside-init
     #  pylint: disable=protected-access
 
-    def __new__(cls, ar, axis):
+    def __new__(cls, ar, axis=1):
         if isinstance(ar, cls):
             return ar
 
