@@ -12,7 +12,7 @@ from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
-                            EstimatorInputError, PmfError)
+                            EstimatorInputError, NddError, PmfError)
 
 __all__ = [
     'entropy',
@@ -111,30 +111,27 @@ def from_data(ar, ks=None, axis=1, r=None):
 
     # check data shape
     # ar = _check_data(ar, axis)
-    ar = DataArray(ar, axis)
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, axis)
 
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
 
     if ks is not None:
-        ks = _check_ks(ks, ar)
-    else:
-        ks = ar.ks
+        ar.ks = _check_ks(ks, ar)
 
     if r is not None:
-        if ks.ndim == 0:
-            raise CardinalityError('For combinations, ks cant be a scalar')
         r = _check_r(r, ar)
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ks, r=r))
+                                      for x in combinations(ar.ks, r=r))
         return (
             estimator(pk, k=k)
             for pk, k in zip(counts_combinations, alphabet_size_combinations))
 
     counts = histogram(ar)
-    return estimator(counts, k=ks)
+    return estimator(counts, k=ar.ks)
 
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
@@ -290,6 +287,7 @@ def interaction_information(ar, ks=None, axis=1, r=None):
 
     if ks is not None:
         ks = _check_ks(ks, ar)
+        ar.ks = ks
     else:
         ks = ar.ks
 
@@ -381,6 +379,7 @@ def mutual_information(ar, ks=None, axis=1):
 
     if ks is not None:
         ks = _check_ks(ks, ar)
+        ar.ks = ks
     else:
         ks = ar.ks
 
@@ -440,6 +439,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
 
     if ks is not None:
         ks = _check_ks(ks, ar)
+        ar.ks = ks
     else:
         ks = ar.ks
 
@@ -551,6 +551,12 @@ def _check_r(r, ar):
 
 def _check_ks(ks, ar):
     """
+    Parameters
+    ----------
+    ks : int or array-like
+        Number of classes for variable.
+    ar : DataArray object
+
     Raises
     ------
     CardinalityError
@@ -561,10 +567,15 @@ def _check_ks(ks, ar):
         ks = numpy.float64(ks)
     except ValueError:
         raise CardinalityError('%s: not a valid cardinality')
-    if ks.ndim:
-        p = ar.shape[0]
-        if len(ks) != p:
-            raise CardinalityError('k should have len %s' % p)
+
+    if not isinstance(ar, DataArray):
+        raise NddError('not a DataArray object')
+
+    p = ar.shape[0]
+    if ks.ndim == 0:
+        ks = numpy.ones(p) * ks
+    if len(ks) != p:
+        raise CardinalityError('k should have len %s' % p)
     return ks
 
 

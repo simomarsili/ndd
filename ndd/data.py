@@ -12,6 +12,9 @@ class DataArray(numpy.ndarray):
     Check that input arrays are non-empty 2D arrays.
     """
 
+    #  pylint: disable=access-member-before-definition
+    #  pylint: disable=attribute-defined-outside-init
+
     def __new__(cls, ar, axis):
         ar = numpy.atleast_2d(ar)
 
@@ -40,8 +43,13 @@ class DataArray(numpy.ndarray):
         The number of unique elements along axis 0. If data is p-dimensional,
         the num. of unique elements for each variable.
         """
-        #  pylint: disable=access-member-before-definition
-        #  pylint: disable=attribute-defined-outside-init
-        if not self._ks:
+        if self._ks is None:
             self._ks = numpy.array([len(numpy.unique(v)) for v in self])
         return self._ks
+
+    @ks.setter
+    def ks(self, value):
+        """
+        Set ks values.
+        """
+        self._ks = value
