@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Contains DataArray class."""
+from itertools import combinations
+
 import numpy
 
 from ndd.exceptions import CardinalityError, DataArrayError
@@ -77,3 +79,7 @@ class DataArray(numpy.ndarray):
             else:
                 ar._ks = self._ks[index]
         return ar
+
+    def combinations(self, r):
+        """Data from combinations of different sets of variables."""
+        return combinations(self, r)
