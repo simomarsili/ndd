@@ -9,7 +9,7 @@ import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
-from ndd.base_estimator import BaseEstimator
+from ndd.base import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError
 
 logger = logging.getLogger(__name__)
