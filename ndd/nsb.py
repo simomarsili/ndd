@@ -499,6 +499,7 @@ def _check_data(ar, axis):
     """Check that input arrays are non-empty 2D arrays."""
 
     ar = numpy.atleast_2d(ar)
+
     if ar.ndim > 2:
         raise DataArrayError('Input array has %s dimensions; must be 2D' %
                              ar.ndim)
