@@ -40,8 +40,7 @@ class DataArray(numpy.ndarray):
     @property
     def ks(self):
         """
-        The number of unique elements along axis 0. If data is p-dimensional,
-        the num. of unique elements for each variable.
+        Alphabet size for each variable.
         """
         if self._ks is None:
             self._ks = numpy.array([len(numpy.unique(v)) for v in self])
