@@ -14,6 +14,7 @@ class DataArray(numpy.ndarray):
 
     #  pylint: disable=access-member-before-definition
     #  pylint: disable=attribute-defined-outside-init
+    #  pylint: disable=protected-access
 
     def __new__(cls, ar, axis):
         ar = numpy.atleast_2d(ar)
@@ -64,3 +65,15 @@ class DataArray(numpy.ndarray):
             self._ks = value
         else:
             raise CardinalityError('ks cannot be set')
+
+    def __getitem__(self, index):
+        # support slicing for ks attribute
+        ar = super().__getitem__(index)
+        if isinstance(ar, DataArray):
+            if isinstance(index, tuple):
+                index = index[0]
+            if self._ks is None:
+                ar._ks = None
+            else:
+                ar._ks = self._ks[index]
+        return ar
