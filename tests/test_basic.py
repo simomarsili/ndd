@@ -79,14 +79,14 @@ def test_from_data():
     data = random_ndarray(N, P, SEED)
     ref_result = 9.107550241712808
     assert numpy.isclose(
-        ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data)),  # pylint: disable=protected-access
+        ndd.nsb.from_data(data),  # pylint: disable=protected-access
         ref_result)
 
 
 def test_combinations_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    hs_pairs = ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data), r=2)  # pylint: disable=protected-access
+    hs_pairs = ndd.nsb.from_data(data, r=2)  # pylint: disable=protected-access
     ref_result = 18.84820751635297
     assert numpy.isclose(numpy.sum(hs_pairs), ref_result)
 

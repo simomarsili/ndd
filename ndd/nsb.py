@@ -8,6 +8,7 @@ import logging
 
 import numpy
 
+from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
@@ -109,12 +110,16 @@ def from_data(ar, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    ar = _check_data(ar, axis)
+    # ar = _check_data(ar, axis)
+    ar = DataArray(ar, axis)
 
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
 
-    ks = _check_ks(ks, ar)
+    if ks is not None:
+        ks = _check_ks(ks, ar)
+    else:
+        ks = ar.ks
 
     if r is not None:
         if ks.ndim == 0:
@@ -280,9 +285,14 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    ar = _check_data(ar, axis)
+    # ar = _check_data(ar, axis)
+    ar = DataArray(ar, axis)
 
-    ks = _check_ks(ks, ar)
+    if ks is not None:
+        ks = _check_ks(ks, ar)
+    else:
+        ks = ar.ks
+
     if ks.ndim == 0:
         raise CardinalityError('ks cant be a scalar')
 
@@ -364,11 +374,16 @@ def mutual_information(ar, ks=None, axis=1):
     from itertools import combinations
 
     # check data shape
-    ar = _check_data(ar, axis)
+    # ar = _check_data(ar, axis)
+    ar = DataArray(ar, axis)
 
     p = ar.shape[0]
 
-    ks = _check_ks(ks, ar)
+    if ks is not None:
+        ks = _check_ks(ks, ar)
+    else:
+        ks = ar.ks
+
     if ks.ndim == 0:
         raise CardinalityError('ks cant be a scalar')
 
@@ -410,7 +425,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    ar = _check_data(ar, axis)
+    # ar = _check_data(ar, axis)
+    ar = DataArray(ar, axis)
 
     p = ar.shape[0]
 
@@ -422,7 +438,10 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         return EstimatorInputError('The indices of conditioning variables'
                                    ' are not valid')
 
-    ks = _check_ks(ks, ar)
+    if ks is not None:
+        ks = _check_ks(ks, ar)
+    else:
+        ks = ar.ks
 
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
@@ -484,7 +503,8 @@ def histogram(data, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    data = _check_data(data, axis)
+    # data = _check_data(data, axis)
+    data = DataArray(data, axis)
 
     if r is not None:
         r = _check_r(r, data)
@@ -537,18 +557,14 @@ def _check_ks(ks, ar):
         If ks is array-like and len(ks) != p.
     """
 
-    if ks is None:
-        # guess from data
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim:
-            p = ar.shape[0]
-            if len(ks) != p:
-                raise CardinalityError('k should have len %s' % p)
+    try:
+        ks = numpy.float64(ks)
+    except ValueError:
+        raise CardinalityError('%s: not a valid cardinality')
+    if ks.ndim:
+        p = ar.shape[0]
+        if len(ks) != p:
+            raise CardinalityError('k should have len %s' % p)
     return ks
 
 

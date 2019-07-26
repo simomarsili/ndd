@@ -31,17 +31,17 @@ class DataArray(numpy.ndarray):
     def __array_finalize__(self, obj) -> None:
         if obj is None:
             return
-        default_attributes = {'_k': None}
+        default_attributes = {'_ks': None}
         self.__dict__.update(default_attributes)
 
     @property
-    def k(self):
+    def ks(self):
         """
         The number of unique elements along axis 0. If data is p-dimensional,
         the num. of unique elements for each variable.
         """
         #  pylint: disable=access-member-before-definition
         #  pylint: disable=attribute-defined-outside-init
-        if not self._k:
-            self._k = [len(numpy.unique(v)) for v in self]
-        return self._k
+        if not self._ks:
+            self._ks = numpy.array([len(numpy.unique(v)) for v in self])
+        return self._ks
