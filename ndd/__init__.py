@@ -126,8 +126,28 @@ __all__ = [
     'conditional_entropy', 'histogram', 'from_data'
 ]
 
-entropy_estimators = {
-    name: var
-    for name, var in ndd.estimators.__dict__.items() if inspect.isclass(var)
-    and issubclass(var, ndd.estimators.EntropyEstimator)
-}
+
+def subclass_in_module(cls, mod, same_class=False):
+    """
+    Return a dict name -> class of all subclasses of `cls` in module `mod`.
+
+    If `same_class` is True and , `cls` is added to the dict if in module.
+    """
+
+    def is_subclass(x):
+        condition = inspect.isclass(x) and issubclass(x, cls)
+        if not same_class:
+            condition = condition and x is not cls
+        return condition
+
+    return {
+        name: var
+        for name, var in mod.__dict__.items() if is_subclass(var)
+    }
+
+
+entropy_estimators = subclass_in_module(ndd.estimators.EntropyEstimator,
+                                        ndd.estimators)
+
+divergence_estimators = subclass_in_module(ndd.divergence.DivergenceEstimator,
+                                           ndd.divergence)
