@@ -11,7 +11,7 @@ import numpy
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
-from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
+from ndd.exceptions import (CardinalityError, CombinationError,
                             EstimatorInputError, NddError, PmfError)
 
 __all__ = [
@@ -110,7 +110,6 @@ def from_data(ar, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    # ar = _check_data(ar, axis)
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, axis)
 
@@ -282,7 +281,6 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    # ar = _check_data(ar, axis)
     ar = DataArray(ar, axis)
 
     if ks is not None:
@@ -372,7 +370,6 @@ def mutual_information(ar, ks=None, axis=1):
     from itertools import combinations
 
     # check data shape
-    # ar = _check_data(ar, axis)
     ar = DataArray(ar, axis)
 
     p = ar.shape[0]
@@ -424,7 +421,6 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    # ar = _check_data(ar, axis)
     ar = DataArray(ar, axis)
 
     p = ar.shape[0]
@@ -503,7 +499,6 @@ def histogram(data, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    # data = _check_data(data, axis)
     data = DataArray(data, axis)
 
     if r is not None:
@@ -513,24 +508,6 @@ def histogram(data, axis=1, r=None):
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts
-
-
-def _check_data(ar, axis):
-    """Check that input arrays are non-empty 2D arrays."""
-
-    ar = numpy.atleast_2d(ar)
-
-    if ar.ndim > 2:
-        raise DataArrayError('Input array has %s dimensions; must be 2D' %
-                             ar.ndim)
-    p, n = ar.shape
-    if n == 0 or p == 0:
-        raise DataArrayError('Empty input array')
-
-    if axis == 0:
-        ar = ar.T
-
-    return ar
 
 
 def _check_r(r, ar):
