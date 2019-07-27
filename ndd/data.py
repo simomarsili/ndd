@@ -1,12 +1,88 @@
 # -*- coding: utf-8 -*-
 """Contains DataArray class."""
+from collections.abc import Sequence
 from itertools import combinations
 
 import numpy
 
-from ndd.exceptions import CardinalityError, DataArrayError
+from ndd.exceptions import CardinalityError, DataArrayError, NddError
 
 # from numbers import Integral
+
+
+class Data1D(Sequence):
+    """Data container."""
+
+    def __init__(self, ar, k=None, axis=0):
+        _, encoded, counts = numpy.unique(ar,
+                                          return_inverse=True,
+                                          return_counts=True,
+                                          axis=axis)
+        encoded.flags['WRITEABLE'] = False
+        self.data = encoded
+        self.nbins = len(counts)
+        self.counts = counts
+
+        if k is not None:
+            if k < self.nbins:
+                raise ValueError('k must be larger than nbins')
+            self.k = k
+
+    def __iter__(self):
+        return iter(self.data)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        return self.data[index]
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.data)
+
+
+class DataMatrix(Sequence):
+    """Data container for multiple Data1D objects."""
+
+    def __init__(self, ar, k=None, axis=0):
+        try:
+            k = numpy.float64(k)
+        except ValueError:
+            raise CardinalityError('%s: not a valid cardinality')
+
+        ar = numpy.atleast_2d(ar)
+        if not ar.size:
+            raise NddError('Empty data array')
+        if ar.ndim > 2:
+            raise NddError('Input array has %s dimensions; must be 2D' %
+                           ar.ndim)
+        if axis == 0:
+            ar = ar.T
+
+        p, _ = ar.shape
+
+        if k.ndim == 0:
+            self.k = numpy.ones(p) * k
+        else:
+            if len(k) != p:
+                raise ValueError('len(k) must be equal to p')
+            self.k = k
+
+        self.data = [Data1D(x, k=k) for x, k in zip(ar, self.k)]
+        self.nbins = [d.nbins for d in self.data]
+        self.counts = [d.counts for d in self.data]
+
+    def __iter__(self):
+        return iter(self.data)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        return self.data[index]
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.data)
 
 
 class DataArray(numpy.ndarray):
