@@ -48,6 +48,11 @@ class Data1D(Sequence):
         """Variable cardinality."""
         return self._k
 
+    @property
+    def kb(self):
+        """Return cardinality if defined else nbins."""
+        return self._k or self.nbins
+
     @k.setter
     def k(self, value):
         if value:
@@ -76,7 +81,7 @@ class DataMatrix(Sequence):
     """Data container for multiple Data1D objects."""
 
     def __init__(self, ar, k=None, axis=0):
-        print('params: ', ar, k, axis)
+        # print('params: ', ar, k, axis)
 
         ar = numpy.atleast_2d(ar)
         if not ar.size:
@@ -113,6 +118,11 @@ class DataMatrix(Sequence):
             value = [value] * p
         for x, k in zip(self, value):
             x.k = k
+
+    @property
+    def kb(self):
+        """Return cardinality if defined else nbins."""
+        return [x.k or x.nbins for x in self]
 
     def __iter__(self):
         return iter(self.data)

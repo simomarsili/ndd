@@ -120,13 +120,13 @@ def from_data(ar, ks=None, axis=1, r=None):
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ar.k, r=r))
+                                      for x in combinations(ar.kb, r=r))
         return (
             estimator(pk, k=k)
             for pk, k in zip(counts_combinations, alphabet_size_combinations))
 
     counts = histogram(ar)
-    return estimator(counts, k=ar.k)
+    return estimator(counts, k=ar.kb)
 
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
