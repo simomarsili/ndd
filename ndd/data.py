@@ -34,10 +34,14 @@ class Data1D(Sequence):
                                           axis=axis)
         encoded.flags['WRITEABLE'] = False
         self.data = encoded
-        self.nbins = len(counts)
         self.counts = counts
         self._k = None
         self.k = k
+
+    @property
+    def nbins(self):
+        """Number of observed bins."""
+        return len(self.counts)
 
     @property
     def k(self):
@@ -84,15 +88,19 @@ class DataMatrix(Sequence):
             ar = ar.T
 
         self.shape = ar.shape
-        self.data = [Data1D(x) for x in ar]
+        self.data = tuple(Data1D(x) for x in ar)
+        self.counts = tuple(d.counts for d in self.data)
         self.k = k
-        self.nbins = [d.nbins for d in self.data]
-        self.counts = [d.counts for d in self.data]
+
+    @property
+    def nbins(self):
+        """Number of observed bins."""
+        return tuple(d.nbins for d in self.data)
 
     @property
     def k(self):
         """Variable cardinality."""
-        return [x.k for x in self]
+        return tuple(x.k for x in self)
 
     @k.setter
     def k(self, value):
