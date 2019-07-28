@@ -80,21 +80,22 @@ class Data1D(Sequence):
 class DataMatrix(Sequence):
     """Data container for multiple Data1D objects."""
 
-    def __init__(self, ar, k=None, axis=0):
+    def __init__(self, ar, k=None, axis=1):
         # print('params: ', ar, k, axis)
 
-        ar = numpy.atleast_2d(ar)
-        if not ar.size:
-            raise NddError('Empty data array')
-        if ar.ndim > 2:
-            raise NddError('Input array has %s dimensions; must be 2D' %
-                           ar.ndim)
-        if axis == 0:
-            ar = ar.T
+        if not isinstance(ar, self.__class__):
+            ar = numpy.atleast_2d(ar)
+            if not ar.size:
+                raise NddError('Empty data array')
+            if ar.ndim > 2:
+                raise NddError('Input array has %s dimensions; must be 2D' %
+                               ar.ndim)
+            if axis == 0:
+                ar = ar.T
 
-        self.shape = ar.shape
-        self.data = tuple(Data1D(x) for x in ar)
-        self.counts = tuple(d.counts for d in self.data)
+            self.data = tuple(Data1D(x) for x in ar)
+            self.shape = ar.shape
+            self.counts = tuple(d.counts for d in self.data)
         self.k = k
 
     @property

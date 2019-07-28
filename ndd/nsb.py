@@ -363,7 +363,7 @@ def mutual_information(ar, ks=None, axis=1):
 
     if p > 2:
         h1 = list(from_data(ar, r=1))
-        return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]], ks=ar.k[[i1, i2]])
+        return (h1[i1] + h1[i2] - from_data(DataMatrix([ar[i1], ar[i2]]))
                 for i1, i2 in combinations(range(p), 2))
 
     return numpy.sum(from_data(ar, r=1)) - from_data(ar)
@@ -416,8 +416,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     estimator = NSB()
 
     # Entropy of features on which we are conditioning
-    counts = histogram(ar[c])
-    hc = estimator(counts, k=ar.k)
+    counts = histogram(DataMatrix([ar[i] for i in c]))
+    hc = estimator(counts, k=ar.kb)
 
     if r is not None:
 
@@ -435,7 +435,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
                 if set(c) <= set(ids))
 
     counts = histogram(ar)
-    return estimator(counts, k=ar.k) - hc
+    return estimator(counts, k=ar.kb) - hc
 
 
 def _nbins(data):
