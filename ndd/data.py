@@ -57,7 +57,7 @@ class Data1D(Sequence):
             if value < self.nbins:
                 raise ValueError('k (%r) must be larger than nbins (%r)' %
                                  (value, self.nbins))
-        self._k = numpy.float64(value)
+        self._k = numpy.float64(value) if value else None
 
     def __iter__(self):
         return iter(self.data)
@@ -100,7 +100,7 @@ class DataMatrix(Sequence):
     @property
     def k(self):
         """Variable cardinality."""
-        return tuple(x.k for x in self)
+        return [x.k for x in self]
 
     @k.setter
     def k(self, value):
