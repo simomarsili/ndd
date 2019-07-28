@@ -8,7 +8,7 @@ import logging
 
 import numpy
 
-from ndd.data import DataArray
+from ndd.data import DataArray, DataMatrix
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import CombinationError, EstimatorInputError, PmfError
@@ -109,27 +109,24 @@ def from_data(ar, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    if not isinstance(ar, DataArray):
-        ar = DataArray(ar, axis)
+    if not isinstance(ar, DataMatrix):
+        ar = DataMatrix(ar, k=ks, axis=axis)
 
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
-
-    if ks is not None:
-        ar.ks = ks
 
     if r is not None:
         r = _check_r(r, ar)
 
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ar.ks, r=r))
+                                      for x in combinations(ar.k, r=r))
         return (
             estimator(pk, k=k)
             for pk, k in zip(counts_combinations, alphabet_size_combinations))
 
     counts = histogram(ar)
-    return estimator(counts, k=ar.ks)
+    return estimator(counts, k=ar.k)
 
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
@@ -279,21 +276,18 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     """
     from itertools import combinations
 
-    # check data shape
-    ar = DataArray(ar, axis)
-
-    if ks is not None:
-        ar.ks = ks
+    if not isinstance(ar, DataMatrix):
+        ar = DataMatrix(ar, k=ks, axis=axis)
 
     if r is not None:
         r = _check_r(r, ar)
 
         data_combinations = combinations(ar, r=r)
-        alphabet_size_combinations = (x for x in combinations(ar.ks, r=r))
+        alphabet_size_combinations = (x for x in combinations(ar.k, r=r))
         return (iinfo(*args)
                 for args in zip(data_combinations, alphabet_size_combinations))
 
-    return iinfo(ar, ar.ks)
+    return iinfo(ar, ar.k)
 
 
 def coinformation(ar, ks=None, r=None):
@@ -362,17 +356,14 @@ def mutual_information(ar, ks=None, axis=1):
 
     from itertools import combinations
 
-    # check data shape
-    ar = DataArray(ar, axis)
+    if not isinstance(ar, DataMatrix):
+        ar = DataMatrix(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
-    if ks is not None:
-        ar.ks = ks
-
     if p > 2:
         h1 = list(from_data(ar, r=1))
-        return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]], ks=ar.ks[[i1, i2]])
+        return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]], ks=ar.k[[i1, i2]])
                 for i1, i2 in combinations(range(p), 2))
 
     return numpy.sum(from_data(ar, r=1)) - from_data(ar)
@@ -408,7 +399,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    ar = DataArray(ar, axis)
+    if not isinstance(ar, DataMatrix):
+        ar = DataMatrix(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
@@ -420,15 +412,12 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         return EstimatorInputError('The indices of conditioning variables'
                                    ' are not valid')
 
-    if ks is not None:
-        ar.ks = ks
-
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
 
     # Entropy of features on which we are conditioning
     counts = histogram(ar[c])
-    hc = estimator(counts, k=ar.ks)
+    hc = estimator(counts, k=ar.k)
 
     if r is not None:
 
@@ -440,13 +429,13 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         indices = combinations(range(p), r=r)
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ar.ks, r=r))
+                                      for x in combinations(ar.k, r=r))
         return (estimator(*args) - hc for ids, *args in zip(
             indices, counts_combinations, alphabet_size_combinations)
                 if set(c) <= set(ids))
 
     counts = histogram(ar)
-    return estimator(counts, k=ar.ks) - hc
+    return estimator(counts, k=ar.k) - hc
 
 
 def _nbins(data):

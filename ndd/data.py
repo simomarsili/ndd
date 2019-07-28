@@ -10,6 +10,20 @@ from ndd.exceptions import CardinalityError, DataArrayError, NddError
 # from numbers import Integral
 
 
+def is_sequence(x):
+    """Check if x is a sequence."""
+    return isinstance(x, Sequence) and not isinstance(x, str)
+
+
+def is_whole(x):
+    """Check if x is a whole number."""
+    try:
+        x = numpy.float64(x)
+    except ValueError:
+        return False
+    return x.is_integer()
+
+
 class Data1D(Sequence):
     """Data container."""
 
@@ -22,11 +36,24 @@ class Data1D(Sequence):
         self.data = encoded
         self.nbins = len(counts)
         self.counts = counts
+        self._k = None
+        self.k = k
 
-        if k is not None:
-            if k < self.nbins:
-                raise ValueError('k must be larger than nbins')
-            self.k = k
+    @property
+    def k(self):
+        """Variable cardinality."""
+        return self._k
+
+    @k.setter
+    def k(self, value):
+        if value:
+            if not is_whole(value):
+                raise CardinalityError('k must be a whole number (got %r)' %
+                                       value)
+            if value < self.nbins:
+                raise ValueError('k (%r) must be larger than nbins (%r)' %
+                                 (value, self.nbins))
+        self._k = numpy.float64(value)
 
     def __iter__(self):
         return iter(self.data)
@@ -45,10 +72,7 @@ class DataMatrix(Sequence):
     """Data container for multiple Data1D objects."""
 
     def __init__(self, ar, k=None, axis=0):
-        try:
-            k = numpy.float64(k)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
+        print('params: ', ar, k, axis)
 
         ar = numpy.atleast_2d(ar)
         if not ar.size:
@@ -59,18 +83,28 @@ class DataMatrix(Sequence):
         if axis == 0:
             ar = ar.T
 
-        p, _ = ar.shape
-
-        if k.ndim == 0:
-            self.k = numpy.ones(p) * k
-        else:
-            if len(k) != p:
-                raise ValueError('len(k) must be equal to p')
-            self.k = k
-
-        self.data = [Data1D(x, k=k) for x, k in zip(ar, self.k)]
+        self.shape = ar.shape
+        self.data = [Data1D(x) for x in ar]
+        self.k = k
         self.nbins = [d.nbins for d in self.data]
         self.counts = [d.counts for d in self.data]
+
+    @property
+    def k(self):
+        """Variable cardinality."""
+        return [x.k for x in self]
+
+    @k.setter
+    def k(self, value):
+        p, _ = self.shape
+        if is_sequence(value):
+            # check len sequence
+            if len(value) != p:
+                raise ValueError('len(k) must be equal to p')
+        else:
+            value = [value] * p
+        for x, k in zip(self, value):
+            x.k = k
 
     def __iter__(self):
         return iter(self.data)
