@@ -13,7 +13,8 @@ from ndd.exceptions import CardinalityError, DataArrayError, NddError
 
 def is_sequence(x):
     """Check if x is a sequence."""
-    return isinstance(x, Sequence) and not isinstance(x, str)
+    return (not isinstance(x, str) if isinstance(x, Sequence) else isinstance(
+        x, numpy.ndarray))
 
 
 def is_whole(x):
@@ -82,9 +83,18 @@ class DataMatrix(Sequence):
     """Data container for multiple Data1D objects."""
 
     def __init__(self, ar, k=None, axis=1):
-        # print('params: ', ar, k, axis)
 
-        if not isinstance(ar, self.__class__):
+        if isinstance(ar, Data1D):
+            # a Data1D object
+            self.data = (ar, )
+            self.shape = 1, len(ar)
+            self.counts = (ar.counts, )
+        if is_sequence(ar) and isinstance(ar[0], Data1D):
+            # a sequence of Data1D objects
+            self.data = tuple(x for x in ar)
+            self.shape = len(ar), len(ar[0])
+            self.counts = tuple(x.counts for x in ar)
+        else:
             ar = numpy.atleast_2d(ar)
             if not ar.size:
                 raise NddError('Empty data array')
@@ -97,6 +107,7 @@ class DataMatrix(Sequence):
             self.data = tuple(Data1D(x) for x in ar)
             self.shape = ar.shape
             self.counts = tuple(d.counts for d in self.data)
+
         self.k = k
 
     @property
@@ -113,7 +124,6 @@ class DataMatrix(Sequence):
     def k(self, value):
         p, _ = self.shape
         if is_sequence(value):
-            # check len sequence
             if len(value) != p:
                 raise ValueError('len(k) must be equal to p')
         else:
