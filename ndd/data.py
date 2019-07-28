@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Contains DataArray class."""
 from collections.abc import Sequence
-# from itertools import combinations
+from itertools import combinations
 from operator import itemgetter
 
 import numpy
@@ -30,6 +30,8 @@ class DataArray(Sequence):
     """Data container."""
 
     def __init__(self, ar, k=None, axis=0):
+        if is_sequence(ar) and isinstance(ar[0], DataArray):
+            axis = 1
         _, encoded, counts = numpy.unique(ar,
                                           return_inverse=True,
                                           return_counts=True,
@@ -88,12 +90,10 @@ class DataMatrix(Sequence):
             # a DataArray object
             self.data = (ar, )
             self.shape = 1, len(ar)
-            self.counts = (ar.counts, )
         if is_sequence(ar) and isinstance(ar[0], DataArray):
             # a sequence of DataArray objects
             self.data = tuple(x for x in ar)
             self.shape = len(ar), len(ar[0])
-            self.counts = tuple(x.counts for x in ar)
         else:
             ar = numpy.atleast_2d(ar)
             if not ar.size:
@@ -106,9 +106,14 @@ class DataMatrix(Sequence):
 
             self.data = tuple(DataArray(x) for x in ar)
             self.shape = ar.shape
-            self.counts = tuple(d.counts for d in self.data)
 
         self.k = k
+
+    def counts(self, r=None):
+        """Frequency array(s)."""
+        if r:
+            return (DataArray(d).counts for d in combinations(self, r=r))
+        return DataArray(self).counts
 
     @property
     def nbins(self):
