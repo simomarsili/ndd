@@ -2,6 +2,7 @@
 """Contains DataArray class."""
 from collections.abc import Sequence
 from itertools import combinations
+from operator import itemgetter
 
 import numpy
 
@@ -132,6 +133,8 @@ class DataMatrix(Sequence):
         return len(self.data)
 
     def __getitem__(self, index):
+        if is_sequence(index):
+            return self.__class__(itemgetter(*index)(self))
         return self.data[index]
 
     def __repr__(self):
