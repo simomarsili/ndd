@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Contains DataArray class."""
 from collections.abc import Sequence
-from itertools import combinations
+# from itertools import combinations
 from operator import itemgetter
 
 import numpy
@@ -26,7 +26,7 @@ def is_whole(x):
     return x.is_integer()
 
 
-class Data1D(Sequence):
+class DataArray(Sequence):
     """Data container."""
 
     def __init__(self, ar, k=None, axis=0):
@@ -62,8 +62,8 @@ class Data1D(Sequence):
                 raise CardinalityError('k must be a whole number (got %r)' %
                                        value)
             if value < self.nbins:
-                raise ValueError('k (%r) must be larger than nbins (%r)' %
-                                 (value, self.nbins))
+                raise DataArrayError('k (%r) must be larger than nbins (%r)' %
+                                     (value, self.nbins))
         self._k = numpy.float64(value) if value else None
 
     def __iter__(self):
@@ -80,17 +80,17 @@ class Data1D(Sequence):
 
 
 class DataMatrix(Sequence):
-    """Data container for multiple Data1D objects."""
+    """Data container for multiple DataArray objects."""
 
     def __init__(self, ar, k=None, axis=1):
 
-        if isinstance(ar, Data1D):
-            # a Data1D object
+        if isinstance(ar, DataArray):
+            # a DataArray object
             self.data = (ar, )
             self.shape = 1, len(ar)
             self.counts = (ar.counts, )
-        if is_sequence(ar) and isinstance(ar[0], Data1D):
-            # a sequence of Data1D objects
+        if is_sequence(ar) and isinstance(ar[0], DataArray):
+            # a sequence of DataArray objects
             self.data = tuple(x for x in ar)
             self.shape = len(ar), len(ar[0])
             self.counts = tuple(x.counts for x in ar)
@@ -104,7 +104,7 @@ class DataMatrix(Sequence):
             if axis == 0:
                 ar = ar.T
 
-            self.data = tuple(Data1D(x) for x in ar)
+            self.data = tuple(DataArray(x) for x in ar)
             self.shape = ar.shape
             self.counts = tuple(d.counts for d in self.data)
 
@@ -125,7 +125,7 @@ class DataMatrix(Sequence):
         p, _ = self.shape
         if is_sequence(value):
             if len(value) != p:
-                raise ValueError('len(k) must be equal to p')
+                raise DataArrayError('len(k) must be equal to p')
         else:
             value = [value] * p
         for x, k in zip(self, value):
@@ -149,88 +149,3 @@ class DataMatrix(Sequence):
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.data)
-
-
-class DataArray(numpy.ndarray):
-    """
-    Data array helper class.
-
-    Check that input arrays are non-empty 2D arrays.
-    """
-
-    #  pylint: disable=access-member-before-definition
-    #  pylint: disable=attribute-defined-outside-init
-    #  pylint: disable=protected-access
-
-    def __new__(cls, ar, axis=1):
-        if isinstance(ar, cls):
-            return ar
-
-        ar = numpy.atleast_2d(ar)
-
-        if not ar.size:
-            raise DataArrayError('Empty data array')
-
-        if ar.ndim > 2:
-            raise DataArrayError('Input array has %s dimensions; must be 2D' %
-                                 ar.ndim)
-        if axis == 0:
-            ar = ar.T
-
-        ar.flags['WRITEABLE'] = False
-
-        return ar.view(cls)
-
-    def __array_finalize__(self, obj) -> None:
-        if obj is None:
-            return
-        default_attributes = {'_ks': None}
-        self.__dict__.update(default_attributes)
-
-    @property
-    def ks(self):
-        """
-        Alphabet size for each variable.
-        """
-        if self._ks is None:
-            if self.ndim == 1:
-                self._ks = len(numpy.unique(self))
-            else:
-                self._ks = numpy.array([len(numpy.unique(v)) for v in self])
-        return self._ks
-
-    @ks.setter
-    def ks(self, value):
-        """
-        Set ks values.
-        """
-        try:
-            value = numpy.float64(value)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-
-        p = self.shape[0]  # pylint: disable=unsubscriptable-object
-        if value.ndim == 0:
-            value = numpy.ones(p) * value
-
-        if numpy.all(value >= self.ks):
-            self._ks = value
-        else:
-
-            raise CardinalityError('ks cannot be set')
-
-    def __getitem__(self, index):
-        # support slicing for ks attribute
-        ar = super().__getitem__(index)
-        if isinstance(ar, DataArray):
-            if isinstance(index, tuple):
-                index = index[0]
-            if self._ks is None:
-                ar._ks = None
-            else:
-                ar._ks = self._ks[index]
-        return ar
-
-    def combinations(self, r):
-        """Data from combinations of different sets of variables."""
-        return combinations(self, r)

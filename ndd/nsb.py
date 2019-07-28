@@ -8,7 +8,7 @@ import logging
 
 import numpy
 
-from ndd.data import DataArray, DataMatrix
+from ndd.data import DataMatrix
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import CombinationError, EstimatorInputError, PmfError
@@ -470,7 +470,7 @@ def histogram(data, axis=1, r=None):
     from itertools import combinations
 
     # check data shape
-    data = DataArray(data, axis)
+    data = DataMatrix(data, axis=axis)
 
     if r is not None:
         r = _check_r(r, data)
