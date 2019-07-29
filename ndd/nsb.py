@@ -9,7 +9,7 @@ from itertools import combinations
 
 import numpy
 
-from ndd.data import Data
+from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import CombinationError, EstimatorInputError, PmfError
@@ -107,8 +107,8 @@ def from_data(ar, ks=None, axis=1, r=None):
         Entropy estimate
 
     """
-    if not isinstance(ar, Data):
-        ar = Data(ar, k=ks, axis=axis)
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
@@ -266,8 +266,8 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         If len(ks) != p.
 
     """
-    if not isinstance(ar, Data):
-        ar = Data(ar, k=ks, axis=axis)
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     if r is not None:
         r = _check_r(r, ar)
@@ -340,8 +340,8 @@ def mutual_information(ar, ks=None, axis=1):
         If len(ks) != p.
 
     """
-    if not isinstance(ar, Data):
-        ar = Data(ar, k=ks, axis=axis)
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
@@ -381,8 +381,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
 
     """
     # check data shape
-    if not isinstance(ar, Data):
-        ar = Data(ar, k=ks, axis=axis)
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
@@ -438,8 +438,8 @@ def histogram(data, axis=1, r=None):
         Bin counts.
 
     """
-    if not isinstance(data, Data):
-        data = Data(data, axis=axis)
+    if not isinstance(data, DataArray):
+        data = DataArray(data, axis=axis)
 
     if r is not None:
         r = _check_r(r, data)

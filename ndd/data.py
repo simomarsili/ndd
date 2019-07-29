@@ -7,7 +7,7 @@ from operator import itemgetter
 
 import numpy
 
-from ndd.exceptions import CardinalityError, DataArrayError, NddError
+from ndd.exceptions import DataArrayError, NddError
 
 
 def is_sequence(x):
@@ -25,7 +25,7 @@ def is_whole(x):
     return x.is_integer()
 
 
-class Data(Sequence):
+class DataArray(Sequence):
     """Data container with methods for counts calculation."""
 
     def __init__(self, ar, axis=0, k=None):
@@ -139,58 +139,3 @@ class Data(Sequence):
         if r:
             return zip(self.counts(r), self.ks(r) or self.nbins(r))
         return self.counts(), self.ks() or self.nbins()
-
-
-class DataArray(Sequence):
-    """Data container."""
-
-    def __init__(self, ar, k=None, axis=0):
-        if is_sequence(ar) and isinstance(ar[0], DataArray):
-            axis = 1
-        _, encoded, counts = numpy.unique(ar,
-                                          return_inverse=True,
-                                          return_counts=True,
-                                          axis=axis)
-        encoded.flags['WRITEABLE'] = False
-        self.data = encoded
-        self.counts = counts
-        self._k = None
-        self.k = k
-
-    @property
-    def nbins(self):
-        """Number of observed bins."""
-        return len(self.counts)
-
-    @property
-    def k(self):
-        """Variable cardinality."""
-        return self._k
-
-    @property
-    def kb(self):
-        """Return cardinality if defined else nbins."""
-        return self._k or self.nbins
-
-    @k.setter
-    def k(self, value):
-        if value:
-            if not is_whole(value):
-                raise CardinalityError('k must be a whole number (got %r)' %
-                                       value)
-            if value < self.nbins:
-                raise DataArrayError('k (%r) must be larger than nbins (%r)' %
-                                     (value, self.nbins))
-        self._k = numpy.float64(value) if value else None
-
-    def __iter__(self):
-        return iter(self.data)
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, index):
-        return self.data[index]
-
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, self.data)

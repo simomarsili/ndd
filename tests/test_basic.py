@@ -68,7 +68,7 @@ def test_entropy(case, ref_result):
 
 def test_histogram_ndarray():
     N, P = 100, 3
-    data = ndd.data.Data(random_ndarray(N, P, SEED), axis=1)
+    data = ndd.data.DataArray(random_ndarray(N, P, SEED), axis=1)
     ref_result = 9.107550241712808
     counts, k = data.iter_counts()
     estimate = ndd.entropy(counts, k=k)
