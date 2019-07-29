@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Contains DataArray class."""
+# Author: Simone Marsili <simomarsili@gmail.com>
+# License: BSD 3 clause
+"""DataArray class."""
+import logging
 from collections.abc import Sequence
 from itertools import combinations
 from numbers import Integral
@@ -8,6 +11,10 @@ from operator import itemgetter
 import numpy
 
 from ndd.exceptions import DataArrayError, NddError
+
+__all__ = ['DataArray']
+
+logger = logging.getLogger(__name__)
 
 
 def is_sequence(x):
