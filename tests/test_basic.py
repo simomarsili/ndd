@@ -119,7 +119,8 @@ def test_mi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     h2 = ndd.from_data(data_with_redundancy[2])
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     mi = h1 + h2 - h12
-    assert numpy.isclose(mutual_information(data_with_redundancy[[1, 2]]), mi)
+    estimate = mutual_information(data_with_redundancy[[1, 2]])
+    assert numpy.isclose(estimate, mi)
 
 
 def test_mmi(data_with_redundancy):  # pylint: disable=redefined-outer-name
@@ -133,15 +134,14 @@ def test_mmi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     h012 = ndd.from_data(data_with_redundancy)
     mmi = -(h0 + h1 + h2 - h01 - h02 - h12 + h012)
-    assert numpy.isclose(interaction_information(data_with_redundancy), mmi)
+    estimate = interaction_information(data_with_redundancy)
+    assert numpy.isclose(estimate, mmi)
 
 
 def test_conditional_entropy(data_with_redundancy):  # pylint: disable=redefined-outer-name
     random.seed(SEED)
     from ndd.nsb import mutual_information
     data = data_with_redundancy[[1, 2]]
-    assert numpy.isclose(mutual_information(data),
-                         ndd.from_data(data) -
-                         ndd.conditional_entropy(data, c=0) -
-                         ndd.conditional_entropy(data, c=1),
-                         atol=0.01)
+    estimate = (ndd.from_data(data) - ndd.conditional_entropy(data, c=0) -
+                ndd.conditional_entropy(data, c=1))
+    assert numpy.isclose(estimate, mutual_information(data), atol=0.01)
