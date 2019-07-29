@@ -68,10 +68,11 @@ def test_entropy(case, ref_result):
 
 def test_histogram_ndarray():
     N, P = 100, 3
-    data = random_ndarray(N, P, SEED)
+    data = ndd.data.Data(random_ndarray(N, P, SEED), axis=1)
     ref_result = 9.107550241712808
-    assert numpy.isclose(
-        ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)), ref_result)  # pylint: disable=protected-access
+    counts, k = data.iter_counts()
+    estimate = ndd.entropy(counts, k=k)
+    assert numpy.isclose(estimate, ref_result)  # pylint: disable=protected-access
 
 
 def test_from_data():
