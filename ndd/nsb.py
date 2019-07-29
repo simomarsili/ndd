@@ -12,7 +12,7 @@ import numpy
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
-from ndd.exceptions import CombinationError, EstimatorInputError, PmfError
+from ndd.exceptions import EstimatorInputError, PmfError
 
 __all__ = [
     'entropy',
@@ -114,7 +114,6 @@ def from_data(ar, ks=None, axis=0, r=None):
     estimator = NSB()
 
     if r is not None:
-        r = _check_r(r, ar)
         return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
 
     counts, k = ar.iter_counts()
@@ -270,7 +269,6 @@ def interaction_information(ar, ks=None, axis=0, r=None):
         ar = DataArray(ar, k=ks, axis=axis)
 
     if r is not None:
-        r = _check_r(r, ar)
         return (iinfo(data, k) for data, k in ar.iter_data(r=r))
 
     data, k = ar.iter_data()
@@ -406,7 +404,7 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=None):
 
     if r is not None:
 
-        r = _check_r(r, p - len(c))
+        # r should be >= p - len(c)
 
         # include the c variables in the set
         r = r + len(c)
@@ -445,28 +443,11 @@ def histogram(data, axis=0, r=None):
         data = DataArray(data, axis=axis)
 
     if r is not None:
-        r = _check_r(r, data)
         return (histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts
-
-
-def _check_r(r, ar):
-    """
-    Raises
-    ------
-    CombinationError
-        For r values out of the interval [1, p].
-    """
-    if ar.shape:
-        p = ar.shape[0]
-    else:
-        p = ar
-    if r < 1 or r > p:
-        raise CombinationError('r values must be in the interval [1, %s]' % p)
-    return r
 
 
 def iinfo(X, ks):
