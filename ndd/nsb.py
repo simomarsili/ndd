@@ -9,7 +9,7 @@ from itertools import combinations
 
 import numpy
 
-from ndd.data import Data, DataMatrix
+from ndd.data import Data
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import CombinationError, EstimatorInputError, PmfError
@@ -438,7 +438,8 @@ def histogram(data, axis=1, r=None):
         Bin counts.
 
     """
-    data = DataMatrix(data, axis=axis)
+    if not isinstance(data, Data):
+        data = Data(data, axis=axis)
 
     if r is not None:
         r = _check_r(r, data)
