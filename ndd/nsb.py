@@ -277,7 +277,7 @@ def interaction_information(ar, ks=None, axis=0, r=None):
     return iinfo(data, k)
 
 
-def coinformation(ar, ks=None, r=None):
+def coinformation(ar, ks=None, axis=0, r=None):
     """Coinformation from data matrix.
 
     See Eq.11 in:
@@ -295,6 +295,8 @@ def coinformation(ar, ks=None, r=None):
         p-by-n array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
+    axis : int, optional
+        The sample-indexing axis
     r : int or None, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
@@ -311,7 +313,8 @@ def coinformation(ar, ks=None, r=None):
     """
 
     # change sign for odd number of variables
-    return (-1)**ar.shape[0] * interaction_information(ar=ar, ks=ks, r=r)
+    return (-1)**ar.shape[0] * interaction_information(
+        ar=ar, ks=ks, axis=axis, r=r)
 
 
 def mutual_information(ar, ks=None, axis=0):
