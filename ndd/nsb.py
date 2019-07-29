@@ -8,7 +8,7 @@ import logging
 
 import numpy
 
-from ndd.data import DataMatrix
+from ndd.data import Data, DataMatrix
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
 from ndd.exceptions import CombinationError, EstimatorInputError, PmfError
@@ -106,27 +106,18 @@ def from_data(ar, ks=None, axis=1, r=None):
         Entropy estimate
 
     """
-    from itertools import combinations
-
-    # check data shape
-    if not isinstance(ar, DataMatrix):
-        ar = DataMatrix(ar, k=ks, axis=axis)
+    if not isinstance(ar, Data):
+        ar = Data(ar, k=ks, axis=axis)
 
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
 
     if r is not None:
         r = _check_r(r, ar)
+        return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
 
-        counts_combinations = histogram(ar, r=r)
-        alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ar.kb, r=r))
-        return (
-            estimator(pk, k=k)
-            for pk, k in zip(counts_combinations, alphabet_size_combinations))
-
-    counts = histogram(ar)
-    return estimator(counts, k=ar.kb)
+    counts, k = ar.iter_counts()
+    return estimator(counts, k=k)
 
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
@@ -276,8 +267,8 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     """
     from itertools import combinations
 
-    if not isinstance(ar, DataMatrix):
-        ar = DataMatrix(ar, k=ks, axis=axis)
+    if not isinstance(ar, Data):
+        ar = Data(ar, k=ks, axis=axis)
 
     if r is not None:
         r = _check_r(r, ar)

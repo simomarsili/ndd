@@ -116,7 +116,20 @@ class Data(Sequence):
                     for idx in combinations(range(p), r=r))
         return numpy.prod(ns)
 
-    def iter(self, r=None):
+    def iter_data(self, r=None):
+        """
+        Return tuples of (data, cardinality) over r-sized sets of variables.
+
+        If cardinality is unknown, defaults to nbins for single variables
+        or to the product of nbins for sets of variables.
+        """
+        cls = type(self)
+        if r:
+            return zip((cls(c, axis=1) for c in combinations(self, r=r)),
+                       self.ks(r) or self.nbins(r))
+        return self, self.ks() or self.nbins()
+
+    def iter_counts(self, r=None):
         """
         Return tuples of (counts, cardinality) over r-sized sets of variables.
 
