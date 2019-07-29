@@ -381,8 +381,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
 
     """
     # check data shape
-    if not isinstance(ar, DataMatrix):
-        ar = DataMatrix(ar, k=ks, axis=axis)
+    if not isinstance(ar, Data):
+        ar = Data(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
@@ -398,8 +398,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     estimator = NSB()
 
     # Entropy of features on which we are conditioning
-    counts = histogram(ar[c])
-    hc = estimator(counts, k=ar.kb)
+    counts, k = ar[c].iter_counts()
+    hc = estimator(counts, k=k)
 
     if r is not None:
 
@@ -416,8 +416,8 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
             indices, counts_combinations, alphabet_size_combinations)
                 if set(c) <= set(ids))
 
-    counts = histogram(ar)
-    return estimator(counts, k=ar.kb) - hc
+    counts, k = ar.iter_counts()
+    return estimator(counts, k=k) - hc
 
 
 def _nbins(data):
