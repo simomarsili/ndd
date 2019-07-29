@@ -418,15 +418,6 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     return estimator(counts, k=k) - hc
 
 
-def _nbins(data):
-    """
-    The number of unique elements along axis 0. If data is p-dimensional,
-    the num. of unique elements for each variable.
-    """
-    # reshape as a p-by-n array
-    return [len(numpy.unique(v)) for v in data]
-
-
 def histogram(data, axis=1, r=None):
     """Compute an histogram from a data matrix. Wrapper to numpy.unique.
 
