@@ -91,12 +91,12 @@ def from_data(ar, ks=None, axis=0, r=None):
 
     Paramaters
     ----------
-    ar : array-like, shape (p, n)
+    ar : array-like, shape (n, p)
         2D array of n samples from p discrete variables.
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis. Defaults to 1.
+        The sample-indexing axis. Defaults to 0.
     r : int, optional; ; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
@@ -245,11 +245,11 @@ def interaction_information(ar, ks=None, axis=0, r=None):
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 0.
     r : int, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
@@ -292,11 +292,11 @@ def coinformation(ar, ks=None, axis=0, r=None):
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 0.
     r : int or None, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
@@ -326,11 +326,11 @@ def mutual_information(ar, ks=None, axis=0):
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 0.
 
     Returns
     -------
@@ -363,13 +363,13 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=None):
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     c : int or array-like
         The variables on which entropy is conditioned (as column indices).
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 0.
     r : int or None, optional; 1<=r<=p-len(c).
         If passed, return a generator yielding estimates for all possible
         combinations of r variables conditioning on the `c` variables.
@@ -427,9 +427,9 @@ def histogram(data, axis=0, r=None):
     Parameters
     ----------
     data : array-like, shape (p, n)
-        A p-by-n array of n samples from p variables.
+        A n-by-p array of n samples from p variables.
     axis : int, optional
-        The sample-indexing axis. Defaults to 1.
+        The sample-indexing axis. Defaults to 0.
     r : int, optional
         For r values in the interval [1, p],
         return a generator yielding bin counts for each of the p-choose-r
