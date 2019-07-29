@@ -5,6 +5,7 @@
 Functions for entropy and information measures estimation.
 """
 import logging
+from itertools import combinations
 
 import numpy
 
@@ -265,20 +266,15 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         If len(ks) != p.
 
     """
-    from itertools import combinations
-
     if not isinstance(ar, Data):
         ar = Data(ar, k=ks, axis=axis)
 
     if r is not None:
         r = _check_r(r, ar)
+        return (iinfo(data, k) for data, k in ar.iter_data(r=r))
 
-        data_combinations = combinations(ar, r=r)
-        alphabet_size_combinations = (x for x in combinations(ar.k, r=r))
-        return (iinfo(*args)
-                for args in zip(data_combinations, alphabet_size_combinations))
-
-    return iinfo(ar, ar.k)
+    data, k = ar.iter_data()
+    return iinfo(data, k)
 
 
 def coinformation(ar, ks=None, r=None):
@@ -344,11 +340,8 @@ def mutual_information(ar, ks=None, axis=1):
         If len(ks) != p.
 
     """
-
-    from itertools import combinations
-
-    if not isinstance(ar, DataMatrix):
-        ar = DataMatrix(ar, k=ks, axis=axis)
+    if not isinstance(ar, Data):
+        ar = Data(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
@@ -387,8 +380,6 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         Conditional entropy estimate
 
     """
-    from itertools import combinations
-
     # check data shape
     if not isinstance(ar, DataMatrix):
         ar = DataMatrix(ar, k=ks, axis=axis)
@@ -458,9 +449,6 @@ def histogram(data, axis=1, r=None):
         Bin counts.
 
     """
-    from itertools import combinations
-
-    # check data shape
     data = DataMatrix(data, axis=axis)
 
     if r is not None:
