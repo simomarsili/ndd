@@ -29,7 +29,7 @@ def random_ndarray(n, p, seed):
     import string
     random.seed(seed)
     alphabet = list(string.ascii_uppercase)
-    return random.choice(alphabet, size=(n, p)).T
+    return random.choice(alphabet, size=(n, p))
 
 
 def random_tuple_generator(n, p, seed):
@@ -51,7 +51,7 @@ def data_with_redundancy():
         rain = clouds * rnd(0.7) + (1 - clouds) * rnd(0.2)
         dark = clouds * rnd(0.9)
         data.append([clouds, rain, dark])
-    return numpy.array(data).T
+    return ndd.data.DataArray(numpy.array(data))
 
 
 with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
@@ -68,7 +68,7 @@ def test_entropy(case, ref_result):
 
 def test_histogram_ndarray():
     N, P = 100, 3
-    data = ndd.data.DataArray(random_ndarray(N, P, SEED), axis=1)
+    data = ndd.data.DataArray(random_ndarray(N, P, SEED))
     ref_result = 9.107550241712808
     counts, k = data.iter_counts()
     estimate = ndd.entropy(counts, k=k)

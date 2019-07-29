@@ -85,7 +85,7 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     return S
 
 
-def from_data(ar, ks=None, axis=1, r=None):
+def from_data(ar, ks=None, axis=0, r=None):
     """
     Entropy estimate from data matrix.
 
@@ -233,7 +233,7 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
     return kl
 
 
-def interaction_information(ar, ks=None, axis=1, r=None):
+def interaction_information(ar, ks=None, axis=0, r=None):
     """Interaction information from data matrix.
 
     See Eq.10 in:
@@ -314,7 +314,7 @@ def coinformation(ar, ks=None, r=None):
     return (-1)**ar.shape[0] * interaction_information(ar=ar, ks=ks, r=r)
 
 
-def mutual_information(ar, ks=None, axis=1):
+def mutual_information(ar, ks=None, axis=0):
     """Mutual information from p-by-n data matrix.
 
     If p > 2, return an estimate of the mutual information for each possible
@@ -353,7 +353,7 @@ def mutual_information(ar, ks=None, axis=1):
     return numpy.sum(from_data(ar, r=1)) - from_data(ar)
 
 
-def conditional_entropy(ar, c, ks=None, axis=1, r=None):
+def conditional_entropy(ar, c, ks=None, axis=0, r=None):
     """
     Coditional entropy estimate from data matrix.
 
@@ -418,7 +418,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
     return estimator(counts, k=k) - hc
 
 
-def histogram(data, axis=1, r=None):
+def histogram(data, axis=0, r=None):
     """Compute an histogram from a data matrix. Wrapper to numpy.unique.
 
     Parameters
