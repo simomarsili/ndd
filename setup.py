@@ -3,9 +3,6 @@
 # pylint: disable=wrong-import-position
 from __future__ import print_function
 
-import os
-import sys
-
 from pkg_resources import parse_version
 
 NAME = 'ndd'
@@ -115,13 +112,3 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
 )
-
-if os.name == 'nt':
-    build_dir = 'build\\lib.win-amd64-{}.{}\\{}'.format(
-        *sys.version_info[:2], NAME)
-    libs_dir = '{}\\.libs'.format(build_dir)
-    print(
-        '*********************************************************** copying .dll from %s to %s'
-        % (libs_dir, build_dir))
-    os.system('copy {}\\*.dll {}'.format(libs_dir, build_dir))
-    os.system('del /s /q {}'.format(libs_dir))
