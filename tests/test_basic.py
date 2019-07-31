@@ -144,3 +144,15 @@ def test_conditional_entropy(data_with_redundancy):  # pylint: disable=redefined
                          ndd.conditional_entropy(data, c=0) -
                          ndd.conditional_entropy(data, c=1),
                          atol=0.01)
+
+
+def test_xor():
+    random.seed(SEED)
+
+    def xor():
+        x, y = numpy.random.randint(2, size=2)
+        z = int(x != y)
+        return x, y, z
+
+    data = numpy.array([xor() for k in range(100)]).T
+    assert numpy.isclose(ndd.conditional_entropy(data, c=[0, 1]), 0, atol=0.01)
