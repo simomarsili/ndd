@@ -112,7 +112,8 @@ import inspect
 
 import pkg_resources
 
-import ndd.estimators
+from ndd.divergence import DivergenceEstimator
+from ndd.estimators import EntropyEstimator
 from ndd.nsb import entropy  # pylint: disable=unused-import
 from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
                      interaction_information, jensen_shannon_divergence,
@@ -133,27 +134,10 @@ __all__ = [
 ]
 
 
-def subclass_in_module(cls, mod, same_class=False):
-    """
-    Return a dict name -> class of all subclasses of `cls` in module `mod`.
-
-    If `same_class` is True and , `cls` is added to the dict if in module.
-    """
-
-    def is_subclass(x):
-        condition = inspect.isclass(x) and issubclass(x, cls)
-        if not same_class:
-            condition = condition and x is not cls
-        return condition
-
-    return {
-        name: var
-        for name, var in mod.__dict__.items() if is_subclass(var)
-    }
+def subclasses(cls):
+    """Return a dict name -> class for all subclasses of class `cls`."""
+    return {sc.__name__: sc for sc in cls.__subclasses__()}
 
 
-entropy_estimators = subclass_in_module(ndd.estimators.EntropyEstimator,
-                                        ndd.estimators)
-
-divergence_estimators = subclass_in_module(ndd.divergence.DivergenceEstimator,
-                                           ndd.divergence)
+entropy_estimators = subclasses(EntropyEstimator)
+divergence_estimators = subclasses(DivergenceEstimator)
