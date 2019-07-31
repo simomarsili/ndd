@@ -76,6 +76,9 @@ FNSB = Extension(
     ],
     # extra_f90_compile_args = ["-fopenmp"],
     # extra_link_args = ["-lgomp"],
+
+    # uncomment line below to build on MacOS
+    # extra_link_args = ["-undefined", "dynamic_lookup"],
 )
 
 setup(
