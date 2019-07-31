@@ -510,7 +510,7 @@ def _check_r(r, ar):
     CombinationError
         For r values out of the interval [1, p].
     """
-    if ar.shape:
+    if hasattr(ar, 'shape'):
         p = ar.shape[0]
     else:
         p = ar
