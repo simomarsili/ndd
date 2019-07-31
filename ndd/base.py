@@ -3,8 +3,8 @@
 # License: BSD 3 clause
 # pylint: disable=c-extension-no-member
 """Base EntropyEstimator class."""
-import abc
 import logging
+from abc import ABCMeta, abstractmethod
 
 import numpy
 
@@ -13,6 +13,10 @@ from ndd.base_estimator import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError
 
 logger = logging.getLogger(__name__)
+
+# compatible with both Python 2 and 3
+# https://stackoverflow.com/a/38668373
+ABC = ABCMeta('ABC', (object, ), {'__slots__': ()})
 
 
 class EntropyEstimatorMixin:
@@ -161,7 +165,7 @@ class EntropyEstimatorMixin:
         return k
 
 
-class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
+class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin, ABC):
     """Extend the BaseEstimator to estimators of entropy-derived quantities.
 
     Specific estimators should extend the EntropyBasedEstimator class with
@@ -237,6 +241,6 @@ class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
         """Estimator function name."""
         return self.estimator.__name__.split('_')[0]
 
-    @abc.abstractmethod
+    @abstractmethod
     def fit(self, pk, k=None):
         """Set the estimated parameters."""
