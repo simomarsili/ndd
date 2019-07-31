@@ -161,7 +161,7 @@ class EntropyEstimatorMixin:
         return k
 
 
-class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin, abc.ABC):
+class EntropyBasedEstimator(BaseEstimator, EntropyEstimatorMixin):
     """Extend the BaseEstimator to estimators of entropy-derived quantities.
 
     Specific estimators should extend the EntropyBasedEstimator class with

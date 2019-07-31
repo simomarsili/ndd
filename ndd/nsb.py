@@ -435,7 +435,7 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         counts_combinations = histogram(ar, r=r)
         alphabet_size_combinations = (numpy.prod(x)
                                       for x in combinations(ks, r=r))
-        return (estimator(*args) - hc for ids, *args in zip(
+        return (estimator(*args) - hc for ids, args in zip(
             indices, counts_combinations, alphabet_size_combinations)
                 if set(c) <= set(ids))
 
