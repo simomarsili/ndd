@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Added
+- build on Windows (MinGW-W64 compiler)
 
 ## [1.4] - 2019-05-20
 ### Added
