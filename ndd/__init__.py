@@ -108,10 +108,9 @@ and interesting links:
 - [Il Memming Park on discrete entropy estimators](https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/)
 
 """
-import inspect
-
 import pkg_resources
 
+from ndd import package_setup
 from ndd.divergence import DivergenceEstimator
 from ndd.estimators import EntropyEstimator
 from ndd.nsb import entropy  # pylint: disable=unused-import
@@ -119,8 +118,9 @@ from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
                      interaction_information, jensen_shannon_divergence,
                      kullback_leibler_divergence, mutual_information)
 
-project_name = 'ndd'
-__version__ = pkg_resources.require(project_name)[0].version
+package_name = package_setup.package_name
+package_path = package_setup.package_path
+__version__ = pkg_resources.require(package_name)[0].version
 __all__ = [
     'entropy',
     'jensen_shannon_divergence',
@@ -133,11 +133,5 @@ __all__ = [
     'from_data',
 ]
 
-
-def subclasses(cls):
-    """Return a dict name -> class for all subclasses of class `cls`."""
-    return {sc.__name__: sc for sc in cls.__subclasses__()}
-
-
-entropy_estimators = subclasses(EntropyEstimator)
-divergence_estimators = subclasses(DivergenceEstimator)
+entropy_estimators = package_setup.subclasses(EntropyEstimator)
+divergence_estimators = package_setup.subclasses(DivergenceEstimator)
