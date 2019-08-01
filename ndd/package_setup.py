@@ -10,11 +10,11 @@ PLATFORM = platform.system()
 
 def add_dir_to_path(a):
     """Append a dir to PATH if exists else return None"""
-    path = None
     if os.path.isdir(a):
         os.environ['PATH'] += PATHSEP + a
-        path = os.environ['PATH']
-    return path
+    else:
+        a = None
+    return a
 
 
 def add_libs_dir():
