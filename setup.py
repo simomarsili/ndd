@@ -3,6 +3,8 @@
 # pylint: disable=wrong-import-position
 from __future__ import print_function
 
+import platform
+
 from pkg_resources import parse_version
 
 NAME = 'ndd'
@@ -11,6 +13,7 @@ VERSION_FILE = 'version.json'
 SETUP_REQUIRES = ['numpy>=1.9']
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
+PLATFORM = platform.system()
 
 
 def get_numpy_status():
@@ -68,18 +71,26 @@ from numpy.distutils.core import setup  # isort:skip
 VERSION = get_version(VERSION_FILE)
 LONG_DESCRIPTION = get_long_description()
 
-FNSB = Extension(
-    name='ndd.fnsb',
-    sources=[
-        'ndd/nsb.pyf', 'ndd/exts/gamma.f90', 'ndd/exts/quad.f90',
-        'ndd/exts/estimators.f90'
-    ],
-    # extra_f90_compile_args = ["-fopenmp"],
-    # extra_link_args = ["-lgomp"],
+FSOURCES = [
+    'ndd/nsb.pyf', 'ndd/exts/gamma.f90', 'ndd/exts/quad.f90',
+    'ndd/exts/estimators.f90'
+]
+EXT_NAME = 'ndd.fnsb'
 
-    # uncomment line below to build on MacOS
-    # extra_link_args = ["-undefined", "dynamic_lookup"],
-)
+
+def extension_args():
+    """Extension object parameters."""
+    args = {'name': EXT_NAME, 'sources': FSOURCES}
+    platform_specific = {
+        'Darwin': {
+            'extra_link_args': ['-undefined', 'dynamic_lookup']
+        },
+    }
+    args.update(platform_specific.get(PLATFORM, dict()))
+    return args
+
+
+FNSB = Extension(**extension_args())
 
 setup(
     name=NAME,
