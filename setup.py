@@ -95,7 +95,7 @@ setup(
     packages=['ndd'],
     package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
     ext_modules=[FNSB],
-    python_requires='>=3.4',
+    # python_requires='>=3.4',
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={'test': ['pytest']},
