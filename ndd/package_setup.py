@@ -1,21 +1,26 @@
 # -*- coding: utf-8 -*-
 """Pre-import project setup."""
 import os
+import platform
 
 SEP = os.path.sep
 PATHSEP = os.pathsep
+PLATFORM = platform.system()
+
+
+def add_dir_to_path(a):
+    """Append a dir to PATH if exists else return None"""
+    path = None
+    if os.path.isdir(a):
+        os.environ['PATH'] += PATHSEP + a
+        path = os.environ['PATH']
+    return path
 
 
 def add_libs_dir():
-    """Add the .libs to PATH env variable (if exists)."""
+    """In Windows systems, add the .libs to PATH env variable (if exists)."""
     libs = os.path.join(package_path, '.libs')
-    if os.path.isdir(libs):
-        print('is dir')
-        os.environ['PATH'] += PATHSEP + libs
-    else:
-        print('is not dir')
-        libs = None
-    return libs
+    return add_dir_to_path(libs)
 
 
 def subclasses(cls):
@@ -26,6 +31,5 @@ def subclasses(cls):
 package_path = os.path.dirname(os.path.abspath(__file__))
 package_name = package_path.split(SEP)[-1]
 
-libs_dir = add_libs_dir()
-if libs_dir:
-    print('%r added to PATH' % libs_dir)
+if PLATFORM == 'Windows':
+    libs_dir = add_libs_dir()
