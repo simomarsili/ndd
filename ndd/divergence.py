@@ -3,8 +3,8 @@
 # License: BSD 3 clause
 # pylint: disable=c-extension-no-member
 """Compute divergences between distributions."""
-import abc
 import logging
+from abc import ABCMeta, abstractmethod
 
 import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
@@ -17,8 +17,12 @@ __all__ = ['DivergenceEstimator', 'JSDivergence']
 
 logger = logging.getLogger(__name__)
 
+# compatible with both Python 2 and 3
+# https://stackoverflow.com/a/38668373
+ABC = ABCMeta('ABC', (object, ), {'__slots__': ()})
 
-class DivergenceEstimator(EntropyEstimator, abc.ABC):
+
+class DivergenceEstimator(EntropyEstimator, ABC):
     """Base class for estimators of divergences."""
 
     def __init__(self, entropy='NSB'):
@@ -50,7 +54,7 @@ class DivergenceEstimator(EntropyEstimator, abc.ABC):
         """Estimator function name."""
         return self.entropy_estimator.__class__.__name__
 
-    @abc.abstractmethod
+    @abstractmethod
     def fit(self, pk, *, k=None):
         """
         Parameters

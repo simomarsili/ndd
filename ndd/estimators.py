@@ -2,8 +2,8 @@
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
 """Classes for entropy estimators."""
-import abc
 import logging
+from abc import ABCMeta, abstractmethod
 
 import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
@@ -31,7 +31,12 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
     return wrapper
 
 
-class EntropyEstimator(BaseEstimator, abc.ABC):
+# compatible with both Python 2 and 3
+# https://stackoverflow.com/a/38668373
+ABC = ABCMeta('ABC', (object, ), {'__slots__': ()})
+
+
+class EntropyEstimator(BaseEstimator, ABC):
     """
     Base class for entropy estimators.
 
@@ -151,7 +156,7 @@ class EntropyEstimator(BaseEstimator, abc.ABC):
 
         return k
 
-    @abc.abstractmethod
+    @abstractmethod
     def fit(self, pk, *, k=None):
         """
         Compute an entropy estimate from pk.
