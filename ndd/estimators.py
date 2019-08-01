@@ -23,7 +23,7 @@ __all__ = [
 def check_input(fit_function):  # pylint: disable=no-self-argument
     """Check fit input args."""
 
-    def wrapper(obj, pk, *, k=None):
+    def wrapper(obj, pk, k=None):
         pk = obj.check_pk(pk)
         k = obj.check_k(k)
         return fit_function(obj, pk, k=k)
@@ -54,7 +54,7 @@ class EntropyEstimator(BaseEstimator, ABC):
         self.err_ = None
         self.input_data_ndim = 1
 
-    def __call__(self, pk, *, k=None):
+    def __call__(self, pk, k=None):
         """Fit and return the estimated value."""
         return self.fit(pk, k=k).estimate_
 
@@ -157,7 +157,7 @@ class EntropyEstimator(BaseEstimator, ABC):
         return k
 
     @abstractmethod
-    def fit(self, pk, *, k=None):
+    def fit(self, pk, k=None):
         """
         Compute an entropy estimate from pk.
 
@@ -195,14 +195,14 @@ class Plugin(EntropyEstimator):
     """
 
     def __init__(self, alpha=None):
-        super().__init__()
+        super(Plugin, self).__init__()
         if not alpha:
             self.alpha = PZERO
         else:
             self.alpha = self.check_alpha(alpha)
 
     @check_input
-    def fit(self, pk, *, k=None):
+    def fit(self, pk, k=None):
         """
         Parameters
         ----------
@@ -234,7 +234,7 @@ class Miller(EntropyEstimator):
     """Miller entropy estimator."""
 
     @check_input
-    def fit(self, pk, *, k=None):
+    def fit(self, pk, k=None):
         """
         Parameters
         ----------
@@ -277,17 +277,17 @@ class WolpertWolf(EntropyEstimator):
     """
 
     def __init__(self, alpha):
-        super().__init__()
+        super(WolpertWolf, self).__init__()
         self.alpha = self.check_alpha(alpha)
 
     @check_input
-    def fit(self, pk, *, k):
+    def fit(self, pk, k=None):
         """
         Parameters
         ----------
         pk : array-like
             The number of occurrences of a set of bins.
-        k : int or array-like, optional
+        k : int or array-like
             Total number of bins (including unobserved bins); k >= len(pk).
             A float is a valid input for whole numbers (e.g. k=1.e3).
             If an array, set k = numpy.prod(k). Defaults to len(pk).
@@ -311,13 +311,13 @@ class NSB(EntropyEstimator):
     """NSB entropy estimator."""
 
     @check_input
-    def fit(self, pk, *, k):
+    def fit(self, pk, k=None):
         """
         Parameters
         ----------
         pk : array-like
             The number of occurrences of a set of bins.
-        k : int or array-like, optional
+        k : int or array-like
             Total number of bins (including unobserved bins); k >= len(pk).
             A float is a valid input for whole numbers (e.g. k=1.e3).
             If an array, set k = numpy.prod(k). Defaults to len(pk).
@@ -351,7 +351,7 @@ class AsymptoticNSB(EntropyEstimator):
     """
 
     @check_input
-    def fit(self, pk, *, k=None):
+    def fit(self, pk, k=None):
         """
         Parameters
         ----------
@@ -389,7 +389,7 @@ class Grassberger(EntropyEstimator):
     """
 
     @check_input
-    def fit(self, pk, *, k=None):  # pylint: disable=unused-argument
+    def fit(self, pk, k=None):  # pylint: disable=unused-argument
         """Estimator definition."""
         from scipy.special import digamma
 
@@ -414,7 +414,7 @@ class UnderWell(EntropyEstimator):
     """
 
     @check_input
-    def fit(self, pk, *, k=None):  # pylint: disable=unused-argument
+    def fit(self, pk, k=None):  # pylint: disable=unused-argument
         """Estimator definition."""
         k1 = len(pk > 0)
         n = sum(pk)

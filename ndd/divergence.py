@@ -27,7 +27,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
 
     def __init__(self, entropy='NSB'):
         """Default entropy estimator is NSB."""
-        super().__init__()
+        super(DivergenceEstimator, self).__init__()
         self.input_data_ndim = 2
         try:
             self._entropy_estimator = ndd.entropy_estimators[entropy]()
@@ -55,7 +55,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         return self.entropy_estimator.__class__.__name__
 
     @abstractmethod
-    def fit(self, pk, *, k=None):
+    def fit(self, pk, k=None):
         """
         Parameters
         ----------
@@ -91,7 +91,7 @@ class JSDivergence(DivergenceEstimator):
     """
 
     @check_input
-    def fit(self, pk, *, k=None):
+    def fit(self, pk, k=None):
         """
         Parameters
         ----------

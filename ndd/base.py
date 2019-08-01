@@ -179,14 +179,14 @@ class BaseEstimator:
 
     def __getstate__(self):
         try:
-            state = super().__getstate__()
+            state = super(BaseEstimator, self).__getstate__()
         except AttributeError:
             state = self.__dict__.copy()
         return state
 
     def __setstate__(self, state):
         try:
-            super().__setstate__(state)
+            super(BaseEstimator, self).__setstate__(state)
         except AttributeError:
             self.__dict__.update(state)
 

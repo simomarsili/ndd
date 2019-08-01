@@ -3,7 +3,6 @@
 # License: BSD 3 clause
 """DataArray class."""
 import logging
-from collections.abc import Sequence
 from itertools import combinations
 from numbers import Integral
 from operator import itemgetter
@@ -11,6 +10,11 @@ from operator import itemgetter
 import numpy
 
 from ndd.exceptions import DataArrayError, NddError
+
+try:
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
 
 __all__ = ['DataArray']
 
