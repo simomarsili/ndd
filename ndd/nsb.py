@@ -5,12 +5,14 @@
 Functions for entropy and information measures estimation.
 """
 import logging
+from itertools import combinations
 
 import numpy
 
-from ndd.estimators import Entropy, JSDivergence
-from ndd.exceptions import (CardinalityError, CombinationError, DataArrayError,
-                            EstimatorInputError, PmfError)
+from ndd.data import DataArray
+from ndd.divergence import JSDivergence
+from ndd.estimators import NSB, Plugin, WolpertWolf
+from ndd.exceptions import EstimatorInputError, PmfError
 
 __all__ = [
     'entropy',
@@ -65,8 +67,17 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     """
 
-    # pk is an array of counts
-    estimator = Entropy(alpha, plugin).fit(pk, k)
+    estimator = select_estimator(alpha=alpha, plugin=plugin)
+
+    if k is None:
+        algorithm = type(estimator).__name__
+        if algorithm in {'NSB', 'WolpertWolf'}:
+            logger.warning(
+                'WARNING: k=None but %s est. needs alphabet size; '
+                'set k=len(pk)', algorithm)
+        k = len(pk)
+
+    estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S):
@@ -82,18 +93,18 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     return S
 
 
-def from_data(ar, ks=None, axis=1, r=None):
+def from_data(ar, ks=None, axis=0, r=None):
     """
     Entropy estimate from data matrix.
 
     Paramaters
     ----------
-    ar : array-like, shape (p, n)
+    ar : array-like, shape (n, p)
         2D array of n samples from p discrete variables.
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis. Defaults to 1.
+        The sample-indexing axis. Defaults to 0.
     r : int, optional; ; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
@@ -104,30 +115,17 @@ def from_data(ar, ks=None, axis=1, r=None):
         Entropy estimate
 
     """
-    from itertools import combinations
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
-    # check data shape
-    ar = _check_data(ar, axis)
-
-    # EntropyBasedEstimator objects are callable and return the fitted estimate
-    estimator = Entropy()
-
-    ks = _check_ks(ks, ar)
+    # EntropyEstimator objects are callable and return the fitted estimate
+    estimator = NSB()
 
     if r is not None:
-        if ks.ndim == 0:
-            raise CardinalityError('For combinations, ks cant be a scalar')
-        r = _check_r(r, ar)
+        return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
 
-        counts_combinations = histogram(ar, r=r)
-        alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ks, r=r))
-        return (
-            estimator(*args)
-            for args in zip(counts_combinations, alphabet_size_combinations))
-
-    counts = histogram(ar)
-    return estimator(counts, k=ks)
+    counts, k = ar.iter_counts()
+    return estimator(counts, k=k)
 
 
 def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
@@ -169,7 +167,8 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
 
     """
 
-    estimator = JSDivergence(alpha, plugin).fit(pk, k)
+    entropy_estimator = select_estimator(alpha, plugin)
+    estimator = JSDivergence(entropy_estimator).fit(pk, k=k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
@@ -220,22 +219,28 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
     else:
         raise PmfError('qk must be a valid PMF')
 
+    if sum(numpy.isinf(log_qk)) > 0:
+        raise PmfError('qk must be positive')
+
     if len(log_qk) != len(pk):
         raise PmfError('qk and pk must have the same length.')
 
     if k == 1:  # single bin
-        kl = 0.0
-    else:
-        estimator = Entropy(alpha, plugin).fit(pk, k)
-        kl = -estimator.estimate_ - numpy.sum(pk * log_qk) / float(sum(pk))
-        if numpy.isnan(kl):
-            logger.warning('nan value for KL divergence')
-            kl = numpy.nan
+        return 0.0
+    if k is None:
+        k = len(pk)
+
+    estimator = select_estimator(alpha, plugin)
+    estimate = estimator.fit(pk, k=k).estimate_
+    kl = -(estimate + numpy.sum(pk * log_qk) / float(sum(pk)))
+    if numpy.isnan(kl):
+        logger.warning('nan value for KL divergence')
+        kl = numpy.nan
 
     return kl
 
 
-def interaction_information(ar, ks=None, axis=1, r=None):
+def interaction_information(ar, ks=None, axis=0, r=None):
     """Interaction information from data matrix.
 
     See Eq.10 in:
@@ -247,11 +252,11 @@ def interaction_information(ar, ks=None, axis=1, r=None):
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 0.
     r : int, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
@@ -268,27 +273,17 @@ def interaction_information(ar, ks=None, axis=1, r=None):
         If len(ks) != p.
 
     """
-    from itertools import combinations
-
-    # check data shape
-    ar = _check_data(ar, axis)
-
-    ks = _check_ks(ks, ar)
-    if ks.ndim == 0:
-        raise CardinalityError('ks cant be a scalar')
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     if r is not None:
-        r = _check_r(r, ar)
+        return (iinfo(data, k) for data, k in ar.iter_data(r=r))
 
-        data_combinations = combinations(ar, r=r)
-        alphabet_size_combinations = (x for x in combinations(ks, r=r))
-        return (iinfo(*args)
-                for args in zip(data_combinations, alphabet_size_combinations))
-
-    return iinfo(ar, ks)
+    data, k = ar.iter_data()
+    return iinfo(data, k)
 
 
-def coinformation(ar, ks=None, r=None):
+def coinformation(ar, ks=None, axis=0, r=None):
     """Coinformation from data matrix.
 
     See Eq.11 in:
@@ -303,9 +298,11 @@ def coinformation(ar, ks=None, r=None):
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
+    axis : int, optional
+        The sample-indexing axis. Defaults to 0.
     r : int or None, optional; 1<=r<=p.
         If passed, return a generator yielding estimates for the p-choose-r
         possible combinations of r variables.
@@ -322,10 +319,11 @@ def coinformation(ar, ks=None, r=None):
     """
 
     # change sign for odd number of variables
-    return (-1)**ar.shape[0] * interaction_information(ar=ar, ks=ks, r=r)
+    return (-1)**ar.shape[0] * interaction_information(
+        ar=ar, ks=ks, axis=axis, r=r)
 
 
-def mutual_information(ar, ks=None, axis=1):
+def mutual_information(ar, ks=None, axis=0):
     """Mutual information from p-by-n data matrix.
 
     If p > 2, return an estimate of the mutual information for each possible
@@ -334,11 +332,11 @@ def mutual_information(ar, ks=None, axis=1):
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 0.
 
     Returns
     -------
@@ -351,40 +349,33 @@ def mutual_information(ar, ks=None, axis=1):
         If len(ks) != p.
 
     """
-
-    from itertools import combinations
-
-    # check data shape
-    ar = _check_data(ar, axis)
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
-    ks = _check_ks(ks, ar)
-    if ks.ndim == 0:
-        raise CardinalityError('ks cant be a scalar')
-
     if p > 2:
-        h1 = list(from_data(ar, ks=ks, r=1))
-        return (h1[i1] + h1[i2] - from_data(ar[[i1, i2]], ks=ks[[i1, i2]])
+        h1 = list(from_data(ar, r=1))
+        return (h1[i1] + h1[i2] - from_data(ar[i1, i2])
                 for i1, i2 in combinations(range(p), 2))
 
-    return numpy.sum(from_data(ar, ks=ks, r=1)) - from_data(ar, ks=ks)
+    return numpy.sum(from_data(ar, r=1)) - from_data(ar)
 
 
-def conditional_entropy(ar, c, ks=None, axis=1, r=None):
+def conditional_entropy(ar, c, ks=None, axis=0, r=None):
     """
     Coditional entropy estimate from data matrix.
 
     Paramaters
     ----------
     ar : array-like
-        p-by-n array of n samples from p discrete variables.
+        n-by-p array of n samples from p discrete variables.
     c : int or array-like
         The variables on which entropy is conditioned (as column indices).
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
     axis : int, optional
-        The sample-indexing axis
+        The sample-indexing axis. Defaults to 0.
     r : int or None, optional; 1<=r<=p-len(c).
         If passed, return a generator yielding estimates for all possible
         combinations of r variables conditioning on the `c` variables.
@@ -398,10 +389,9 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         Conditional entropy estimate
 
     """
-    from itertools import combinations
-
     # check data shape
-    ar = _check_data(ar, axis)
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     p = ar.shape[0]
 
@@ -413,54 +403,39 @@ def conditional_entropy(ar, c, ks=None, axis=1, r=None):
         return EstimatorInputError('The indices of conditioning variables'
                                    ' are not valid')
 
-    ks = _check_ks(ks, ar)
-
-    # EntropyBasedEstimator objects are callable and return the fitted estimate
-    estimator = Entropy()
+    # EntropyEstimator objects are callable and return the fitted estimate
+    estimator = NSB()
 
     # Entropy of features on which we are conditioning
-    counts = histogram(ar[c])
-    hc = estimator(counts, k=ks)
+    counts, k = ar[c].iter_counts()
+    hc = estimator(counts, k=k)
 
     if r is not None:
-        if ks.ndim == 0:
-            raise CardinalityError('For combinations, ks cant be a scalar')
 
-        r = _check_r(r, p - len(c))
+        # r should be >= p - len(c)
 
         # include the c variables in the set
         r = r + len(c)
 
         indices = combinations(range(p), r=r)
-        counts_combinations = histogram(ar, r=r)
-        alphabet_size_combinations = (numpy.prod(x)
-                                      for x in combinations(ks, r=r))
-        return (estimator(*args) - hc for ids, *args in zip(
-            indices, counts_combinations, alphabet_size_combinations)
+
+        return (estimator(counts, k=k) - hc
+                for ids, (counts, k) in zip(indices, ar.iter_counts(r=r))
                 if set(c) <= set(ids))
 
-    counts = histogram(ar)
-    return estimator(counts, k=ks) - hc
+    counts, k = ar.iter_counts()
+    return estimator(counts, k=k) - hc
 
 
-def _nbins(data):
-    """
-    The number of unique elements along axis 0. If data is p-dimensional,
-    the num. of unique elements for each variable.
-    """
-    # reshape as a p-by-n array
-    return [len(numpy.unique(v)) for v in data]
-
-
-def histogram(data, axis=1, r=None):
+def histogram(data, axis=0, r=None):
     """Compute an histogram from a data matrix. Wrapper to numpy.unique.
 
     Parameters
     ----------
     data : array-like, shape (p, n)
-        A p-by-n array of n samples from p variables.
+        A n-by-p array of n samples from p variables.
     axis : int, optional
-        The sample-indexing axis. Defaults to 1.
+        The sample-indexing axis. Defaults to 0.
     r : int, optional
         For r values in the interval [1, p],
         return a generator yielding bin counts for each of the p-choose-r
@@ -472,74 +447,15 @@ def histogram(data, axis=1, r=None):
         Bin counts.
 
     """
-    from itertools import combinations
-
-    # check data shape
-    data = _check_data(data, axis)
+    if not isinstance(data, DataArray):
+        data = DataArray(data, axis=axis)
 
     if r is not None:
-        r = _check_r(r, data)
         return (histogram(d) for d in combinations(data, r=r))
 
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts
-
-
-def _check_data(ar, axis):
-    """Check that input arrays are non-empty 2D arrays."""
-
-    ar = numpy.atleast_2d(ar)
-    if ar.ndim > 2:
-        raise DataArrayError('Input array has %s dimensions; must be 2D' %
-                             ar.ndim)
-    p, n = ar.shape
-    if n == 0 or p == 0:
-        raise DataArrayError('Empty input array')
-
-    if axis == 0:
-        ar = ar.T
-
-    return ar
-
-
-def _check_r(r, ar):
-    """
-    Raises
-    ------
-    CombinationError
-        For r values out of the interval [1, p].
-    """
-    if ar.shape:
-        p = ar.shape[0]
-    else:
-        p = ar
-    if r < 1 or r > p:
-        raise CombinationError('r values must be in the interval [1, %s]' % p)
-    return r
-
-
-def _check_ks(ks, ar):
-    """
-    Raises
-    ------
-    CardinalityError
-        If ks is array-like and len(ks) != p.
-    """
-
-    if ks is None:
-        # guess from data
-        ks = numpy.array([len(numpy.unique(v)) for v in ar])
-    else:
-        try:
-            ks = numpy.float64(ks)
-        except ValueError:
-            raise CardinalityError('%s: not a valid cardinality')
-        if ks.ndim:
-            p = ar.shape[0]
-            if len(ks) != p:
-                raise CardinalityError('k should have len %s' % p)
-    return ks
 
 
 def iinfo(X, ks):
@@ -574,3 +490,15 @@ def is_pmf(a):
     not_negative = numpy.all(a >= 0)
     normalized = numpy.isclose(sum(a), 1.0)
     return not_negative and normalized
+
+
+def select_estimator(alpha, plugin):
+    """Select the appropriate estimator."""
+    if plugin:
+        estimator = Plugin(alpha)
+    else:
+        if alpha is None:
+            estimator = NSB()
+        else:
+            estimator = WolpertWolf(alpha)
+    return estimator

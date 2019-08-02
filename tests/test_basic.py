@@ -29,7 +29,7 @@ def random_ndarray(n, p, seed):
     import string
     random.seed(seed)
     alphabet = list(string.ascii_uppercase)
-    return random.choice(alphabet, size=(n, p)).T
+    return random.choice(alphabet, size=(n, p))
 
 
 def random_tuple_generator(n, p, seed):
@@ -51,7 +51,7 @@ def data_with_redundancy():
         rain = clouds * rnd(0.7) + (1 - clouds) * rnd(0.2)
         dark = clouds * rnd(0.9)
         data.append([clouds, rain, dark])
-    return numpy.array(data).T
+    return ndd.data.DataArray(numpy.array(data))
 
 
 with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
@@ -68,10 +68,11 @@ def test_entropy(case, ref_result):
 
 def test_histogram_ndarray():
     N, P = 100, 3
-    data = random_ndarray(N, P, SEED)
+    data = ndd.data.DataArray(random_ndarray(N, P, SEED))
     ref_result = 9.107550241712808
-    assert numpy.isclose(
-        ndd.entropy(ndd.histogram(data), k=ndd.nsb._nbins(data)), ref_result)  # pylint: disable=protected-access
+    counts, k = data.iter_counts()
+    estimate = ndd.entropy(counts, k=k)
+    assert numpy.isclose(estimate, ref_result)  # pylint: disable=protected-access
 
 
 def test_from_data():
@@ -79,14 +80,14 @@ def test_from_data():
     data = random_ndarray(N, P, SEED)
     ref_result = 9.107550241712808
     assert numpy.isclose(
-        ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data)),  # pylint: disable=protected-access
+        ndd.nsb.from_data(data),  # pylint: disable=protected-access
         ref_result)
 
 
 def test_combinations_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    hs_pairs = ndd.nsb.from_data(data, ks=ndd.nsb._nbins(data), r=2)  # pylint: disable=protected-access
+    hs_pairs = ndd.nsb.from_data(data, r=2)  # pylint: disable=protected-access
     ref_result = 18.84820751635297
     assert numpy.isclose(numpy.sum(hs_pairs), ref_result)
 
@@ -106,7 +107,7 @@ def test_JSD():
     random.seed(SEED)
     pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
-    estimator = ndd.estimators.JSDivergence()
+    estimator = ndd.divergence.JSDivergence()
     ref_result = -0.01804523405829217
     assert numpy.isclose(estimator(counts), ref_result)
 
@@ -118,7 +119,8 @@ def test_mi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     h2 = ndd.from_data(data_with_redundancy[2])
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     mi = h1 + h2 - h12
-    assert numpy.isclose(mutual_information(data_with_redundancy[[1, 2]]), mi)
+    estimate = mutual_information(data_with_redundancy[[1, 2]])
+    assert numpy.isclose(estimate, mi)
 
 
 def test_mmi(data_with_redundancy):  # pylint: disable=redefined-outer-name
@@ -132,18 +134,17 @@ def test_mmi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     h012 = ndd.from_data(data_with_redundancy)
     mmi = -(h0 + h1 + h2 - h01 - h02 - h12 + h012)
-    assert numpy.isclose(interaction_information(data_with_redundancy), mmi)
+    estimate = interaction_information(data_with_redundancy)
+    assert numpy.isclose(estimate, mmi)
 
 
 def test_conditional_entropy(data_with_redundancy):  # pylint: disable=redefined-outer-name
     random.seed(SEED)
     from ndd.nsb import mutual_information
     data = data_with_redundancy[[1, 2]]
-    assert numpy.isclose(mutual_information(data),
-                         ndd.from_data(data) -
-                         ndd.conditional_entropy(data, c=0) -
-                         ndd.conditional_entropy(data, c=1),
-                         atol=0.01)
+    estimate = (ndd.from_data(data) - ndd.conditional_entropy(data, c=0) -
+                ndd.conditional_entropy(data, c=1))
+    assert numpy.isclose(estimate, mutual_information(data), atol=0.01)
 
 
 def test_xor():

@@ -1,3 +1,7 @@
+# default except:
+# invalid-name, fixme warnings are disabled
+# output format is colorized
+
 [MASTER]
 
 # A comma-separated list of package or module names from where C extensions may
@@ -139,7 +143,7 @@ disable=print-statement,
         deprecated-sys-function,
         exception-escape,
         comprehension-escape,
-	# non-default disabled
+	#
 	invalid-name,
 	fixme
 
@@ -279,7 +283,7 @@ ignore-comments=yes
 ignore-docstrings=yes
 
 # Ignore imports when computing similarities.
-ignore-imports=no
+ignore-imports=yes
 
 # Minimum lines number of a similarity.
 min-similarity-lines=4

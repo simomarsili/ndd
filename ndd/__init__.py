@@ -110,15 +110,28 @@ and interesting links:
 """
 import pkg_resources
 
+from ndd import package_setup
+from ndd.divergence import DivergenceEstimator
+from ndd.estimators import EntropyEstimator
 from ndd.nsb import entropy  # pylint: disable=unused-import
 from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
                      interaction_information, jensen_shannon_divergence,
                      kullback_leibler_divergence, mutual_information)
 
-project_name = 'ndd'
-__version__ = pkg_resources.require(project_name)[0].version
+package_name = package_setup.package_name
+package_path = package_setup.package_path
+__version__ = pkg_resources.require(package_name)[0].version
 __all__ = [
-    'entropy', 'jensen_shannon_divergence', 'kullback_leibler_divergence',
-    'interaction_information', 'coinformation', 'mutual_information',
-    'conditional_entropy', 'histogram', 'from_data'
+    'entropy',
+    'jensen_shannon_divergence',
+    'kullback_leibler_divergence',
+    'interaction_information',
+    'coinformation',
+    'mutual_information',
+    'conditional_entropy',
+    'histogram',
+    'from_data',
 ]
+
+entropy_estimators = package_setup.subclasses(EntropyEstimator)
+divergence_estimators = package_setup.subclasses(DivergenceEstimator)
