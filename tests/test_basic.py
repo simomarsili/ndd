@@ -155,5 +155,6 @@ def test_xor():
         z = int(x != y)
         return x, y, z
 
-    data = numpy.array([xor() for k in range(100)]).T
-    assert numpy.isclose(ndd.conditional_entropy(data, c=[0, 1]), 0, atol=0.01)
+    data = numpy.array([xor() for k in range(500)])
+    estimate = ndd.conditional_entropy(data, c=[0, 1])
+    assert numpy.isclose(estimate, 0, atol=0.01)
