@@ -10,6 +10,15 @@ The **ndd** package provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
 
+News
+====
+Starting from version `v0.5`, the functions working directly on data
+will take as input a **n-by-p** 2D array of
+n samples from p discrte variables. In previous versions, the default
+arrangement was transposed (**p-by-n**). This change won't affect the
+behavior of the functions taking frequency counts as input
+(e.g the `ndd.entropy` function).
+
 Basic usage
 ===========
 
