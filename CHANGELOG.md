@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+
+## [1.5] - 2019-08-02
 ### Added
 - builds on Windows (with MinGW-W64)
 - builds on MacOS (thanks to https://github.com/ccattuto)
