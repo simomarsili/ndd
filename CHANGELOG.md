@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 ### Added
-- builds on Windows (MinGW-W64 compiler)
+- builds on Windows (with MinGW-W64)
 - builds on MacOS (thanks to https://github.com/ccattuto)
 
 ## [1.4] - 2019-05-20
