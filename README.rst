@@ -19,7 +19,7 @@ News
     default arrangement was transposed (**p-by-n**). This change won't affect
     the behavior of functions taking frequency counts as input
     (e.g the `ndd.entropy` function).
-**v0.4.2**
+**v1.4.2**
     **ndd** can be compiled and run under Windows (with MinGW-64) and MacOS
     (thans to https://github.com/ccattuto)
 
