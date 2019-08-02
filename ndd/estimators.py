@@ -226,7 +226,7 @@ class Plugin(EntropyEstimator):
         if self.alpha:
             self.estimate_ = ndd.fnsb.pseudo(pk, k, self.alpha)
         else:
-            self.estimate_ = ndd.fnsb.plugin(pk, k)
+            self.estimate_ = ndd.fnsb.plugin(pk)
         return self
 
 
