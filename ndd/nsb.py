@@ -69,6 +69,14 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     estimator = select_estimator(alpha=alpha, plugin=plugin)
 
+    if k is None:
+        algorithm = type(estimator).__name__
+        if algorithm in {'NSB', 'WolpertWolf'}:
+            logger.warning(
+                'WARNING: k=None but %s est. needs alphabet size; '
+                'set k=len(pk)', algorithm)
+        k = len(pk)
+
     estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_
 
