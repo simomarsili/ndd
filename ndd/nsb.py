@@ -115,11 +115,16 @@ def from_data(ar, ks=None, axis=0, r=None):
         Entropy estimate
 
     """
-    if not isinstance(ar, DataArray):
-        ar = DataArray(ar, k=ks, axis=axis)
-
     # EntropyEstimator objects are callable and return the fitted estimate
     estimator = NSB()
+
+    if ks is None:
+        logger.warning(
+            'WARNING: k=None but the NSB estimator needs alphabet size; '
+            'set k = prod(#unique elements for each column)')
+
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar, k=ks, axis=axis)
 
     if r is not None:
         return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
