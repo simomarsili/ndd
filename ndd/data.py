@@ -39,6 +39,8 @@ def is_whole(x):
 class DataArray(Sequence):
     """Data container with methods for counts calculation.
 
+    Stores data as a p-by-n numpy ndarray.
+
     Parameters
     ----------
     ar : array-like, shape (n, p)
@@ -47,7 +49,7 @@ class DataArray(Sequence):
         The sample-indexing axis. Defaults to axis=0.
     k : array-like, shape p or int or None, optional
         The alphabet size for the p variables.
-        If an int, the variables share the same alphabet size.
+        If int: the variables share the same alphabet size k.
         If None (default), the alphabet size is unkown.
 
     """
@@ -64,7 +66,7 @@ class DataArray(Sequence):
                 # take 1D array as single variable, n samples data
                 if ar.shape[0] > 1 and axis == 0:
                     ar = ar.T
-            self.data = ar
+            self._data = ar
         self._k = None
         if k is not None:
             self.k = k
@@ -88,6 +90,11 @@ class DataArray(Sequence):
     def __repr__(self):
         cls = type(self)
         return '%s(data=\n%s\nk=%s\n)' % (cls.__name__, self.data, self.k)
+
+    @property
+    def data(self):
+        """The Data stored as a p-by-n ndarray."""
+        return self._data
 
     @property
     def shape(self):
