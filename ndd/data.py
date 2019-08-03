@@ -51,10 +51,12 @@ class DataArray(Sequence):
         The alphabet size for the p variables.
         If int: the variables share the same alphabet size.
         If None (default), the alphabet size is unkown.
+    k : int or None, optional
+        Alphabet size for the p-dimensional joint PMF.
 
     """
 
-    def __init__(self, ar, axis=0, ks=None):
+    def __init__(self, ar, axis=0, ks=None, k=None):
         if not isinstance(ar, self.__class__):
             ar = numpy.atleast_2d(ar)
             if not ar.size:
@@ -68,6 +70,7 @@ class DataArray(Sequence):
                     ar = ar.T
             self._data = ar
         self._ks = None
+        self._k = k
         if ks is not None:
             self.ks = ks
 
@@ -145,22 +148,31 @@ class DataArray(Sequence):
     def k(self, r=None):
         """Alphabet size for the joint PMF of variables in dataset.
 
-        The product of the alphabet size of the single variables.
-        If not know, use the number of unique elements observed for each
-        variable.
+        If unknown, return the product of the alphabet size of the single
+        variables.
+        If r is not None, return a generator for all combinations of r-sized
+        sets of variables.
         """
+        if self._k is not None:
+            return self._k
+
         if self.ks is None:
             return None
-        ns = self.ks
+
+        ks = self.ks
         if r:
             p, _ = self.shape
-            return (numpy.prod([ns[i] for i in idx])
+            return (numpy.prod([ks[i] for i in idx])
                     for idx in combinations(range(p), r=r))
-        return numpy.prod(ns)
+
+        return numpy.prod(ks)
 
     def iter_data(self, r=None):
         """
-        Return tuples of (data, alphabet size) over r-sized sets of variables.
+        Return a tuple (data, alphabet_size) for the data array.
+
+        If r is not None: return tuples of (data, alphabet size) for all
+        r-sized combinations of variables.
         """
         cls = type(self)
         if r:
@@ -170,8 +182,11 @@ class DataArray(Sequence):
 
     def iter_counts(self, r=None):
         """
-        Return tuples of (counts, alphabet size) over r-sized sets of
-        variables.
+        Return a tuple (counts, alphabet_size) for the data array, where counts
+        is an array of frequency counts for the p-dimensional data samples.
+
+        If r is not None: return tuples of (counts, alphabet size) for all
+        r-sized combinations of variables.
         """
         if r:
             return zip(self.counts(r), self.k(r) or self.nunique(r))
