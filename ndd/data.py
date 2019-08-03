@@ -169,10 +169,11 @@ class DataArray(Sequence):
 
     def iter_data(self, r=None):
         """
-        Return a tuple (data, alphabet_size) for the data array.
+        Return tuples of (data, alphabet size) for all r-sized combinations of
+        variables.
 
-        If r is not None: return tuples of (data, alphabet size) for all
-        r-sized combinations of variables.
+        If r is None (default): return a tuple (data, alphabet_size).
+
         """
         cls = type(self)
         if r:
@@ -182,11 +183,12 @@ class DataArray(Sequence):
 
     def iter_counts(self, r=None):
         """
-        Return a tuple (counts, alphabet_size) for the data array, where counts
-        is an array of frequency counts for the p-dimensional data samples.
+        Return tuples of (counts, alphabet size) for all r-sized combinations
+        of variables.
 
-        If r is not None: return tuples of (counts, alphabet size) for all
-        r-sized combinations of variables.
+        If r is None (default): return a tuple (counts, alphabet_size) for the
+        data array, where counts are the frequencies of samples in data.
+
         """
         if r:
             return zip(self.counts(r), self.k(r) or self.nunique(r))
