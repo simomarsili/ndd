@@ -124,7 +124,7 @@ def from_data(ar, ks=None, axis=0, r=None):
             'set k = prod(#unique elements for each column)')
 
     if not isinstance(ar, DataArray):
-        ar = DataArray(ar, k=ks, axis=axis)
+        ar = DataArray(ar, ks=ks, axis=axis)
 
     if r is not None:
         return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
@@ -279,7 +279,7 @@ def interaction_information(ar, ks=None, axis=0, r=None):
 
     """
     if not isinstance(ar, DataArray):
-        ar = DataArray(ar, k=ks, axis=axis)
+        ar = DataArray(ar, ks=ks, axis=axis)
 
     if r is not None:
         return (iinfo(data, k) for data, k in ar.iter_data(r=r))
@@ -355,7 +355,7 @@ def mutual_information(ar, ks=None, axis=0):
 
     """
     if not isinstance(ar, DataArray):
-        ar = DataArray(ar, k=ks, axis=axis)
+        ar = DataArray(ar, ks=ks, axis=axis)
 
     p = ar.shape[0]
 
@@ -396,7 +396,7 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=None):
     """
     # check data shape
     if not isinstance(ar, DataArray):
-        ar = DataArray(ar, k=ks, axis=axis)
+        ar = DataArray(ar, ks=ks, axis=axis)
 
     p = ar.shape[0]
 

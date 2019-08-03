@@ -47,14 +47,14 @@ class DataArray(Sequence):
         2D array of n samples from p discrete variables.
     axis : int, optional
         The sample-indexing axis. Defaults to axis=0.
-    k : array-like, shape p or int or None, optional
+    ks : array-like, shape p or int or None, optional
         The alphabet size for the p variables.
         If int: the variables share the same alphabet size k.
         If None (default), the alphabet size is unkown.
 
     """
 
-    def __init__(self, ar, axis=0, k=None):
+    def __init__(self, ar, axis=0, ks=None):
         if not isinstance(ar, self.__class__):
             ar = numpy.atleast_2d(ar)
             if not ar.size:
@@ -67,9 +67,9 @@ class DataArray(Sequence):
                 if ar.shape[0] > 1 and axis == 0:
                     ar = ar.T
             self._data = ar
-        self._k = None
-        if k is not None:
-            self.k = k
+        self._ks = None
+        if ks is not None:
+            self.ks = ks
 
     def __getitem__(self, index):
         cls = type(self)
@@ -89,7 +89,7 @@ class DataArray(Sequence):
 
     def __repr__(self):
         cls = type(self)
-        return '%s(data=\n%s\nk=%s\n)' % (cls.__name__, self.data, self.k)
+        return '%s(data=\n%s\nks=%s\n)' % (cls.__name__, self.data, self.ks)
 
     @property
     def data(self):
@@ -102,19 +102,19 @@ class DataArray(Sequence):
         return self.data.shape
 
     @property
-    def k(self):
+    def ks(self):
         """Alphabet size for each of the p variables."""
-        return self._k
+        return self._ks
 
-    @k.setter
-    def k(self, value):
+    @ks.setter
+    def ks(self, value):
         p, _ = self.shape
         if is_sequence(value):
             if len(value) != p:
-                raise DataArrayError('len(k) must be equal to p')
-            self._k = value
+                raise DataArrayError('len(ks) must be equal to p')
+            self._ks = value
         else:
-            self._k = [value] * p
+            self._ks = [value] * p
 
     def counts(self, r=None):
         """Frequency array(s)."""
@@ -136,11 +136,11 @@ class DataArray(Sequence):
                     for idx in combinations(range(p), r=r))
         return numpy.prod(ns)
 
-    def ks(self, r=None):
+    def k(self, r=None):
         """#bins."""
-        if self.k is None:
+        if self.ks is None:
             return None
-        ns = self.k
+        ns = self.ks
         if r:
             p, _ = self.shape
             return (numpy.prod([ns[i] for i in idx])
@@ -157,8 +157,8 @@ class DataArray(Sequence):
         cls = type(self)
         if r:
             return zip((cls(c, axis=1) for c in combinations(self, r=r)),
-                       self.ks(r) or self.nbins(r))
-        return self, self.ks() or self.nbins()
+                       self.k(r) or self.nbins(r))
+        return self, self.k() or self.nbins()
 
     def iter_counts(self, r=None):
         """
@@ -168,5 +168,5 @@ class DataArray(Sequence):
         or to the product of nbins for sets of variables.
         """
         if r:
-            return zip(self.counts(r), self.ks(r) or self.nbins(r))
-        return self.counts(), self.ks() or self.nbins()
+            return zip(self.counts(r), self.k(r) or self.nbins(r))
+        return self.counts(), self.k() or self.nbins()
