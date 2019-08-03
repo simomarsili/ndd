@@ -58,7 +58,7 @@ Changes
     The behavior of functions taking frequency counts as input
     (e.g. the `ndd.entropy` function) is unchanged.
 **1.4.2**
-    - Builds on **ndd** Windows (with MinGW-64)
+    - Builds on Windows (with MinGW-64)
     - Builds on MacOS (thanks to https://github.com/ccattuto)
 **1.4**
     Added `kullback_leibler_divergence` function.
