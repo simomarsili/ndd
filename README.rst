@@ -31,6 +31,9 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
+Information measures
+====================
+
 **ndd** provide functions for the estimation of entropic information measures
 (as linear combinations of single Bayesian entropy estimates):
 
@@ -97,39 +100,6 @@ Clone the repo, install tests requirements and run the tests with `make`::
   cd ndd
   pip install .[test]
   make test
-
-Changes
-=======
-1.4 (2019-05-20)
-----------------
-- Added `kullback_leibler_divergence` function.
-
-1.3 (2019-05-08)
-----------------
-- For methods/functions working on data matrices:
-
-
-  the default input is a **p-by-n** 2D array
-  (n samples from p discrete variables, with
-  different samples on different **columns**).
-
-1.1 (2019-03-26)
-----------------
-Added:
-
-- `from_data`
-- `mutual_information`
-- `conditional_information`
-- `interaction_information`
-- `coinformation`
-
-1.0 (2019-03-19)
-----------------
-- Python3 only (>= 3.4)
-
-0.9 (2019-01-15)
-----------------
-- Added `jensen_shannnon_divergence` function.
 
 References
 ==========
