@@ -10,18 +10,53 @@ The **ndd** package provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
 
-News
-====
+Basic usage
+===========
 
-**v1.5**
-    The functions working directly on data will take as input a **n-by-p** 2D
-    array of n samples from p discrete variables. In previous versions, the
-    default arrangement was transposed (**p-by-n**). This change won't affect
-    the behavior of functions taking frequency counts as input
-    (e.g the `ndd.entropy` function).
-**v1.4.2**
-    **ndd** can be compiled and run under Windows (with MinGW-64) and MacOS
-    (thans to https://github.com/ccattuto)
+The **entropy** function takes as input a vector of frequency counts
+(the observed frequencies for a set of classes or states)
+and returns an **entropy** estimate (in nats)::
+
+  >>> counts
+  [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
+  >>> import ndd
+  >>> entropy_estimate = ndd.entropy(counts)
+  >>> entropy_estimate
+  2.623634344888532
+
+Optionally, the uncertainty in the entropy estimate can be quantified
+by computing an approximation for the posterior standard deviation::
+
+  >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
+  >>> std
+  0.048675500725595504
+
+Changes
+=======
+
+**1.5** (2019-08-02)
+    For methods/functions working on data matrices:
+    the default input is a **n-by-p** 2D array (n samples from p discrete
+    variables, with different samples on different **rows**).
+    Since release 1.3, the default was a transposed (**p-by-n**) data matrix.
+    The behavior of functions taking frequency counts as input
+    (e.g. the `ndd.entropy` function) is unchanged.
+**1.4.2** (2019-08-01)
+    - Builds on **ndd** Windows (with MinGW-64)
+    - Builds on MacOS (thanks to https://github.com/ccattuto)
+**1.4** (2019-05-20)
+    Added `kullback_leibler_divergence` function.
+**1.1** (2019-03-26)
+    Added:
+    - `from_data`
+    - `mutual_information`
+    - `conditional_information`
+    - `interaction_information`
+    - `coinformation`
+**1.0** (2019-03-19)
+    Python3 only (>= 3.4)
+**0.9** (2019-01-15)
+    Added `jensen_shannnon_divergence` function.
 
 Basic usage
 ===========
