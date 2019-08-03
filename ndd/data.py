@@ -93,13 +93,28 @@ class DataArray(Sequence):
 
     @property
     def data(self):
-        """The Data stored as a p-by-n ndarray."""
+        """Data are stored as a p-by-n ndarray."""
         return self._data
 
     @property
     def shape(self):
         """Data shape, p-by-n."""
         return self.data.shape
+
+    @property
+    def k(self):
+        """Alphabet size for each of the p variables."""
+        return self._k
+
+    @k.setter
+    def k(self, value):
+        p, _ = self.shape
+        if is_sequence(value):
+            if len(value) != p:
+                raise DataArrayError('len(k) must be equal to p')
+            self._k = value
+        else:
+            self._k = [value] * p
 
     def counts(self, r=None):
         """Frequency array(s)."""
@@ -120,21 +135,6 @@ class DataArray(Sequence):
             return (numpy.prod([ns[i] for i in idx])
                     for idx in combinations(range(p), r=r))
         return numpy.prod(ns)
-
-    @property
-    def k(self):
-        """Data cardinality (passed to Data instance)."""
-        return self._k
-
-    @k.setter
-    def k(self, value):
-        p, _ = self.shape
-        if is_sequence(value):
-            if len(value) != p:
-                raise DataArrayError('len(k) must be equal to p')
-            self._k = value
-        else:
-            self._k = [value] * p
 
     def ks(self, r=None):
         """#bins."""
