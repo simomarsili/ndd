@@ -48,13 +48,11 @@ Changes
     Added `kullback_leibler_divergence` function.
 **1.1**
     Added:
-
-    - `from_data`
-    - `mutual_information`
-    - `conditional_information`
-    - `interaction_information`
-    - `coinformation`
-
+    * `from_data`
+    * `mutual_information`
+    * `conditional_information`
+    * `interaction_information`
+    * `coinformation`
 **1.0**
     Drop support for Python < 3.4
 **0.9**
