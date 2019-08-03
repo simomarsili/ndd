@@ -31,6 +31,19 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
+**ndd** provide functions for the estimation of entropic information measures
+(as linear combinations of single Bayesian entropy estimates):
+
+* jensen_shannon_divergence
+* kullback_leibler_divergence
+* conditional_entropy
+* mutual_information
+* interaction_information
+* coinformation
+
+
+See the functions' docstrings for details.
+
 Changes
 =======
 
@@ -57,43 +70,7 @@ Changes
 **1.0**
     Drop support for Python < 3.4
 **0.9**
-    Added `jensen_shannnon_divergence` function.
-
-Basic usage
-===========
-
-The **entropy** function takes as input a vector of frequency counts
-(the observed frequencies for a set of classes or states)
-and returns an **entropy** estimate (in nats)::
-
-  >>> counts
-  [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
-  >>> import ndd
-  >>> entropy_estimate = ndd.entropy(counts)
-  >>> entropy_estimate
-  2.623634344888532
-
-Optionally, the uncertainty in the entropy estimate can be quantified
-by computing an approximation for the posterior standard deviation::
-
-  >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
-  >>> std
-  0.048675500725595504
-
-Information measures
-====================
-**ndd** provide functions for the estimation of entropic information measures
-(as linear combinations of single Bayesian entropy estimates):
-
-* jensen_shannon_divergence
-* kullback_leibler_divergence
-* conditional_entropy
-* mutual_information
-* interaction_information
-* coinformation
-
-
-See the functions' docstrings for details.
+    Added the `jensen_shannnon_divergence` function.
 
 Where to get it
 ===============
