@@ -34,28 +34,30 @@ by computing an approximation for the posterior standard deviation::
 Changes
 =======
 
-**1.5** (2019-08-02)
+**1.5**
     For methods/functions working on data matrices:
     the default input is a **n-by-p** 2D array (n samples from p discrete
     variables, with different samples on different **rows**).
     Since release 1.3, the default was a transposed (**p-by-n**) data matrix.
     The behavior of functions taking frequency counts as input
     (e.g. the `ndd.entropy` function) is unchanged.
-**1.4.2** (2019-08-01)
+**1.4.2**
     - Builds on **ndd** Windows (with MinGW-64)
     - Builds on MacOS (thanks to https://github.com/ccattuto)
-**1.4** (2019-05-20)
+**1.4**
     Added `kullback_leibler_divergence` function.
-**1.1** (2019-03-26)
+**1.1**
     Added:
+
     - `from_data`
     - `mutual_information`
     - `conditional_information`
     - `interaction_information`
     - `coinformation`
-**1.0** (2019-03-19)
-    Python3 only (>= 3.4)
-**0.9** (2019-01-15)
+
+**1.0**
+    Drop support for Python < 3.4
+**0.9**
     Added `jensen_shannnon_divergence` function.
 
 Basic usage
