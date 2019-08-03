@@ -49,7 +49,7 @@ class DataArray(Sequence):
         The sample-indexing axis. Defaults to axis=0.
     ks : array-like, shape p or int or None, optional
         The alphabet size for the p variables.
-        If int: the variables share the same alphabet size k.
+        If int: the variables share the same alphabet size.
         If None (default), the alphabet size is unkown.
 
     """
@@ -127,8 +127,14 @@ class DataArray(Sequence):
             return (histogram(d) for d in combinations(self, r=r))
         return histogram(self)
 
-    def nbins(self, r=None):
-        """#bins."""
+    def nunique(self, r=None):
+        """
+        The product of the number of unique elements observed in the data
+        for each variable.
+
+        If r is not None, return a generator for all combinations of r-sized
+        sets of variables.
+        """
         ns = tuple(len(c) for c in self.counts(r=1))
         if r:
             p, _ = self.shape
@@ -137,7 +143,12 @@ class DataArray(Sequence):
         return numpy.prod(ns)
 
     def k(self, r=None):
-        """#bins."""
+        """Alphabet size for the joint PMF of variables in dataset.
+
+        The product of the alphabet size of the single variables.
+        If not know, use the number of unique elements observed for each
+        variable.
+        """
         if self.ks is None:
             return None
         ns = self.ks
@@ -149,24 +160,19 @@ class DataArray(Sequence):
 
     def iter_data(self, r=None):
         """
-        Return tuples of (data, cardinality) over r-sized sets of variables.
-
-        If cardinality is unknown, defaults to nbins for single variables
-        or to the product of nbins for sets of variables.
+        Return tuples of (data, alphabet size) over r-sized sets of variables.
         """
         cls = type(self)
         if r:
             return zip((cls(c, axis=1) for c in combinations(self, r=r)),
-                       self.k(r) or self.nbins(r))
-        return self, self.k() or self.nbins()
+                       self.k(r) or self.nunique(r))
+        return self, self.k() or self.nunique()
 
     def iter_counts(self, r=None):
         """
-        Return tuples of (counts, cardinality) over r-sized sets of variables.
-
-        If cardinality is unknown, defaults to nbins for single variables
-        or to the product of nbins for sets of variables.
+        Return tuples of (counts, alphabet size) over r-sized sets of
+        variables.
         """
         if r:
-            return zip(self.counts(r), self.k(r) or self.nbins(r))
-        return self.counts(), self.k() or self.nbins()
+            return zip(self.counts(r), self.k(r) or self.nunique(r))
+        return self.counts(), self.k() or self.nunique()
