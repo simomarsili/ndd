@@ -61,7 +61,7 @@ Changes
     - Builds on Windows (with MinGW-64)
     - Builds on MacOS (thanks to https://github.com/ccattuto)
 **1.4**
-    Added `kullback_leibler_divergence` function.
+    Added the `kullback_leibler_divergence` function.
 **1.1**
     Added:
 
