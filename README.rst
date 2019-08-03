@@ -48,6 +48,7 @@ Changes
     Added `kullback_leibler_divergence` function.
 **1.1**
     Added:
+
     * `from_data`
     * `mutual_information`
     * `conditional_information`
