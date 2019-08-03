@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Pre-import project setup."""
+"""Pre-import package setup."""
 import os
 import platform
 

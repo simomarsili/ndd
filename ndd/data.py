@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
-"""DataArray class."""
+"""Contains the DataArray class."""
 import logging
 from itertools import combinations
 from numbers import Integral
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def is_sequence(x):
-    """Check if x is a sequence."""
+    """Check if x is a sequence or a ndarray."""
     return (not isinstance(x, str) if isinstance(x, Sequence) else isinstance(
         x, numpy.ndarray))
 
@@ -37,7 +37,20 @@ def is_whole(x):
 
 
 class DataArray(Sequence):
-    """Data container with methods for counts calculation."""
+    """Data container with methods for counts calculation.
+
+    Parameters
+    ----------
+    ar : array-like, shape (n, p)
+        2D array of n samples from p discrete variables.
+    axis : int, optional
+        The sample-indexing axis. Defaults to axis=0.
+    k : array-like, shape p or int or None, optional
+        The alphabet size for the p variables.
+        If an int, the variables share the same alphabet size.
+        If None (default), the alphabet size is unkown.
+
+    """
 
     def __init__(self, ar, axis=0, k=None):
         if not isinstance(ar, self.__class__):
