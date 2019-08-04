@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
+# pylint: disable=redefined-outer-name
 """Tests module."""
 import json
 import os
@@ -9,6 +10,7 @@ import numpy.random as random
 import pytest
 
 import ndd
+import ndd.estimators
 from make_test_ref import SEED, cases
 
 
@@ -112,7 +114,7 @@ def test_JSD():
     assert numpy.isclose(estimator(counts), ref_result)
 
 
-def test_mi(data_with_redundancy):  # pylint: disable=redefined-outer-name
+def test_mi(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import mutual_information
     h1 = ndd.from_data(data_with_redundancy[1])
@@ -123,7 +125,7 @@ def test_mi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     assert numpy.isclose(estimate, mi)
 
 
-def test_mmi(data_with_redundancy):  # pylint: disable=redefined-outer-name
+def test_mmi(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import interaction_information
     h0 = ndd.from_data(data_with_redundancy[0])
@@ -138,7 +140,7 @@ def test_mmi(data_with_redundancy):  # pylint: disable=redefined-outer-name
     assert numpy.isclose(estimate, mmi)
 
 
-def test_conditional_entropy(data_with_redundancy):  # pylint: disable=redefined-outer-name
+def test_conditional_entropy(data_with_redundancy):
     random.seed(SEED)
     from ndd.nsb import mutual_information
     data = data_with_redundancy[[1, 2]]
@@ -158,3 +160,12 @@ def test_xor():
     data = numpy.array([xor() for k in range(500)])
     estimate = ndd.conditional_entropy(data, c=[0, 1])
     assert numpy.isclose(estimate, 0, atol=0.01)
+
+
+def test_WW_NSB_equivalence(data_with_redundancy):
+    a = 1.0
+    nsb = ndd.estimators.NSB(alpha=a)
+    ww = ndd.estimators.WolpertWolf(alpha=a)
+    counts = data_with_redundancy.counts()
+    k = data_with_redundancy.nunique()
+    assert nsb(counts, k) == ww(counts, k)

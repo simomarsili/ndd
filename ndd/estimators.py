@@ -311,7 +311,21 @@ class WolpertWolf(EntropyEstimator):
 
 
 class NSB(EntropyEstimator):
-    """NSB entropy estimator."""
+    """Nemenman-Shafee-Bialek (NSB) entropy estimator.
+
+    Parameters
+    ----------
+    alpha : float, optional
+        Concentration parameter. alpha > 0.0.
+        If alpha is passed, use a single Dirichlet prior
+        (Wolpert-Wolf estimator).
+        Default: use a mixture-of-Dirichlets prior (NSB estimator).
+
+    """
+
+    def __init__(self, alpha=None):
+        super(NSB, self).__init__()
+        self.alpha = alpha if alpha is None else self.check_alpha(alpha)
 
     @check_input
     def fit(self, pk, k=None):
@@ -336,7 +350,10 @@ class NSB(EntropyEstimator):
             raise ValueError('NSB estimator needs k')
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
-        self.estimate_, self.err_ = ndd.fnsb.nsb(pk, k)
+        if self.alpha is None:
+            self.estimate_, self.err_ = ndd.fnsb.nsb(pk, k)
+        else:
+            self.estimate_ = ndd.fnsb.dirichlet(pk, k, self.alpha)
         return self
 
 
