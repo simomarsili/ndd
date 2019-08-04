@@ -12,8 +12,8 @@ import numpy
 import ndd
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, Plugin, WolpertWolf
-from ndd.exceptions import EstimatorInputError, PmfError
+from ndd.estimators import NSB, EntropyEstimator, Plugin, WolpertWolf
+from ndd.exceptions import EstimatorInputError, NddError, PmfError
 
 __all__ = [
     'entropy',
@@ -71,10 +71,13 @@ def entropy(pk, k=None, estimator='NSB', alpha=None, return_std=False):
 
     """
 
-    #estimator = select_estimator(alpha=alpha, plugin=plugin)
+    if not isinstance(estimator, EntropyEstimator):
+        try:
+            estimator = ndd.entropy_estimators[estimator](alpha=alpha)
+        except KeyError:
+            raise NddError('entropy(): valid values for estimator are: '
+                           "'NSB', 'Plugin'")
 
-    estimator = (estimator if hasattr(estimator, 'fit') else
-                 ndd.entropy_estimators[estimator](alpha=alpha))
     if k is None:
         algorithm = type(estimator).__name__
         if algorithm in {'NSB', 'WolpertWolf'}:
@@ -100,7 +103,7 @@ def entropy(pk, k=None, estimator='NSB', alpha=None, return_std=False):
     return S
 
 
-def from_data(ar, ks=None, axis=0, r=None):
+def from_data(ar, ks=None, estimator='NSB', alpha=None, axis=0, r=None):  # pylint: disable=too-many-arguments
     """
     Entropy estimate from data matrix.
 
@@ -122,8 +125,13 @@ def from_data(ar, ks=None, axis=0, r=None):
         Entropy estimate
 
     """
-    # EntropyEstimator objects are callable and return the fitted estimate
-    estimator = NSB()
+
+    if not isinstance(estimator, EntropyEstimator):
+        try:
+            estimator = ndd.entropy_estimators[estimator](alpha=alpha)
+        except KeyError:
+            raise NddError('entropy(): valid values for estimator are: '
+                           "'NSB', 'Plugin'")
 
     if ks is None:
         logger.warning(
