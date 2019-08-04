@@ -41,9 +41,10 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
     pk : array-like
         The number of occurrences of a set of bins.
     k : int or array-like, optional
-        Total number of bins (including unobserved bins); k >= len(pk).
-        A float is a valid input for whole numbers (e.g. k=1.e3).
-        If an array, set k = numpy.prod(k). Defaults to len(pk).
+        Alphabet size (the number of bins with non-zero probability).
+        Must be >= len(pk). A float is a valid input for whole numbers
+        (e.g. k=1.e3). If an array, set k = numpy.prod(k).
+        Defaults to len(pk).
     alpha : float, optional
         If not None: Wolpert-Wolf entropy estimator (fixed alpha).
         Use a single Dirichlet prior with concentration parameter alpha.
@@ -73,8 +74,9 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         algorithm = type(estimator).__name__
         if algorithm in {'NSB', 'WolpertWolf'}:
             logger.warning(
-                'WARNING: k=None but %s est. needs alphabet size; '
-                'set k=len(pk)', algorithm)
+                'WARNING: input value for k is None. Will set k = to the '
+                'number of observed bins (alphabet size is needed for the %s '
+                'estimator)', algorithm)
         k = len(pk)
 
     estimator = estimator.fit(pk, k=k)
