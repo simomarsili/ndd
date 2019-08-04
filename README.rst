@@ -31,6 +31,32 @@ by computing an approximation for the posterior standard deviation::
   >>> std
   0.048675500725595504
 
+More options
+============
+
++---------------+-----------+----------------------------------+-------------------------------------------------+
+| Estimator     | k         | alpha                            | notes                                           |
++---------------+-----------+----------------------------------+-------------------------------------------------+
+| Plugin        | \-        | optional (use as pseudocounts)   | -                                               |
++---------------+-----------+----------------------------------+-------------------------------------------------+
+| NSB           | mandatory | optional (switch to WolpertWolf) | mixture-of-Dirichlet priors                     |
++---------------+-----------+----------------------------------+-------------------------------------------------+
+| WolpertWolf   | mandatory | mandatory                        | single Dirichlet prior                          |
++---------------+-----------+----------------------------------+-------------------------------------------------+
+| AsymptoticNSB | -         | -                                | under-sampled regime                            |
++---------------+-----------+----------------------------------+-------------------------------------------------+
+| Grassberger   | -         | -                                | Grassberger 1988 estimator; well-sampled regime |
++---------------+-----------+----------------------------------+-------------------------------------------------+
+
+Estimator     k         alpha                            notes
+============= ========= ================================ ===============================================
+Plugin        -         optional (use as pseudocounts)   -
+NSB           mandatory optional (switch to WolpertWolf) mixture-of-Dirichlet priors
+WolpertWolf   mandatory mandatory                        single Dirichlet prior
+AsymptoticNSB -         -                                under-sampled regime
+Grassberger   -         -                                Grassberger 1988 estimator; well-sampled regime
+============= ========= ================================ ===============================================
+
 Information measures
 ====================
 
