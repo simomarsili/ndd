@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ## [1.5] - 2019-08-02
+### Changed
+For methods/functions working on data matrices:
+the default input is a **n-by-p** 2D array (n samples from p discrete
+variables, with different samples on different **rows**).
+Since release 1.3, the default was a transposed (**p-by-n**) data matrix.
+The behavior of functions taking frequency counts as input
+(e.g. the `ndd.entropy` function) is unchanged.
 ### Added
 - builds on Windows (with MinGW-W64)
 - builds on MacOS (thanks to https://github.com/ccattuto)
