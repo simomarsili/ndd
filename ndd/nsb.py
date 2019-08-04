@@ -9,6 +9,7 @@ from itertools import combinations
 
 import numpy
 
+import ndd
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, Plugin, WolpertWolf
@@ -29,7 +30,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
+def entropy(pk, k=None, estimator='NSB', alpha=None, return_std=False):
     """
     Entropy estimate from an array of counts.
 
@@ -45,16 +46,18 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
         Must be >= len(pk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
         Defaults to len(pk).
-    alpha : float, optional
-        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
-        Use a single Dirichlet prior with concentration parameter alpha.
-        alpha > 0.0.
-    plugin : boolean, optional
-        If True, return a 'plugin' estimate of the entropy. The discrete
+    estimator : str, optional
+        Entropy estimator; valid options are 'NSB' and 'Plugin'. If 'NSB', use
+        the  Nemenman-Shafee-Bialek estimator. If 'Plugin', the discrete
         distribution is estimated from the empirical frequencies over bins
         and inserted into the entropy definition (plugin estimator).
-        If alpha is passed in combination with plugin=True, add
-        alpha pseudocounts to each frequency count (pseudocount estimator).
+        Defaults to NSB estimator.
+    alpha : float, optional
+        Concentration parameter or pseudocounts (alpha > 0).
+        If not None, use a single Dirichlet prior with
+        concentration parameter alpha (Wolpert-Wolf estimator).
+        If estimator is set 'Plugin', add alpha pseudocounts to each frequency
+        count (pseudocount estimator).
     return_std : boolean, optional
         If True, also return an approximation for the standard deviation
         over the entropy posterior.
@@ -68,8 +71,10 @@ def entropy(pk, k=None, alpha=None, plugin=False, return_std=False):
 
     """
 
-    estimator = select_estimator(alpha=alpha, plugin=plugin)
+    #estimator = select_estimator(alpha=alpha, plugin=plugin)
 
+    estimator = (estimator if hasattr(estimator, 'fit') else
+                 ndd.entropy_estimators[estimator](alpha=alpha))
     if k is None:
         algorithm = type(estimator).__name__
         if algorithm in {'NSB', 'WolpertWolf'}:

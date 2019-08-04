@@ -24,15 +24,16 @@ def estimator_prms():
     return [
         {},  # NSB
         {
+            'estimator': 'NSB',
             'alpha': 1.0
-        },  # Dirichlet
+        },  # Wolpert-Wolf
         {
-            'alpha': 0.0,
-            'plugin': 1
-        },  # ML
+            'estimator': 'Plugin',
+            'alpha': None
+        },  # plugin estimator
         {
-            'alpha': 1.0,
-            'plugin': 1
+            'estimator': 'Plugin',
+            'alpha': 1.0
         },  # pseudo
     ]
 
