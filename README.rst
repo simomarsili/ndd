@@ -89,6 +89,11 @@ you can install the gfortran compiler using the following command::
 
   sudo apt-get install gfortran
 
+On Windows, you can use the gfortran compiler from the
+[**MinGW-w64** project](https://sourceforge.net/projects/mingw-w64/files),
+[direct link](https://sourceforge.net/projects/mingw-w64/files/latest/download)
+to the installer.
+
 Running tests
 =============
 Clone the repo, install tests requirements and run the tests with `make`::
