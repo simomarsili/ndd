@@ -10,7 +10,7 @@ from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
 from ndd.base import BaseEstimator
-from ndd.exceptions import AlphaError, CardinalityError, CountsError
+from ndd.exceptions import AlphaError, CardinalityError, CountsError, NddError
 
 logger = logging.getLogger(__name__)
 
@@ -384,12 +384,13 @@ class AsymptoticNSB(EntropyEstimator):
             Entropy estimate.
         """
         from scipy.special import digamma
-        n = sum(pk)  # #samples
-        k1 = sum(pk > 0)  # #sampled bins
+        k1 = sum(pk > 0)  # number of sampled bins
+        n = sum(pk)  # number of samples
+        # define under-sampled regime when ratio > 0.9 (Nemenman 2011)
+        ratio = k1 / n
         delta = n - k1
         if delta == 0:
-            raise ValueError('NSBAsymptotic: No coincidences in data')
-        ratio = k1 / n
+            raise NddError('NSBAsymptotic: No coincidences in data')
         if ratio <= 0.9:
             logger.warning('NSB asymptotic should be used in the '
                            'under-sampled regime only.')
