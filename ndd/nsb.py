@@ -113,6 +113,19 @@ def from_data(ar, ks=None, estimator='NSB', alpha=None, axis=0, r=None):  # pyli
         2D array of n samples from p discrete variables.
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
+    estimator : str, optional
+        Entropy estimator; valid options are 'NSB' and 'Plugin'. If 'NSB', use
+        the  Nemenman-Shafee-Bialek estimator. If 'Plugin', the discrete
+        distribution is estimated from the empirical frequencies over bins
+        and inserted into the entropy definition (plugin estimator).
+        Defaults to NSB estimator.
+    alpha : float, optional
+        Concentration parameter or pseudocounts (alpha > 0).
+        If not None, use a single Dirichlet prior with
+        concentration parameter alpha (Wolpert-Wolf estimator).
+        If estimator is set 'Plugin', add alpha pseudocounts to each frequency
+        count (pseudocount estimator).
+
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int, optional; ; 1<=r<=p.
