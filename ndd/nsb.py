@@ -9,11 +9,10 @@ from itertools import combinations
 
 import numpy
 
-import ndd
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, EntropyEstimator, Plugin
-from ndd.exceptions import EstimatorInputError, NddError, PmfError
+from ndd.estimators import NSB, Plugin, check_estimator
+from ndd.exceptions import EstimatorInputError, PmfError
 
 __all__ = [
     'entropy',
@@ -63,18 +62,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
 
     """
 
-    if isinstance(estimator, str):
-        try:
-            estimator_name = estimator
-            estimator = getattr(ndd.estimators, estimator_name)()
-        except AttributeError:
-            raise NddError('%s is not a valid entropy estimator' %
-                           estimator_name)
-    else:
-        estimator_name = type(estimator).__name__
-
-    if estimator_name not in ndd.entropy_estimators:
-        raise NddError('%s is not a valid entropy estimator' % estimator_name)
+    estimator, estimator_name = check_estimator(estimator)
 
     if k is None:
         if estimator_name in ['NSB', 'WolpertWolf']:
@@ -127,14 +115,7 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
 
     """
 
-    if isinstance(estimator, EntropyEstimator):
-        estimator_name = type(estimator).__name__
-    else:
-        estimator_name = estimator
-        if estimator_name in ndd.entropy_estimators:
-            estimator = getattr(ndd.estimators, estimator_name)()
-        else:
-            raise NddError('Unknown entropy estimator: %r' % estimator_name)
+    estimator, estimator_name = check_estimator(estimator)
 
     if ks is None:
         if estimator_name in ['NSB', 'WolpertWolf']:
@@ -153,7 +134,7 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
     return estimator(counts, k=k)
 
 
-def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
+def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
     """
     Return the Jensen-Shannon divergence from a m-by-p matrix of counts.
 
@@ -176,14 +157,10 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
         Total number of bins (including unobserved bins); k >= p.
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to p.
-    alpha : float, optional
-        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
-        Use a single Dirichlet prior with concentration parameter alpha.
-        alpha > 0.0.
-    plugin : boolean, optional
-        If True, use a 'plugin' estimator for the entropy.
-        If alpha is passed in combination with plugin == True, add alpha
-        pseudoconts to the frequency counts in the plugin estimate.
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
 
     Returns
     -------
@@ -192,8 +169,9 @@ def jensen_shannon_divergence(pk, k=None, alpha=None, plugin=False):
 
     """
 
-    entropy_estimator = select_estimator(alpha, plugin)
-    estimator = JSDivergence(entropy_estimator).fit(pk, k=k)
+    estimator, _ = check_estimator(estimator)
+
+    estimator = JSDivergence(estimator).fit(pk, k=k)
     js = estimator.estimate_
 
     if numpy.isnan(js):

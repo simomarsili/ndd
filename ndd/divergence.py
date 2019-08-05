@@ -10,7 +10,7 @@ import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
 import ndd
-from ndd.estimators import EntropyEstimator, check_input
+from ndd.estimators import NSB, EntropyEstimator, check_input
 from ndd.exceptions import NddError
 
 __all__ = ['DivergenceEstimator', 'JSDivergence']
@@ -25,21 +25,12 @@ ABC = ABCMeta('ABC', (object, ), {'__slots__': ()})
 class DivergenceEstimator(EntropyEstimator, ABC):
     """Base class for estimators of divergences."""
 
-    def __init__(self, entropy='NSB'):
+    def __init__(self, entropy=NSB()):
         """Default entropy estimator is NSB."""
         super(DivergenceEstimator, self).__init__()
         self.input_data_ndim = 2
 
-        if isinstance(entropy, str):
-            try:
-                estimator_name = entropy
-                entropy = getattr(ndd.estimators, estimator_name)()
-            except AttributeError:
-                raise NddError('%s is not a valid entropy estimator' %
-                               estimator_name)
-        else:
-            estimator_name = type(entropy).__name__
-
+        estimator_name = type(entropy).__name__
         if estimator_name not in ndd.entropy_estimators:
             raise NddError('%s is not a valid entropy estimator' %
                            estimator_name)

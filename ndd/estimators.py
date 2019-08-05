@@ -8,6 +8,7 @@ from abc import ABCMeta, abstractmethod
 import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
+import ndd
 import ndd.fnsb
 from ndd.base import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError, NddError
@@ -19,6 +20,24 @@ __all__ = [
     'Plugin',
     'NSB',
 ]
+
+
+def check_estimator(estimator):
+    """Check that estimator is a valid entropy estimator."""
+    if isinstance(estimator, str):
+        try:
+            estimator_name = estimator
+            estimator = getattr(ndd.estimators, estimator_name)()
+        except AttributeError:
+            raise NddError('%s is not a valid entropy estimator' %
+                           estimator_name)
+    else:
+        estimator_name = type(estimator).__name__
+
+    if estimator_name not in ndd.entropy_estimators:
+        raise NddError('%s is not a valid entropy estimator' % estimator_name)
+
+    return estimator, estimator_name
 
 
 def check_input(fit_function):  # pylint: disable=no-self-argument
