@@ -65,12 +65,11 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
     estimator, estimator_name = check_estimator(estimator)
 
     if k is None:
-        if estimator_name in ['NSB', 'WolpertWolf']:
+        if estimator_name == 'NSB':
             logger.warning(
-                'WARNING: input value for k is None. Will set k = to the '
-                'number of observed bins (alphabet size is needed for the %s '
-                'estimator)', estimator_name)
-        k = len(pk)
+                'WARNING: unkown alphabet size. Set to the number of observed '
+                'bins (the alphabet size is needed for the NSB estimator)')
+        k = sum(pk > 0)
 
     estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_
@@ -118,11 +117,10 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
     estimator, estimator_name = check_estimator(estimator)
 
     if ks is None:
-        if estimator_name in ['NSB', 'WolpertWolf']:
+        if estimator_name == 'NSB':
             logger.warning(
-                'WARNING: input value for k is None. Will set k = to the '
-                'number of observed bins (alphabet size is needed for the %s '
-                'estimator)', estimator_name)
+                'WARNING: unkown alphabet size. Set to the number of observed '
+                'bins (the alphabet size is needed for the NSB estimator)')
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
