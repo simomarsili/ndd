@@ -50,7 +50,7 @@ See the functions' docstrings for details.
 Changes
 =======
 
-**unreleased**
+**Unreleased**
    Added:
 
    - *MillerMadow* estimator class
