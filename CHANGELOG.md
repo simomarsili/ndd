@@ -1,6 +1,10 @@
 # Change log
 
 ## [Unreleased]
+### Changed
+`entropy` function: the `alpha` and `plugin` arguments have been replaced by
+an optional `estimator` argument that select a specific estimator algorithm.
+Check ndd.entropy_estimators for the available estimators.
 
 ## [1.5] - 2019-08-02
 ### Changed
