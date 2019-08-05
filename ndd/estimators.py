@@ -19,6 +19,7 @@ __all__ = [
     'EntropyEstimator',
     'Plugin',
     'NSB',
+    'AsymptoticNSB',
 ]
 
 
