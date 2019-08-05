@@ -55,6 +55,7 @@ Changes
 
    - *MillerMadow* estimator class
    - *AsymptoticNSB* estimator class
+   - *Grasseberger* estimator class
 
    Changed:
 

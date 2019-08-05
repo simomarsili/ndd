@@ -1,6 +1,10 @@
 # Change log
 
 ## [Unreleased]
+### Added
+- `MillerMadow` estimator class
+- `AsymptoticNSB` estimator class
+- `Grassberger` estimator class
 ### Changed
 `entropy` function: the `alpha` and `plugin` arguments have been replaced by
 an optional `estimator` argument that select a specific estimator algorithm.
