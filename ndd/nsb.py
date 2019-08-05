@@ -392,7 +392,7 @@ def mutual_information(ar, ks=None, estimator='NSB', axis=0):
             from_data(ar, estimator))
 
 
-def conditional_entropy(ar, c, ks=None, axis=0, r=None):
+def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pylint: disable=too-many-arguments
     """
     Coditional entropy estimate from data matrix.
 
@@ -404,6 +404,10 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=None):
         The variables on which entropy is conditioned (as column indices).
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int or None, optional; 1<=r<=p-len(c).
@@ -434,7 +438,7 @@ def conditional_entropy(ar, c, ks=None, axis=0, r=None):
                                    ' are not valid')
 
     # EntropyEstimator objects are callable and return the fitted estimate
-    estimator = NSB()
+    estimator, _ = check_estimator(estimator)
 
     # Entropy of features on which we are conditioning
     counts, k = ar[c].iter_counts()
