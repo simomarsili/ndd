@@ -51,6 +51,13 @@ Changes
 =======
 
 **unreleased**
+   Added:
+
+   - *MillerMadow* estimator class
+   - *AsymptoticNSB* estimator class
+
+   Changed:
+
    *entropy* function: the *alpha* and *plugin* arguments have been replaced by
    an optional *estimator* argument that selects the entropy estimator
    algorithm. Check the new docstrings and ndd.entropy_estimators for the

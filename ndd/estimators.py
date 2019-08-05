@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     'EntropyEstimator',
     'Plugin',
+    'MillerMadow',
     'NSB',
     'AsymptoticNSB',
 ]
@@ -254,7 +255,7 @@ class Plugin(EntropyEstimator):
         return self
 
 
-class _MillerMadow(EntropyEstimator):
+class MillerMadow(EntropyEstimator):
     """Miller-Madow entropy estimator."""
 
     @check_input
