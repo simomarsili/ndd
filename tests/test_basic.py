@@ -160,12 +160,3 @@ def test_xor():
     data = numpy.array([xor() for k in range(500)])
     estimate = ndd.conditional_entropy(data, c=[0, 1])
     assert numpy.isclose(estimate, 0, atol=0.01)
-
-
-def test_WW_NSB_equivalence(data_with_redundancy):
-    a = 1.0
-    nsb = ndd.estimators.NSB(alpha=a)
-    ww = ndd.estimators.WolpertWolf(alpha=a)
-    counts = data_with_redundancy.counts()
-    k = data_with_redundancy.nunique()
-    assert nsb(counts, k) == ww(counts, k)
