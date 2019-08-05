@@ -52,9 +52,9 @@ Changes
 
 **unreleased**
    *entropy* function: the *alpha* and *plugin* arguments have been replaced by
-   an optional *estimator* argument that select a specific estimator algorithm.
-   Check the new docsrings and ndd.entropy_estimators for the available
-   estimators.
+   an optional *estimator* argument that selects the entropy estimator
+   algorithm. Check the new docstrings and ndd.entropy_estimators for the
+   available estimators.
 **v1.5**
     For methods/functions working on data matrices:
     the default input is a **n-by-p** 2D array (n samples from p discrete

@@ -254,7 +254,7 @@ class Plugin(EntropyEstimator):
 
 
 class _MillerMadow(EntropyEstimator):
-    """Miller entropy estimator."""
+    """Miller-Madow entropy estimator."""
 
     @check_input
     def fit(self, pk, k=None):
@@ -377,7 +377,7 @@ class NSB(EntropyEstimator):
         return self
 
 
-class _AsymptoticNSB(EntropyEstimator):
+class AsymptoticNSB(EntropyEstimator):
     """
     Asymptotic NSB estimator for countably infinite distributions.
 
@@ -385,9 +385,9 @@ class _AsymptoticNSB(EntropyEstimator):
     number of distinct symbols in the samples and N the number of samples)
 
     See:
-    "Coincidences and estimation of entropies of random variables with large
-    cardinalities."
-    I. Nemenman.
+    Nemenman2011:
+    "Coincidences and estimation of entropies of random variables
+    with largecardinalities.", equations 29, 30
     """
 
     @check_input
@@ -403,21 +403,22 @@ class _AsymptoticNSB(EntropyEstimator):
         float
             Entropy estimate.
         """
-        from scipy.special import digamma
+        from scipy.special import digamma, polygamma
         k1 = sum(pk > 0)  # number of sampled bins
         n = sum(pk)  # number of samples
-        # define under-sampled regime when ratio > 0.9 (Nemenman 2011)
+        # under-sampled regime when ratio > 0.9 (Nemenman2011)
         ratio = k1 / n
         delta = n - k1
         if delta == 0:
             raise NddError('NSBAsymptotic: No coincidences in data')
         if ratio <= 0.9:
-            logger.warning('NSB asymptotic should be used in the '
-                           'under-sampled regime only.')
+            logger.warning('The AsymptoticNSB estimator should be only used '
+                           'in the under-sampled regime.')
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
         self.estimate_ = (euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
                           digamma(delta))
+        self.err_ = numpy.sqrt(polygamma(1, delta))
         return self
 
 
@@ -461,7 +462,7 @@ class _UnderWell(EntropyEstimator):
         n = sum(pk)
         ratio = k1 / n
 
-        under_sampled_estimator = _AsymptoticNSB()
+        under_sampled_estimator = AsymptoticNSB()
         well_sampled_estimator = _Grassberger()
         self.estimate_ = (ratio**2 * under_sampled_estimator(pk) +
                           (1 - ratio**2) * well_sampled_estimator(pk))
