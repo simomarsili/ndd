@@ -21,6 +21,7 @@ __all__ = [
     'MillerMadow',
     'NSB',
     'AsymptoticNSB',
+    'Grassberger',
 ]
 
 
@@ -51,6 +52,34 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
         return fit_function(obj, pk, k=k)
 
     return wrapper
+
+
+def g_series():
+    """Higher-order function storing terms of the series."""
+    GG = {}
+
+    def gterm(n):
+        """Sequence of reals for the Grassberger estimator."""
+        if n in GG:
+            return GG[n]
+        if n <= 2:
+            if n < 1:
+                value = 0.0
+            elif n == 1:
+                value = -euler_gamma - numpy.log(2.0)
+            elif n == 2:
+                value = 2.0 + gterm(1)
+        else:
+            if n % 2 == 0:
+                # we don't use recursion here
+                value = gterm(2) + ndd.fnsb.gamma0(
+                    (n + 1) / 2) - ndd.fnsb.gamma0(3 / 2)
+            else:
+                value = gterm(n - 1)
+        GG[n] = value
+        return value
+
+    return gterm
 
 
 # compatible with both Python 2 and 3
@@ -359,29 +388,34 @@ class AsymptoticNSB(EntropyEstimator):
         float
             Entropy estimate.
         """
-        from scipy.special import digamma, polygamma
         k1 = sum(pk > 0)  # number of sampled bins
         n = sum(pk)  # number of samples
         # under-sampled regime when ratio > 0.9 (Nemenman2011)
         ratio = k1 / n
         delta = n - k1
+
         if delta == 0:
-            raise NddError('NSBAsymptotic: No coincidences in data')
+            logger.warning('NSBAsymptotic: No coincidences in data')
+            self.estimate_ = numpy.nan
+            return self
+
         if ratio <= 0.9:
             logger.warning('The AsymptoticNSB estimator should be only used '
                            'in the under-sampled regime.')
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
+            return self
+
         self.estimate_ = (euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
-                          digamma(delta))
-        self.err_ = numpy.sqrt(polygamma(1, delta))
+                          ndd.fnsb.gamma0(delta))
+        self.err_ = numpy.sqrt(ndd.fnsb.gamma1(delta))
         return self
 
 
-class _Grassberger(EntropyEstimator):
+class _Grassberger1(EntropyEstimator):
     """Grassberger 1988 estimator.
 
-    see:
+    see equation 7 in:
     http://hornacek.coa.edu/dave/Junk/entropy.estimation.pdf
     https://www.sciencedirect.com/science/article/abs/pii/0375960188901934
     """
@@ -389,15 +423,38 @@ class _Grassberger(EntropyEstimator):
     @check_input
     def fit(self, pk, k=None):  # pylint: disable=unused-argument
         """Estimator definition."""
-        from scipy.special import digamma
 
         n = sum(pk)
 
         estimate = n * numpy.log(n)
         for x in pk:
-            if not x:
-                continue
-            estimate -= x * digamma(x) + (1 - 2 * (x % 2)) / (x + 1)
+            if x:
+                estimate -= x * ndd.fnsb.gamma0(x) + (1 - 2 *
+                                                      (x % 2)) / (x + 1)
+        estimate /= n
+
+        self.estimate_ = estimate
+        return self
+
+
+class Grassberger(EntropyEstimator):
+    """Grassberger 2008 estimator.
+
+    see equation 35 in:
+    https://arxiv.org/pdf/physics/0307138.pdf
+    """
+
+    @check_input
+    def fit(self, pk, k=None):  # pylint: disable=unused-argument
+        """Estimator definition."""
+
+        n = sum(pk)
+
+        gg = g_series()  # init the G series
+        estimate = n * numpy.log(n)
+        for x in pk:
+            if x:
+                estimate -= x * gg(x)
         estimate /= n
 
         self.estimate_ = estimate
@@ -414,12 +471,13 @@ class _UnderWell(EntropyEstimator):
     @check_input
     def fit(self, pk, k=None):  # pylint: disable=unused-argument
         """Estimator definition."""
-        k1 = len(pk > 0)
+        k1 = sum(pk > 0)
         n = sum(pk)
         ratio = k1 / n
 
         under_sampled_estimator = AsymptoticNSB()
-        well_sampled_estimator = _Grassberger()
-        self.estimate_ = (ratio**2 * under_sampled_estimator(pk) +
-                          (1 - ratio**2) * well_sampled_estimator(pk))
+        well_sampled_estimator = MillerMadow()
+        estimate = (ratio**2 * under_sampled_estimator(pk) +
+                    (1 - ratio**2) * well_sampled_estimator(pk))
+        self.estimate_ = estimate
         return self

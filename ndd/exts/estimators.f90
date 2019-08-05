@@ -584,3 +584,21 @@ subroutine nsb2d(n,m,counts,nc,estimate,err_estimate)
 
 end subroutine nsb2d
 
+subroutine gamma0(x, y)
+  use iso_fortran_env
+  use gamma_funcs, only: digamma
+  implicit none
+  real(real64), intent(in) :: x
+  real(real64), intent(out) :: y
+  y = digamma(x)
+end subroutine gamma0
+
+subroutine gamma1(x, y)
+  use iso_fortran_env
+  use gamma_funcs, only: trigamma
+  implicit none
+  real(real64), intent(in) :: x
+  real(real64), intent(out) :: y
+  y = trigamma(x)
+end subroutine gamma1
+
