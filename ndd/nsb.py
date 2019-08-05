@@ -30,7 +30,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def entropy(pk, k=None, estimator='NSB', alpha=None, return_std=False):
+def entropy(pk, k=None, estimator='NSB', return_std=False):
     """
     Entropy estimate from an array of counts.
 
@@ -46,18 +46,10 @@ def entropy(pk, k=None, estimator='NSB', alpha=None, return_std=False):
         Must be >= len(pk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
         Defaults to len(pk).
-    estimator : str, optional
-        Entropy estimator; valid options are 'NSB' and 'Plugin'. If 'NSB', use
-        the  Nemenman-Shafee-Bialek estimator. If 'Plugin', the discrete
-        distribution is estimated from the empirical frequencies over bins
-        and inserted into the entropy definition (plugin estimator).
-        Defaults to NSB estimator.
-    alpha : float, optional
-        Concentration parameter or pseudocounts (alpha > 0).
-        If not None, use a single Dirichlet prior with
-        concentration parameter alpha (Wolpert-Wolf estimator).
-        If estimator is set 'Plugin', add alpha pseudocounts to each frequency
-        count (pseudocount estimator).
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
     return_std : boolean, optional
         If True, also return an approximation for the standard deviation
         over the entropy posterior.
@@ -71,20 +63,25 @@ def entropy(pk, k=None, estimator='NSB', alpha=None, return_std=False):
 
     """
 
-    if not isinstance(estimator, EntropyEstimator):
+    if isinstance(estimator, str):
         try:
-            estimator = ndd.entropy_estimators[estimator](alpha=alpha)
-        except KeyError:
-            raise NddError('entropy(): valid values for estimator are: '
-                           "'NSB', 'Plugin'")
+            estimator_name = estimator
+            estimator = getattr(ndd.estimators, estimator_name)()
+        except AttributeError:
+            raise NddError('%s is not a valid entropy estimator' %
+                           estimator_name)
+    else:
+        estimator_name = type(estimator).__name__
+
+    if estimator_name not in ndd.entropy_estimators:
+        raise NddError('%s is not a valid entropy estimator' % estimator_name)
 
     if k is None:
-        algorithm = type(estimator).__name__
-        if algorithm in {'NSB', 'WolpertWolf'}:
+        if estimator_name in ['NSB', 'WolpertWolf']:
             logger.warning(
                 'WARNING: input value for k is None. Will set k = to the '
                 'number of observed bins (alphabet size is needed for the %s '
-                'estimator)', algorithm)
+                'estimator)', estimator_name)
         k = len(pk)
 
     estimator = estimator.fit(pk, k=k)
@@ -103,7 +100,7 @@ def entropy(pk, k=None, estimator='NSB', alpha=None, return_std=False):
     return S
 
 
-def from_data(ar, ks=None, estimator='NSB', alpha=None, axis=0, r=None):  # pylint: disable=too-many-arguments
+def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
     """
     Entropy estimate from data matrix.
 
@@ -113,19 +110,10 @@ def from_data(ar, ks=None, estimator='NSB', alpha=None, axis=0, r=None):  # pyli
         2D array of n samples from p discrete variables.
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
-    estimator : str, optional
-        Entropy estimator; valid options are 'NSB' and 'Plugin'. If 'NSB', use
-        the  Nemenman-Shafee-Bialek estimator. If 'Plugin', the discrete
-        distribution is estimated from the empirical frequencies over bins
-        and inserted into the entropy definition (plugin estimator).
-        Defaults to NSB estimator.
-    alpha : float, optional
-        Concentration parameter or pseudocounts (alpha > 0).
-        If not None, use a single Dirichlet prior with
-        concentration parameter alpha (Wolpert-Wolf estimator).
-        If estimator is set 'Plugin', add alpha pseudocounts to each frequency
-        count (pseudocount estimator).
-
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int, optional; ; 1<=r<=p.
@@ -139,17 +127,21 @@ def from_data(ar, ks=None, estimator='NSB', alpha=None, axis=0, r=None):  # pyli
 
     """
 
-    if not isinstance(estimator, EntropyEstimator):
-        try:
-            estimator = ndd.entropy_estimators[estimator](alpha=alpha)
-        except KeyError:
-            raise NddError('entropy(): valid values for estimator are: '
-                           "'NSB', 'Plugin'")
+    if isinstance(estimator, EntropyEstimator):
+        estimator_name = type(estimator).__name__
+    else:
+        estimator_name = estimator
+        if estimator_name in ndd.entropy_estimators:
+            estimator = getattr(ndd.estimators, estimator_name)()
+        else:
+            raise NddError('Unknown entropy estimator: %r' % estimator_name)
 
     if ks is None:
-        logger.warning(
-            'WARNING: k=None but the NSB estimator needs alphabet size; '
-            'set k = prod(#unique elements for each column)')
+        if estimator_name in ['NSB', 'WolpertWolf']:
+            logger.warning(
+                'WARNING: input value for k is None. Will set k = to the '
+                'number of observed bins (alphabet size is needed for the %s '
+                'estimator)', estimator_name)
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)

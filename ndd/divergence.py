@@ -29,25 +29,22 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         """Default entropy estimator is NSB."""
         super(DivergenceEstimator, self).__init__()
         self.input_data_ndim = 2
-        try:
-            self._entropy_estimator = ndd.entropy_estimators[entropy]()
-        except KeyError:
-            raise NddError(
-                'Unknown entropy estimator; valid options are:\n%s' %
-                ', '.join(list(ndd.entropy_estimators.keys())))
 
-    @property
-    def entropy_estimator(self):
-        """EntropyEstimator object."""
-        return self._entropy_estimator
-
-    @entropy_estimator.setter
-    def entropy_estimator(self, obj):
-        """Entropy estimator setter."""
-        if isinstance(obj, EntropyEstimator):
-            self._entropy_estimator = obj
+        if isinstance(entropy, str):
+            try:
+                estimator_name = entropy
+                entropy = getattr(ndd.estimators, estimator_name)()
+            except AttributeError:
+                raise NddError('%s is not a valid entropy estimator' %
+                               estimator_name)
         else:
-            raise TypeError('Not a EntropyEstimator object.')
+            estimator_name = type(entropy).__name__
+
+        if estimator_name not in ndd.entropy_estimators:
+            raise NddError('%s is not a valid entropy estimator' %
+                           estimator_name)
+
+        self.entropy_estimator = entropy
 
     @property
     def algorithm(self):

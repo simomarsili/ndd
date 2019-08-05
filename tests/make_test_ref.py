@@ -9,6 +9,7 @@ import numpy
 import numpy.random as random
 
 import ndd
+from ndd.estimators import NSB, Plugin
 
 SEED = 123
 
@@ -24,16 +25,13 @@ def estimator_prms():
     return [
         {},  # NSB
         {
-            'estimator': 'NSB',
-            'alpha': 1.0
+            'estimator': NSB(alpha=1.0),
         },  # Wolpert-Wolf
         {
-            'estimator': 'Plugin',
-            'alpha': None
+            'estimator': Plugin(),
         },  # plugin estimator
         {
-            'estimator': 'Plugin',
-            'alpha': 1.0
+            'estimator': Plugin(alpha=1.0),
         },  # pseudo
     ]
 
