@@ -346,7 +346,7 @@ def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
         ar=ar, ks=ks, estimator=estimator, axis=axis, r=r)
 
 
-def mutual_information(ar, ks=None, axis=0):
+def mutual_information(ar, ks=None, estimator='NSB', axis=0):
     """Mutual information from p-by-n data matrix.
 
     If p > 2, return an estimate of the mutual information for each possible
@@ -358,6 +358,10 @@ def mutual_information(ar, ks=None, axis=0):
         n-by-p array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
 
@@ -372,6 +376,8 @@ def mutual_information(ar, ks=None, axis=0):
         If len(ks) != p.
 
     """
+    estimator, _ = check_estimator(estimator)
+
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
 
@@ -379,10 +385,11 @@ def mutual_information(ar, ks=None, axis=0):
 
     if p > 2:
         h1 = list(from_data(ar, r=1))
-        return (h1[i1] + h1[i2] - from_data(ar[i1, i2])
+        return (h1[i1] + h1[i2] - from_data(ar[i1, i2], estimator=estimator)
                 for i1, i2 in combinations(range(p), 2))
 
-    return numpy.sum(from_data(ar, r=1)) - from_data(ar)
+    return (numpy.sum(from_data(ar, r=1, estimator=estimator)) -
+            from_data(ar, estimator))
 
 
 def conditional_entropy(ar, c, ks=None, axis=0, r=None):
