@@ -95,7 +95,7 @@ you can install the gfortran compiler using the following command::
   sudo apt-get install gfortran
 
 On Windows, you can use the gfortran compiler from the
-**`MinGW-w64 <https://sourceforge.net/projects/mingw-w64/files>`_** project
+`MinGW-w64 <https://sourceforge.net/projects/mingw-w64/files>`_ project
 (`direct link <https://sourceforge.net/projects/mingw-w64/files/latest/download>`_
 to the installer).
 
