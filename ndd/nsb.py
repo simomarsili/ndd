@@ -45,7 +45,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
         Must be >= len(pk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
         Defaults to len(pk).
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
@@ -98,7 +98,7 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
         2D array of n samples from p discrete variables.
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
@@ -157,7 +157,7 @@ def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
         Total number of bins (including unobserved bins); k >= p.
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to p.
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
@@ -201,7 +201,7 @@ def kullback_leibler_divergence(pk, qk, k=None, estimator='NSB'):
         Total number of bins (including unobserved bins); k >= p.
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to len(pk).
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
@@ -254,7 +254,7 @@ def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
         n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
@@ -320,7 +320,7 @@ def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
         n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
@@ -358,7 +358,7 @@ def mutual_information(ar, ks=None, estimator='NSB', axis=0):
         n-by-p array of n samples from p discrete variables.
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
@@ -404,7 +404,7 @@ def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pyl
         The variables on which entropy is conditioned (as column indices).
     ks : 1D p-dimensional array, optional
         Alphabet size for each variable.
-    estimator : str or estimator instance, optional
+    estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
         Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
