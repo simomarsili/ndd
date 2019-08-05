@@ -239,7 +239,7 @@ def kullback_leibler_divergence(pk, qk, k=None, estimator='NSB'):
     return kl
 
 
-def interaction_information(ar, ks=None, axis=0, r=None):
+def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
     """Interaction information from data matrix.
 
     See Eq.10 in:
@@ -254,6 +254,10 @@ def interaction_information(ar, ks=None, axis=0, r=None):
         n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int, optional; 1<=r<=p.
@@ -272,17 +276,33 @@ def interaction_information(ar, ks=None, axis=0, r=None):
         If len(ks) != p.
 
     """
+
+    def iinfo(X, ks, estimator):
+        """Helper function for interaction information definition.
+
+        Ref: timme2014synergy
+        """
+        info = 0.0
+        S = len(X)
+        for T in range(1, S + 1):
+            sgn = (-1)**(S - T)
+            info += sgn * numpy.sum(
+                from_data(X, ks=ks, estimator=estimator, r=T))
+        return -info
+
+    estimator, _ = check_estimator(estimator)
+
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
 
     if r is not None:
-        return (iinfo(data, k) for data, k in ar.iter_data(r=r))
+        return (iinfo(data, k, estimator) for data, k in ar.iter_data(r=r))
 
     data, k = ar.iter_data()
-    return iinfo(data, k)
+    return iinfo(data, k, estimator)
 
 
-def coinformation(ar, ks=None, axis=0, r=None):
+def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
     """Coinformation from data matrix.
 
     See Eq.11 in:
@@ -300,6 +320,10 @@ def coinformation(ar, ks=None, axis=0, r=None):
         n-by-p array of n samples from p discrete variables.
     ks : 1D array of length p, optional
         Alphabet size for each variable.
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int or None, optional; 1<=r<=p.
@@ -319,7 +343,7 @@ def coinformation(ar, ks=None, axis=0, r=None):
 
     # change sign for odd number of variables
     return (-1)**ar.shape[0] * interaction_information(
-        ar=ar, ks=ks, axis=axis, r=r)
+        ar=ar, ks=ks, estimator=estimator, axis=axis, r=r)
 
 
 def mutual_information(ar, ks=None, axis=0):
@@ -455,19 +479,6 @@ def histogram(data, axis=0, r=None):
     # statistics for the p-dimensional variable
     _, counts = numpy.unique(data, return_counts=True, axis=1)
     return counts
-
-
-def iinfo(X, ks):
-    """Helper function for interaction information definition.
-
-    Ref: timme2014synergy
-    """
-    info = 0.0
-    S = len(X)
-    for T in range(1, S + 1):
-        sgn = (-1)**(S - T)
-        info += sgn * numpy.sum(from_data(X, ks=ks, r=T))
-    return -info
 
 
 def coinfo(X, ks):
