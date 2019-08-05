@@ -181,7 +181,7 @@ def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
     return js
 
 
-def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
+def kullback_leibler_divergence(pk, qk, k=None, estimator='NSB'):
     """
     Kullback-Leibler divergence given counts pk and a reference PMF qk.
 
@@ -201,14 +201,10 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
         Total number of bins (including unobserved bins); k >= p.
         A float is a valid input for whole numbers (e.g. k=1.e3).
         If an array, set k = numpy.prod(k). Defaults to len(pk).
-    alpha : float, optional
-        If not None: Wolpert-Wolf entropy estimator (fixed alpha).
-        Use a single Dirichlet prior with concentration parameter alpha.
-        alpha > 0.0.
-    plugin : boolean, optional
-        If True, use a 'plugin' estimator for the entropy.
-        If alpha is passed in combination with plugin == True, add alpha
-        pseudoconts to the frequency counts in the plugin estimate.
+    estimator : str or estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
 
     Returns
     -------
@@ -233,7 +229,7 @@ def kullback_leibler_divergence(pk, qk, k=None, alpha=None, plugin=False):
     if k is None:
         k = len(pk)
 
-    estimator = select_estimator(alpha, plugin)
+    estimator, _ = check_estimator(estimator)
     estimate = estimator.fit(pk, k=k).estimate_
     kl = -(estimate + numpy.sum(pk * log_qk) / float(sum(pk)))
     if numpy.isnan(kl):
