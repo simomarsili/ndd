@@ -51,8 +51,8 @@ Changes
 =======
 
 **unreleased**
-   `entropy` function: the `alpha` and `plugin` arguments have been replaced by
-   an optional `estimator` argument that select a specific estimator algorithm.
+   *entropy* function: the *alpha* and *plugin* arguments have been replaced by
+   an optional *estimator* argument that select a specific estimator algorithm.
    Check the new docsrings and ndd.entropy_estimators for the available
    estimators.
 **v1.5**
@@ -61,17 +61,17 @@ Changes
     variables, with different samples on different **rows**).
     Since release 1.3, the default was a transposed (**p-by-n**) data matrix.
     The behavior of functions taking frequency counts as input
-    (e.g. the `ndd.entropy` function) is unchanged.
+    (e.g. the *entropy* function) is unchanged.
 **v1.4**
-    Added the `kullback_leibler_divergence` function.
+    Added the *kullback_leibler_divergence* function.
 **v1.1**
     Added:
 
-    * `from_data`
-    * `mutual_information`
-    * `conditional_information`
-    * `interaction_information`
-    * `coinformation`
+    * *from_data*
+    * *mutual_information*
+    * *conditional_information*
+    * *interaction_information*
+    * *coinformation*
 **v1.0**
     Drop support for Python < 3.4.
 **v0.9**
