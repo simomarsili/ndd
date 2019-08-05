@@ -285,52 +285,6 @@ class _MillerMadow(EntropyEstimator):
         return self
 
 
-class _WolpertWolf(EntropyEstimator):
-    """
-    Wolpert-Wolf (single Dirichlet prior) estimator.
-
-    See:
-    "Estimating functions of probability distributions from a finite set of
-    samples"
-    Wolpert, David H and Wolf, David R
-
-    Parameters
-    ----------
-    alpha : float
-        Concentration parameter. alpha > 0.0.
-    """
-
-    def __init__(self, alpha):
-        super(_WolpertWolf, self).__init__()
-        self.alpha = self.check_alpha(alpha)
-
-    @check_input
-    def fit(self, pk, k=None):
-        """
-        Parameters
-        ----------
-        pk : array-like
-            The number of occurrences of a set of bins.
-        k : int or array-like
-            Total number of bins (including unobserved bins); k >= len(pk).
-            A float is a valid input for whole numbers (e.g. k=1.e3).
-            If an array, set k = numpy.prod(k). Defaults to len(pk).
-            If k is None, set k = #bins with frequency > 0 (Miller-Madow).
-
-        Returns
-        -------
-        float
-            Entropy estimate.
-
-        """
-        if k is None:
-            raise ValueError('Wolpert-Wolf estimator needs k')
-        if k == 1:
-            self.estimate_, self.err_ = PZERO, PZERO
-        self.estimate_ = ndd.fnsb.dirichlet(pk, k, self.alpha)
-        return self
-
-
 class NSB(EntropyEstimator):
     """Nemenman-Shafee-Bialek (NSB) entropy estimator.
 
