@@ -15,8 +15,9 @@ from ndd.exceptions import AlphaError, CardinalityError, CountsError, NddError
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'EntropyEstimator', 'Plugin', 'Miller', 'WolpertWolf', 'NSB',
-    'AsymptoticNSB'
+    'EntropyEstimator',
+    'Plugin',
+    'NSB',
 ]
 
 
@@ -233,7 +234,7 @@ class Plugin(EntropyEstimator):
         return self
 
 
-class Miller(EntropyEstimator):
+class _MillerMadow(EntropyEstimator):
     """Miller entropy estimator."""
 
     @check_input
@@ -244,10 +245,10 @@ class Miller(EntropyEstimator):
         pk : array-like
             The number of occurrences of a set of bins.
         k : int or array-like, optional
-            Total number of accessible bins (including unobserved bins)
+            Alphabet size (the number of bins with non-zero probability).
             A float is a valid input for whole numbers (e.g. k=1.e3).
-            If an array, set k = numpy.prod(k). Defaults to len(pk).
-            If k is None, set k = #bins with frequency > 0 (Miller-Madow).
+            If an array, set k = numpy.prod(k).
+            Defaults to the number of bins with frequency > 0 (Miller-Madow).
 
         Returns
         -------
@@ -264,7 +265,7 @@ class Miller(EntropyEstimator):
         return self
 
 
-class WolpertWolf(EntropyEstimator):
+class _WolpertWolf(EntropyEstimator):
     """
     Wolpert-Wolf (single Dirichlet prior) estimator.
 
@@ -280,7 +281,7 @@ class WolpertWolf(EntropyEstimator):
     """
 
     def __init__(self, alpha):
-        super(WolpertWolf, self).__init__()
+        super(_WolpertWolf, self).__init__()
         self.alpha = self.check_alpha(alpha)
 
     @check_input
@@ -357,7 +358,7 @@ class NSB(EntropyEstimator):
         return self
 
 
-class AsymptoticNSB(EntropyEstimator):
+class _AsymptoticNSB(EntropyEstimator):
     """
     Asymptotic NSB estimator for countably infinite distributions.
 
@@ -401,7 +402,7 @@ class AsymptoticNSB(EntropyEstimator):
         return self
 
 
-class Grassberger(EntropyEstimator):
+class _Grassberger(EntropyEstimator):
     """Grassberger 1988 estimator.
 
     see:
@@ -427,7 +428,7 @@ class Grassberger(EntropyEstimator):
         return self
 
 
-class UnderWell(EntropyEstimator):
+class _UnderWell(EntropyEstimator):
     """Combination of two estimators.
 
     Combination of an estimator for the under-sampled regime (asymptotic NSB)
@@ -441,8 +442,8 @@ class UnderWell(EntropyEstimator):
         n = sum(pk)
         ratio = k1 / n
 
-        under_sampled_estimator = AsymptoticNSB()
-        well_sampled_estimator = Grassberger()
+        under_sampled_estimator = _AsymptoticNSB()
+        well_sampled_estimator = _Grassberger()
         self.estimate_ = (ratio**2 * under_sampled_estimator(pk) +
                           (1 - ratio**2) * well_sampled_estimator(pk))
         return self

@@ -23,9 +23,18 @@ def add_libs_dir():
     return add_dir_to_path(libs)
 
 
-def subclasses(cls):
-    """Return a dict name -> class for all subclasses of class `cls`."""
-    return {sc.__name__: sc for sc in cls.__subclasses__()}
+def subclasses(cls, abstract=False, private=False):
+    """Return a dict name -> class for all subclasses of class `cls`.
+
+    If abstract, include classes with abstract methods.
+    If private, include private classes.
+    """
+    return {
+        sc.__name__: sc
+        for sc in cls.__subclasses__()
+        if (abstract or not sc.__abstractmethods__) and (
+            private or sc.__name__[0] != '_')
+    }
 
 
 package_path = os.path.dirname(os.path.abspath(__file__))

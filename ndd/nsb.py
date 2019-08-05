@@ -11,7 +11,7 @@ import numpy
 
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, Plugin, WolpertWolf
+from ndd.estimators import NSB, Plugin
 from ndd.exceptions import EstimatorInputError, PmfError
 
 __all__ = [
@@ -507,5 +507,5 @@ def select_estimator(alpha, plugin):
         if alpha is None:
             estimator = NSB()
         else:
-            estimator = WolpertWolf(alpha)
+            estimator = NSB(alpha)
     return estimator
