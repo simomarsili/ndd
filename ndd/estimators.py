@@ -117,6 +117,7 @@ class EntropyEstimator(BaseEstimator, ABC):
     @staticmethod
     def check_alpha(a):
         """Check concentration parameter/#pseudocount.
+        TODO: return None if alpha is None or alpha is 0
 
         Parameters
         ----------
@@ -250,10 +251,10 @@ class Plugin(EntropyEstimator):
 
     def __init__(self, alpha=None):
         super(Plugin, self).__init__()
-        if not alpha:
-            self.alpha = PZERO
-        else:
+        if alpha:
             self.alpha = self.check_alpha(alpha)
+        else:
+            self.alpha = None
 
     @check_input
     def fit(self, pk, k=None):
@@ -330,7 +331,10 @@ class NSB(EntropyEstimator):
 
     def __init__(self, alpha=None):
         super(NSB, self).__init__()
-        self.alpha = alpha if alpha is None else self.check_alpha(alpha)
+        if alpha:
+            self.alpha = self.check_alpha(alpha)
+        else:
+            self.alpha = None
 
     @check_input
     def fit(self, pk, k=None):
