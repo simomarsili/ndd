@@ -278,6 +278,7 @@ class Plugin(EntropyEstimator):
             k = len(pk)
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
+            return self
         if self.alpha:
             self.estimate_ = ndd.fnsb.pseudo(pk, k, self.alpha)
         else:
@@ -359,6 +360,7 @@ class NSB(EntropyEstimator):
             raise ValueError('NSB estimator needs k')
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
+            return self
         if self.alpha is None:
             self.estimate_, self.err_ = ndd.fnsb.nsb(pk, k)
         else:
