@@ -71,9 +71,9 @@ def g_series():
                 value = 2.0 + gterm(1)
         else:
             if n % 2 == 0:
-                # value = gterm(2) + ndd.fnsb.gamma0(
-                #     (n + 1) / 2) - ndd.fnsb.gamma0(3 / 2)
-                value = ndd.fnsb.gamma0((n + 1) / 2) + numpy.log(2) - 2
+                value = gterm(2) + ndd.fnsb.gamma0(
+                    (n + 1) / 2) - ndd.fnsb.gamma0(3 / 2)
+                # value = ndd.fnsb.gamma0((n + 1) / 2) + numpy.log(2) - 2
             else:
                 value = gterm(n - 1)
         GG[n] = value
