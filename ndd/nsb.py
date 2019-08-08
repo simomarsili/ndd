@@ -44,7 +44,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
         Alphabet size (the number of bins with non-zero probability).
         Must be >= len(pk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
-        Defaults to len(pk).
+        Default: k = sum(pk)**2 if estimator == 'NSB' else sum(pk > 0)
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
@@ -64,12 +64,9 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
 
     estimator, estimator_name = check_estimator(estimator)
 
+    pk = numpy.asarray(pk)
     if k is None:
-        if estimator_name == 'NSB':
-            logger.warning(
-                'WARNING: unkown alphabet size. Set to the number of observed '
-                'bins (the alphabet size is needed for the NSB estimator)')
-        k = sum(pk > 0)
+        k = sum(pk)**2 if estimator_name == 'NSB' else sum(pk > 0)
 
     estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_

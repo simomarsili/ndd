@@ -62,7 +62,7 @@ Changes
    The signature of the *entropy* function has been changed to allow
    arbitrary entropy estimators. The new signature is::
 
-     entropy(pk, k=None, estimator='NSB')
+     entropy(pk, k=None, estimator='NSB', return_std=False)
 
    Available estimators are::
 
