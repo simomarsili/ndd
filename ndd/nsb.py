@@ -111,16 +111,16 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
 
     """
 
+    # pylint: disable=pointless-string-statement, unused-variable
     estimator, estimator_name = check_estimator(estimator)
-
-    if ks is None:
-        if estimator_name == 'NSB':
-            logger.warning(
-                'WARNING: unkown alphabet size. Set to the number of observed '
-                'bins (the alphabet size is needed for the NSB estimator)')
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
+    """
+    if ks is None and estimator_name == 'NSB':
+        _, n = ar.shape
+        ar = DataArray(ar, ks=n**2, axis=axis)
+    """
 
     if r is not None:
         return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
@@ -384,7 +384,7 @@ def mutual_information(ar, ks=None, estimator='NSB', axis=0):
                 for i1, i2 in combinations(range(p), 2))
 
     return (numpy.sum(from_data(ar, r=1, estimator=estimator)) -
-            from_data(ar, estimator))
+            from_data(ar, estimator=estimator))
 
 
 def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pylint: disable=too-many-arguments
