@@ -57,6 +57,7 @@ class DataArray(Sequence):
     """
 
     def __init__(self, ar, axis=0, ks=None, k=None):
+        # set data
         if not isinstance(ar, self.__class__):
             ar = numpy.atleast_2d(ar)
             if not ar.size:
@@ -69,6 +70,8 @@ class DataArray(Sequence):
                 if ar.shape[0] > 1 and axis == 0:
                     ar = ar.T
             self._data = ar
+        else:
+            self._data = ar.data
         self._ks = None
         self._k = k
         if ks is not None:
