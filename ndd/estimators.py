@@ -205,7 +205,7 @@ class EntropyEstimator(BaseEstimator, ABC):
                 print('k: ', k)
                 raise CardinalityError('k must be > 0')
             if numpy.log(k) > MAX_LOGK:
-                raise CardinalityError('k must be smaller than 2^150 ')
+                raise CardinalityError('k must be smaller than 2^40 ')
         if not k.is_integer():
             raise CardinalityError('k must be a whole number (got %r).' % k)
 
