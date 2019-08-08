@@ -44,7 +44,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
         Alphabet size (the number of bins with non-zero probability).
         Must be >= len(pk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
-        Default: k = sum(pk)**2 if estimator == 'NSB' else sum(pk > 0)
+        Default: k = sum(pk > 0)
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
@@ -62,11 +62,11 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
 
     """
 
-    estimator, estimator_name = check_estimator(estimator)
+    estimator, _ = check_estimator(estimator)
 
     pk = numpy.asarray(pk)
     if k is None:
-        k = sum(pk)**2 if estimator_name == 'NSB' else sum(pk > 0)
+        k = sum(pk > 0)
 
     estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_
@@ -111,16 +111,10 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
 
     """
 
-    # pylint: disable=pointless-string-statement, unused-variable
-    estimator, estimator_name = check_estimator(estimator)
+    estimator, _ = check_estimator(estimator)
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
-    """
-    if ks is None and estimator_name == 'NSB':
-        _, n = ar.shape
-        ar = DataArray(ar, ks=n**2, axis=axis)
-    """
 
     if r is not None:
         return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
