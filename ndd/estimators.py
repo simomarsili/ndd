@@ -181,7 +181,7 @@ class EntropyEstimator(BaseEstimator, ABC):
             If k is not valid (wrong type, negative, too large...)
 
         """
-        MAX_LOGK = 150 * numpy.log(2)
+        MAX_LOGK = 40 * numpy.log(2)
 
         if k is None:
             return k
@@ -197,7 +197,7 @@ class EntropyEstimator(BaseEstimator, ABC):
             if logk > MAX_LOGK:
                 # too large a number; backoff to n_bins?
                 # TODO: log warning
-                raise CardinalityError('k must be smaller than 2^150 ')
+                raise CardinalityError('k must be smaller than 2^40 ')
             k = numpy.prod(k)
         else:
             # if a scalar check size
