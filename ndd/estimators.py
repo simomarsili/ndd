@@ -394,18 +394,13 @@ class AsymptoticNSB(EntropyEstimator):
         float
             Entropy estimate.
         """
-        k1 = sum(pk > 0)  # number of sampled bins
+        kn = sum(pk > 0)  # number of sampled bins
         n = sum(pk)  # number of samples
-        # under-sampled regime when ratio > 0.9 (Nemenman2011)
-        ratio = k1 / n
-        delta = n - k1
+        # under-sampled regime when ratio < 0.1 (Nemenman2011)
+        delta = n - kn + 1
+        ratio = delta / n
 
-        if delta == 0:
-            logger.warning('NSBAsymptotic: No coincidences in data')
-            self.estimate_ = numpy.nan
-            return self
-
-        if ratio <= 0.9:
+        if ratio > 0.1:
             logger.warning('The AsymptoticNSB estimator should be only used '
                            'in the under-sampled regime.')
         if k == 1:
@@ -471,19 +466,21 @@ class _UnderWell(EntropyEstimator):
     """Combination of two estimators.
 
     Combination of an estimator for the under-sampled regime (asymptotic NSB)
-    and another for the well-sampled regime (GRassberger)
+    and another for the well-sampled regime
     """
 
     @check_input
     def fit(self, pk, k=None):  # pylint: disable=unused-argument
         """Estimator definition."""
-        k1 = sum(pk > 0)
+        kn = sum(pk > 0)
         n = sum(pk)
-        ratio = k1 / n
+        # under-sampled regime when ratio < 0.1 (Nemenman2011)
+        delta = n - kn + 1
+        ratio = delta / n
 
         under_sampled_estimator = AsymptoticNSB()
         well_sampled_estimator = MillerMadow()
-        estimate = (ratio**2 * under_sampled_estimator(pk) +
-                    (1 - ratio**2) * well_sampled_estimator(pk))
+        estimate = ((1 - ratio)**2 * under_sampled_estimator(pk) +
+                    ratio**2 * well_sampled_estimator(pk))
         self.estimate_ = estimate
         return self
