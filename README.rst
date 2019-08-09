@@ -22,7 +22,7 @@ non-zero probability.
    :align: center
    :target: ./figs/bias.svg
 
-The figure compares the average bias for the NSB estimator,
+The figure shows the average bias for the NSB estimator,
 the "plugin" or maximum-likelihood estimator and an estimator proposed by
 `Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
 in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ (Eq. 35).
