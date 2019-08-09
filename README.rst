@@ -16,7 +16,7 @@ maximum-likelihood estimator and an algorithm proposed by
 in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ (Eq. 35).
 The bias is averaged over 1000 vectors of counts extracted from a
 Dirichlet-multinomial distribution with alphabet size :math:`k=10^4`
-for two different values of the concentration parameter :math:`alpha`.
+for two different values of the concentration parameter :math:`\alpha`.
 
 .. image:: ./figs/bias.svg
    :height: 500px
