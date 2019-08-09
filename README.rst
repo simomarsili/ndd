@@ -7,24 +7,12 @@ ndd - Bayesian entropy estimation from discrete data
     :target: https://travis-ci.com/simomarsili/ndd
 
 The **ndd** package provides a simple Python interface to an efficient
-implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
+implementation of the `Nemenman-Schafee-Bialek (NSB) algorithm
+<https://arxiv.org/abs/physics/0108025>`_,
 a parameter-free, Bayesian entropy estimator for discrete data.
-
-|
-
-The NSB estimator allows to estimate entropies in situations where the
-number os samples is much smaller than the alphabet size size of the variable
-(strongly undersampled regime), when others estimators are strongly biased.
-
-|
-
-The figure shows the average bias for different estimators
-(NSB, the "plugin" or maximum-likelihood estimator and an estimator proposed by
-`Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
-in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ Eq. 35).
-The bias is averaged over 1000 vectors of counts extracted
-from a Dirichlet-multinomial distribution with alphabet size :math:`k=10^4`
-for two different values of the concentration parameter :math:`\alpha`.
+The NSB algorithm allows entropy estimation in strongly undersampled cases,
+where the number of samples is much smaller than the number of classes with
+non-zero probability.
 
 .. image:: ./figs/bias.svg
    :height: 300px
@@ -34,12 +22,10 @@ for two different values of the concentration parameter :math:`\alpha`.
    :align: center
    :target: ./figs/bias.svg
 
-Estimate entropies in the strongly undersampled regime, where
-The NSB estimator has been shown to
-It's possible to estimate entropies in the strongly undersampled regime, where #samples << alphabet size.
-
-
-
+The figure [1]_ compares the average bias for the NSB estimator,
+the "plugin" or maximum-likelihood estimator and an estimator proposed by
+`Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
+in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ (Eq. 35).
 
 Basic usage
 ===========
@@ -239,4 +225,11 @@ Redistribution and use in source and binary forms, with or without modification,
 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+.. rubric:: Footnotes
+
+.. [1] The bias is averaged over 1000 vectors of counts extracted
+       from a Dirichlet-multinomial distribution with alphabet size k = 10^4
+       for two different values of the concentration parameter alpha.
+       The ogarithm base is k (the alphabet size).
 
