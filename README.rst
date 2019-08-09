@@ -14,15 +14,15 @@ Basic usage
 ===========
 
 The **entropy** function takes as input a vector of frequency counts
-(the observed frequencies for a set of classes or states)
-and returns an **entropy** estimate (in nats)::
+(the observed frequencies for a set of classes or states) and the alphabet size
+(the number of classes with non-zero probability) and returns an entropy
+estimate (in nats)::
 
-  >>> counts
-  [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
   >>> import ndd
-  >>> entropy_estimate = ndd.entropy(counts)
+  >>> counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+  >>> entropy_estimate = ndd.entropy(counts, k=100)
   >>> entropy_estimate
-  2.623634344888532
+  2.840012048914245
 
 Optionally, the uncertainty in the entropy estimate can be quantified
 by computing an approximation for the posterior standard deviation::
