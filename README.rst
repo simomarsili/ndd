@@ -112,6 +112,10 @@ On Windows, you can use the gfortran compiler from the
 (`direct link <https://sourceforge.net/projects/mingw-w64/files/latest/download>`_
 to the installer).
 
+If you don't have a Fortran compiler, install using the
+`ndd python wheels <https://github.com/simomarsili/ndd-wheels>`_
+with pre-compiled extensions. numpy >= 1.16 is needed.
+
 Running tests
 =============
 Clone the repo, install tests requirements and run the tests with `make`::
