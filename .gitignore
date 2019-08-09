@@ -20,3 +20,6 @@ build/*
 dist/*
 ndd/*.so
 ndd/*.c
+figs/*
+!tests/*.py
+
