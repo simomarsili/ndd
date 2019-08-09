@@ -14,7 +14,7 @@ Basic usage
 ===========
 
 The **entropy** function takes as input a vector of frequency counts
-(the observed frequencies for a set of classes or states) and the alphabet size
+(the observed frequencies for a set of classes or states) and an alphabet size
 (the number of classes with non-zero probability) and returns an entropy
 estimate (in nats)::
 
