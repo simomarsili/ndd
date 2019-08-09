@@ -24,29 +24,6 @@ estimate (in nats)::
   >>> entropy_estimate
   2.840012048914245
 
-Optionally, the uncertainty in the entropy estimate can be quantified
-by computing an approximation for the posterior standard deviation::
-
-  >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
-  >>> std
-  0.048675500725595504
-
-Information measures
-====================
-
-**ndd** provide functions for the estimation of entropic information measures
-(as linear combinations of single Bayesian entropy estimates):
-
-* jensen_shannon_divergence
-* kullback_leibler_divergence
-* conditional_entropy
-* mutual_information
-* interaction_information
-* coinformation
-
-
-See the functions' docstrings for details.
-
 Changes
 =======
 
