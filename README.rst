@@ -19,7 +19,7 @@ from a Dirichlet-multinomial distribution with alphabet size :math:`k=10^4`
 for two different values of the concentration parameter :math:`\alpha`.
 
 .. image:: ./figs/bias.svg
-   :height: 600px
+   :height: 400px
    :width: 1000 px
    :scale: 90 %
    :alt: average bias for NSB, plugin and Grassberger estimator
