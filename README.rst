@@ -232,5 +232,5 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 .. [here] The bias is averaged over 1000 vectors of counts extracted
        from a Dirichlet-multinomial distribution with alphabet size k = 10^4
        for two different values of the concentration parameter alpha.
-       The ogarithm base is k (the alphabet size).
+       Logarithm base is k (the alphabet size).
 
