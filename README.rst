@@ -10,6 +10,14 @@ The **ndd** package provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
 
+.. image:: ./figs/bias.svg
+   :height: 400px
+   :width: 800 px
+   :scale: 100 %
+   :alt: alternate text
+   :align: center
+   :target: ./figs/bias.svg
+
 Basic usage
 ===========
 
@@ -23,14 +31,6 @@ estimate (in nats)::
   >>> entropy_estimate = ndd.entropy(counts, k=100)
   >>> entropy_estimate
   2.840012048914245
-
-.. image:: ./figs/bias.svg
-   :height: 300px
-   :width: 800 px
-   :scale: 100 %
-   :alt: alternate text
-   :align: center
-   :target: ./figs/bias.svg
 
 Changes
 =======
