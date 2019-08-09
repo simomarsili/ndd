@@ -50,13 +50,7 @@ See the functions' docstrings for details.
 Changes
 =======
 
-**Unreleased**
-   Added:
-
-   - *MillerMadow* estimator class
-   - *AsymptoticNSB* estimator class
-   - *Grassberger* estimator class
-
+**v1.6**
    Changed:
 
    The signature of the *entropy* function has been changed to allow
@@ -64,13 +58,20 @@ Changes
 
      entropy(pk, k=None, estimator='NSB', return_std=False)
 
-   Available estimators are::
+   The available estimators are::
 
      >>> import ndd
      >>> ndd.entropy_estimators
      ['Plugin', 'MillerMadow', 'NSB', 'AsymptoticNSB', 'Grassberger']
 
    Check the function docstring for details.
+
+   Added:
+
+   - *MillerMadow* estimator class
+   - *AsymptoticNSB* estimator class
+   - *Grassberger* estimator class
+
 **v1.5**
     For methods/functions working on data matrices:
     the default input is a **n-by-p** 2D array (n samples from p discrete
