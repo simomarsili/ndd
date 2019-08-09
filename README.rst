@@ -13,16 +13,16 @@ a parameter-free, Bayesian entropy estimator for discrete data.
 The figure compares the average bias for the NSB estimator, the "plugin" or
 maximum-likelihood estimator and an algorithm proposed by
 `Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
-in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_, Eq. 35.
-(The bias is averaged over 1000 vectors of counts extracted from a
+in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ (Eq. 35).
+The bias is averaged over 1000 vectors of counts extracted from a
 Dirichlet-multinomial distribution with alphabet size K=10^4
-for two different values of the concentration parameter alpha, 0.1 and 1).
+for two different values of the concentration parameter alpha, 0.1 and 1.
 
 .. image:: ./figs/bias.svg
-   :height: 400px
-   :width: 800 px
+   :height: 500px
+   :width: 1000 px
    :scale: 100 %
-   :alt: alternate text
+   :alt: average bias for NSB, plugin and Grassberger estimator
    :align: center
    :target: ./figs/bias.svg
 
