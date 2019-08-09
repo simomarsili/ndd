@@ -29,7 +29,7 @@ estimate (in nats)::
    :width: 800 px
    :scale: 100 %
    :alt: alternate text
-   :align: right
+   :align: center
    :target: ./figs/bias.svg
 
 Changes
