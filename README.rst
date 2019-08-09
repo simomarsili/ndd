@@ -10,10 +10,10 @@ The **ndd** package provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
 
-The figure compares the average bias for the NSB estimator, the "plugin" or
-maximum-likelihood estimator and an algorithm proposed by
+The figure shows the average bias for the different estimators
+(NSB the "plugin" or maximum-likelihood estimator and an estimator proposed by
 `Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
-in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ (Eq. 35).
+in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ Eq. 35).
 The bias is averaged over 1000 vectors of counts extracted from a
 Dirichlet-multinomial distribution with alphabet size :math:`k=10^4`
 for two different values of the concentration parameter :math:`\alpha`.
