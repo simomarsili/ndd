@@ -8,9 +8,9 @@ import platform
 from pkg_resources import parse_version
 
 NAME = 'ndd'
-NUMPY_MIN_VERSION = '1.12'
+NUMPY_MIN_VERSION = '1.16'
 VERSION_FILE = 'version.json'
-SETUP_REQUIRES = ['numpy>=1.12']
+SETUP_REQUIRES = ['numpy>=1.16']
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 PLATFORM = platform.system()
