@@ -460,27 +460,3 @@ class Grassberger(EntropyEstimator):
 
         self.estimate_ = estimate
         return self
-
-
-class _UnderWell(EntropyEstimator):
-    """Combination of two estimators.
-
-    Combination of an estimator for the under-sampled regime (asymptotic NSB)
-    and another for the well-sampled regime
-    """
-
-    @check_input
-    def fit(self, pk, k=None):  # pylint: disable=unused-argument
-        """Estimator definition."""
-        kn = sum(pk > 0)
-        n = sum(pk)
-        # under-sampled regime when ratio < 0.1 (Nemenman2011)
-        delta = n - kn + 1
-        ratio = delta / n
-
-        under_sampled_estimator = AsymptoticNSB()
-        well_sampled_estimator = MillerMadow()
-        estimate = ((1 - ratio)**2 * under_sampled_estimator(pk) +
-                    ratio**2 * well_sampled_estimator(pk))
-        self.estimate_ = estimate
-        return self
