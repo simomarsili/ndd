@@ -26,7 +26,7 @@ The figure compares the average bias for the NSB estimator,
 the "plugin" or maximum-likelihood estimator and an estimator proposed by
 `Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
 in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ (Eq. 35).
-See [here]_ for details.
+See [figure detais]_.
 
 Basic usage
 ===========
@@ -229,7 +229,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 .. rubric:: Footnotes
 
-.. [here] The bias is averaged over 1000 vectors of counts extracted
+.. [figure details] The bias is averaged over 1000 vectors of counts extracted
        from a Dirichlet-multinomial distribution with alphabet size k = 10^4
        for two different values of the concentration parameter alpha.
        Logarithm base is k (the alphabet size).
