@@ -24,6 +24,14 @@ estimate (in nats)::
   >>> entropy_estimate
   2.840012048914245
 
+.. image:: ./figs/bias.svg
+   :height: 300px
+   :width: 800 px
+   :scale: 100 %
+   :alt: alternate text
+   :align: right
+   :target: ./figs/bias.svg
+
 Changes
 =======
 
