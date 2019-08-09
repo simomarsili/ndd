@@ -9,8 +9,12 @@ ndd - Bayesian entropy estimation from discrete data
 The **ndd** package provides a simple Python interface to an efficient
 implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
-
-The figure shows the average bias for the different estimators
+|
+The NSB estimator allows to estimate entropies in situations where the
+number os samples is much smaller than the alphabet size size of the variable
+(strongly undersampled regime), when others estimators are strongly biased.
+|
+The figure shows the average bias for different estimators
 (NSB, the "plugin" or maximum-likelihood estimator and an estimator proposed by
 `Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
 in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ Eq. 35).
@@ -25,6 +29,10 @@ for two different values of the concentration parameter :math:`\alpha`.
    :alt: average bias for NSB, plugin and Grassberger estimator
    :align: center
    :target: ./figs/bias.svg
+
+Estimate entropies in the strongly undersampled regime, where
+The NSB estimator has been shown to
+It's possible to estimate entropies in the strongly undersampled regime, where #samples << alphabet size.
 
 
 
