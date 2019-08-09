@@ -18,7 +18,7 @@ non-zero probability.
    :height: 300px
    :width: 800 px
    :scale: 100 %
-   :alt: average bias for NSB, plugin and Grassberger estimator
+   :alt: https://github.com/simomarsili/ndd/blob/master/figs/bias.svg
    :align: center
    :target: ./figs/bias.svg
 
