@@ -91,7 +91,7 @@ def test_combinations_from_data():
     data = random_ndarray(N, P, SEED)
     hs_pairs = ndd.nsb.from_data(data, r=2)  # pylint: disable=protected-access
     ref_result = 18.84820751635297
-    assert numpy.isclose(numpy.sum(hs_pairs), ref_result)
+    assert numpy.isclose(sum(hs_pairs), ref_result)
 
 
 def test_KLD():

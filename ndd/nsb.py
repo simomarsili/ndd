@@ -275,8 +275,7 @@ def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
         S = len(X)
         for T in range(1, S + 1):
             sgn = (-1)**(S - T)
-            info += sgn * numpy.sum(
-                from_data(X, ks=ks, estimator=estimator, r=T))
+            info += sgn * sum(from_data(X, ks=ks, estimator=estimator, r=T))
         return -info
 
     estimator, _ = check_estimator(estimator)
@@ -377,7 +376,7 @@ def mutual_information(ar, ks=None, estimator='NSB', axis=0):
         return (h1[i1] + h1[i2] - from_data(ar[i1, i2], estimator=estimator)
                 for i1, i2 in combinations(range(p), 2))
 
-    return (numpy.sum(from_data(ar, r=1, estimator=estimator)) -
+    return (sum(from_data(ar, r=1, estimator=estimator)) -
             from_data(ar, estimator=estimator))
 
 
