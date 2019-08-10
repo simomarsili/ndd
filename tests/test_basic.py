@@ -61,10 +61,14 @@ with open(os.path.join(tests_dir(), 'data.json'), 'r') as _jf:
 
 
 @pytest.mark.parametrize('case, ref_result', zip(cases(), results))
-def test_entropy(case, ref_result):
+def test_entropy(case, ref_result, capsys):
     """Basic tests."""
+    import sys
     counts, _, kwargs = case
     test_result = ndd.entropy(counts, k=len(counts), **kwargs)
+    out, err = capsys.readouterr()
+    sys.stdout.write(out)
+    sys.stderr.write(err)
     assert numpy.isclose(test_result, ref_result)
 
 
