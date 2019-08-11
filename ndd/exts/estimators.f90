@@ -6,7 +6,9 @@ module constants
   use iso_fortran_env
   implicit none
 
+  real(real64), parameter :: zero = 0.0_real64
   real(real64), parameter :: one = 1.0_real64
+  real(real64), parameter :: two = 2.0_real64
 
 end module constants
 
@@ -598,12 +600,6 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
   integer(int32) :: err
-
-!  if (size(counts) == 1) then
-!     estimate = 0.0_real64
-!     err_estimate = 0.0_real64
-!     return
-!  end if
 
   call initialize_dirichlet(counts, nc)
 
