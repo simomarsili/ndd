@@ -70,6 +70,10 @@ with pre-compiled extensions. numpy >= 1.16 is needed.
 Changes
 =======
 
+**v1.6.1**
+   Changed:
+   Fixed numerical integration for large alphabet sizes.
+
 **v1.6**
    Changed:
 

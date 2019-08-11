@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [1.6.1] - 2019-08-11
+### Changed
+For the NSB integration:
+- Find the saddle point maximizing p(alpha | data)
+- Set the integration range at 4 standard deviations around the saddle point
+- If the standard deviation is too small, return the entropy posterior mean at
+  the saddle point
+
 ## [1.6] - 2019-08-09
 ### Added
 - `MillerMadow` estimator class
