@@ -24,10 +24,8 @@ non-zero probability.
 
 The figure shows the average bias vs the number of samples for the NSB
 estimator, the "plugin" or maximum-likelihood estimator and an estimator
-proposed by
-`Peter Grassberger <https://www.ucalgary.ca/complexity/people/faculty/peter>`_
-in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_ (Eq. 35).
-Check the figure [details]_.
+proposed in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_
+(Eq. 35). Check the figure [details]_.
 
 Basic usage
 ===========
@@ -42,6 +40,32 @@ estimate (in nats)::
   >>> entropy_estimate = ndd.entropy(counts, k=100)
   >>> entropy_estimate
   2.840012048914245
+
+Where to get it
+===============
+Install using pip::
+
+  pip3 install -U ndd
+
+or directly from sources in github for the latest version of the code::
+
+  pip3 install git+https://github.com/simomarsili/ndd.git
+
+In order to compile **ndd**, you will need **numpy** (>= 1.9) and a
+**Fortran compiler**  installed on your machine.
+If you are using Debian or a Debian derivative such as Ubuntu,
+you can install the gfortran compiler using the following command::
+
+  sudo apt-get install gfortran
+
+On Windows, you can use the gfortran compiler from the
+`MinGW-w64 <https://sourceforge.net/projects/mingw-w64/files>`_ project
+(`direct link <https://sourceforge.net/projects/mingw-w64/files/latest/download>`_
+to the installer).
+
+If you don't have a Fortran compiler, install using the
+`ndd python wheels <https://github.com/simomarsili/ndd-wheels>`_
+with pre-compiled extensions. numpy >= 1.16 is needed.
 
 Changes
 =======
@@ -89,41 +113,6 @@ Changes
     Drop support for Python < 3.4.
 **v0.9**
     Added the `jensen_shannnon_divergence` function.
-
-Where to get it
-===============
-Install using pip::
-
-  pip3 install -U ndd
-
-or directly from sources in github for the latest version of the code::
-
-  pip3 install git+https://github.com/simomarsili/ndd.git
-
-In order to compile **ndd**, you will need **numpy** (>= 1.9) and a
-**Fortran compiler**  installed on your machine.
-If you are using Debian or a Debian derivative such as Ubuntu,
-you can install the gfortran compiler using the following command::
-
-  sudo apt-get install gfortran
-
-On Windows, you can use the gfortran compiler from the
-`MinGW-w64 <https://sourceforge.net/projects/mingw-w64/files>`_ project
-(`direct link <https://sourceforge.net/projects/mingw-w64/files/latest/download>`_
-to the installer).
-
-If you don't have a Fortran compiler, install using the
-`ndd python wheels <https://github.com/simomarsili/ndd-wheels>`_
-with pre-compiled extensions. numpy >= 1.16 is needed.
-
-Running tests
-=============
-Clone the repo, install tests requirements and run the tests with `make`::
-
-  git clone https://github.com/simomarsili/ndd.git
-  cd ndd
-  pip install .[test]
-  make test
 
 References
 ==========
