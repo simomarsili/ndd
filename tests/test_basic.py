@@ -104,7 +104,7 @@ def test_KLD():
     qk = random.dirichlet([ALPHA] * P)
     pk = random.multinomial(N, qk)
     estimator = ndd.kullback_leibler_divergence
-    ref_result = -0.0397771083187739
+    ref_result = -0.04070743035844604
     assert numpy.isclose(estimator(pk, qk), ref_result)
 
 
@@ -114,7 +114,7 @@ def test_JSD():
     pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.divergence.JSDivergence()
-    ref_result = -0.01828713709187424
+    ref_result = -0.017279789323140893
     assert numpy.isclose(estimator(counts), ref_result)
 
 

@@ -262,12 +262,13 @@ contains
   end subroutine log_weight_d
 
   subroutine compute_integration_range()
+    use constants
     use dirichlet_mod, only: log_pna
 
     integer(int32),parameter :: nx = 100
     real(real64)             :: dx,largest
     real(real64)             :: xs(nx),fxs(nx)
-    real(real64)             :: a1,a2,f,x
+    real(real64)             :: a1,a2,f,df,x, amx
     integer(int32)           :: i, counter, nbins
     integer(int32)           :: err
     real(real64)             :: lamin=log(1.e-8_real64)
@@ -282,48 +283,24 @@ contains
     amax = 1.0_real64
     lw_max = log_weight(amax)
 
-    counter = 0
-    do
-       counter = counter + 1
-
-       ! set intervals equally spaced on log scale
-       dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
-       do i = 1,nx
-          xs(i) = log_alpha1 + (i - 0.5_real64) * dx
-       end do
-       xs = exp(xs)
-
-       fxs = log_weight(xs)
-       ! find amax such that the alpha weight is maximal
-       i = maxloc(fxs, 1, fxs < largest)
-       amax = xs(i)
-       lw_max = log_weight(amax)
-
-       ! check the bins with weights > 0
-       fxs = exp(fxs - lw_max)
-       nbins = count(fxs > 0.0)
-       if (nbins > 1) exit
-       if (nbins == 1) then
-          log_alpha1 = log(amax) - dx
-          log_alpha2 = log(amax) + dx
+    a1 = 1.e-8_real64
+    a2 = 1.e4_real64
+    do i = 1,100
+       x = (a1 + a2) / two
+       call log_weight_d(x, f, df)
+       ! write(*, *) i, x, a1, a2, f, df
+       if (df > 0) then
+          a1 = x
+       else if (df < 0) then
+          a2 = x
+       end if
+       if (abs(df) < 1.e-10 .or. abs(a1-a2) < 1.e-10) then
+          amx = x
+          exit
        end if
     end do
 
-    ! re-compute a reasonable integration range
-    fxs = exp(log_weight(xs) - lw_max)
-    log_alpha1 = log(minval(xs, fxs > 0.0_real64))
-    log_alpha2 = log(maxval(xs, fxs < largest))
-
-    dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
-    do i = 1,nx
-       xs(i) = log_alpha1 + (i - 0.5_real64) * dx
-    end do
-    xs = exp(xs)
-
-    fxs = log_weight(xs)
-    ! find amax such that the alpha weight is maximal
-    i = maxloc(fxs, 1, fxs < largest)
-    amax = xs(i)
+    amax = amx
     lw_max = log_weight(amax)
 
     call weight_std(ascale, err)
@@ -337,6 +314,8 @@ contains
 
     if (log_alpha1 < lamin) log_alpha1 = lamin
     if (log_alpha2 > lamax) log_alpha2 = lamax
+
+    ! write(*, *) 'amax', amax, amx, lw_max
 
   end subroutine compute_integration_range
 
