@@ -279,16 +279,16 @@ contains
     amax = -one
     do i = 1,100
        x = (a1 + a2) / two
+       if (abs(a2-a1)/x < 0.001) then
+          amax = x
+          exit
+       end if
        call log_weight_d(x, f, df)
        ! write(*, *) i, x, a1, a2, f, df
        if (df > 0) then
           a1 = x
        else if (df < 0) then
           a2 = x
-       end if
-       if (abs(df) < 1.e-10 .or. abs(a1-a2) < 1.e-10) then
-          amax = x
-          exit
        end if
     end do
 
