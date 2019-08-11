@@ -206,8 +206,61 @@ module nsb_mod
 
 contains
 
+  elemental real(real64) function log_weight(alpha)
+    ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
+    use dirichlet_mod, only: log_pna, log_fpa
+
+    real(real64), intent(in) :: alpha
+
+    log_weight = log_fpa(alpha) + log_pna(alpha)
+
+  end function log_weight
+
+  subroutine log_weight_d(alpha, logw, dlogw)
+    ! compute value and derivative of log p(a | x)
+    use constants
+    use gamma_funcs, only: digamma, trigamma, quadgamma
+    use dirichlet_mod, only: alphabet_size, n_empty_bins, n_data, multi,&
+         multi_z
+    use dirichlet_mod, only: log_pna, log_fpa
+
+    real(real64), intent(in) :: alpha
+    real(real64), intent(out) :: logw, dlogw
+
+    real(real64) :: fpa, dfpa, lpna, dlpna, wsum
+
+    fpa = alphabet_size * trigamma(alphabet_size * alpha + one) - &
+         trigamma(alpha + one)
+
+    dfpa = alphabet_size**2 * quadgamma(alphabet_size * alpha + one) - &
+         quadgamma(alpha + one)
+
+    lpna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) &
+         - alphabet_size * log_gamma(alpha) &
+         - log_gamma(n_data + alpha * alphabet_size)
+
+    wsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
+    wsum = wsum + &
+         sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
+
+    lpna = lpna + wsum
+
+    dlpna = alphabet_size * digamma(alpha * alphabet_size) &
+    - alphabet_size * digamma(alpha) &
+         - alphabet_size * digamma(n_data + alpha * alphabet_size)
+
+    wsum = n_empty_bins * digamma(alpha)
+    wsum = wsum + sum(multi * (digamma(multi_z + alpha)))
+
+    dlpna = dlpna + wsum
+
+    logw = log(fpa) + lpna
+    dlogw = dfpa / fpa + dlpna
+
+  end subroutine log_weight_d
+
   subroutine compute_integration_range()
-    use dirichlet_mod, only: log_pna, log_weight
+    use dirichlet_mod, only: log_pna
 
     integer(int32),parameter :: nx = 100
     real(real64)             :: dx,largest
@@ -664,4 +717,3 @@ subroutine gamma1(x, y)
   real(real64), intent(out) :: y
   y = trigamma(x)
 end subroutine gamma1
-
