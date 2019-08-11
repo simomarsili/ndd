@@ -90,7 +90,7 @@ def test_combinations_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
     hs_pairs = ndd.nsb.from_data(data, r=2)  # pylint: disable=protected-access
-    ref_result = 18.84820751635297
+    ref_result = 18.847999689904068
     assert numpy.isclose(sum(hs_pairs), ref_result)
 
 
@@ -100,7 +100,7 @@ def test_KLD():
     qk = random.dirichlet([ALPHA] * P)
     pk = random.multinomial(N, qk)
     estimator = ndd.kullback_leibler_divergence
-    ref_result = -0.04299973796573253
+    ref_result = -0.0397771083187739
     assert numpy.isclose(estimator(pk, qk), ref_result)
 
 
@@ -110,7 +110,7 @@ def test_JSD():
     pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.divergence.JSDivergence()
-    ref_result = -0.01804523405829217
+    ref_result = -0.01828713709187424
     assert numpy.isclose(estimator(counts), ref_result)
 
 
