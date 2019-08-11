@@ -158,23 +158,20 @@ contains
     integer(int32) :: i_
     real(real64) :: asum, bsum
 
-    ! log_pna(alpha)
-    !lpna = log_gamma(n_data + one) &
-    !     + log_gamma(alpha * alphabet_size) &
-    !     - alphabet_size * log_gamma(alpha) &
-    !     - log_gamma(n_data + alpha * alphabet_size)
-    !
-    !bsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
-    !bsum = bsum &
-    !     + sum(multi * (log_gamma(multi_z + alpha) &
-    !     - log_gamma(multi_z + one)))
-    ! -
-
     if (order == 0) then
        lw_max = log_weight(amax)
        integrand = exp(log_weight(alpha) - lw_max)  * alpha / amax
     else
-       lpna = log_pna(alpha)
+       ! lpna = log_pna(alpha)
+       lpna = log_gamma(n_data + one) &
+            + log_gamma(alpha * alphabet_size) &
+            - alphabet_size * log_gamma(alpha) &
+            - log_gamma(n_data + alpha * alphabet_size)
+
+       bsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
+       bsum = bsum &
+            + sum(multi * (log_gamma(multi_z + alpha) &
+            - log_gamma(multi_z + one)))
 
        asum = n_empty_bins * alpha * digamma(alpha + one)
        asum = asum + sum(multi * (multi_z + alpha) &
