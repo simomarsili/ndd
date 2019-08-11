@@ -94,7 +94,8 @@ contains
     integer(int32) :: i_
     real(real64)   :: wsum
 
-    log_pna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) &
+    log_pna = log_gamma(n_data + one) &
+         + log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
@@ -105,6 +106,25 @@ contains
     log_pna = log_pna + wsum
 
   end function log_pna
+
+  elemental real(real64) function log_fpa(alpha)
+    ! prop. to p(alpha) - the prior for alpha in NSB estimator
+    use constants
+    use gamma_funcs, only: trigamma
+
+    real(real64), intent(in) :: alpha
+
+    log_fpa = log(alphabet_size * trigamma(alphabet_size * alpha + one) - trigamma(alpha + one))
+
+  end function log_fpa
+
+  elemental real(real64) function log_weight(alpha)
+    ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
+    real(real64), intent(in) :: alpha
+
+    log_weight = log_fpa(alpha) + log_pna(alpha)
+
+  end function log_weight
 
   real(real64) function h_bayes(alpha)
     ! posterior average of the entropy given data and a specific alpha value
@@ -123,54 +143,57 @@ contains
 
   end function h_bayes
 
-  elemental real(real64) function integrand(alpha, lw_max, order)
+  elemental real(real64) function integrand(alpha, amax, order)
     ! posterior average of the entropy given the data and alpha
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
     use constants
 
-    real(real64), intent(in) :: alpha, lw_max
+    real(real64), intent(in) :: alpha
+    real(real64), intent(in) :: amax
     integer(int32), intent(in) :: order
-    real(real64) :: hb, lw
+    real(real64) :: hb, lw, lw_max
     real(real64) :: lpna
     integer(int32) :: mi, mzi
     integer(int32) :: i_
     real(real64) :: asum, bsum
 
-    lpna = log_gamma(n_data + one) &
-         + log_gamma(alpha * alphabet_size) &
-         - alphabet_size * log_gamma(alpha) &
-         - log_gamma(n_data + alpha * alphabet_size)
+    ! log_pna(alpha)
+    !lpna = log_gamma(n_data + one) &
+    !     + log_gamma(alpha * alphabet_size) &
+    !     - alphabet_size * log_gamma(alpha) &
+    !     - log_gamma(n_data + alpha * alphabet_size)
+    !
+    !bsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
+    !bsum = bsum &
+    !     + sum(multi * (log_gamma(multi_z + alpha) &
+    !     - log_gamma(multi_z + one)))
+    ! -
 
-    asum = n_empty_bins * alpha * digamma(alpha + one)
-    asum = asum + sum(multi * (multi_z + alpha) &
-         * digamma(multi_z + alpha + one))
+    if (order == 0) then
+       lw_max = log_weight(amax)
+       integrand = exp(log_weight(alpha) - lw_max)  * alpha / amax
+    else
+       lpna = log_pna(alpha)
 
-    bsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
-    bsum = bsum + sum(multi * (log_gamma(multi_z + alpha) &
-         - log_gamma(multi_z + one)))
+       asum = n_empty_bins * alpha * digamma(alpha + one)
+       asum = asum + sum(multi * (multi_z + alpha) &
+            * digamma(multi_z + alpha + one))
 
-    lpna = lpna + bsum
-    lw = log_fpa(alpha) + lpna - lw_max
+       lpna = lpna + bsum
+       lw = log_fpa(alpha) + lpna
 
-    hb = -asum
-    hb = hb / (n_data + alpha * alphabet_size)
-    hb = hb + digamma(n_data + alpha * alphabet_size + one)
+       hb = -asum
+       hb = hb / (n_data + alpha * alphabet_size)
+       hb = hb + digamma(n_data + alpha * alphabet_size + one)
 
-    integrand = exp(lw) * hb**order
+       integrand = hb**order
+
+       lw_max = log_weight(amax)
+       integrand = integrand * exp(log_weight(alpha) - lw_max)  * alpha / amax
+    end if
 
   end function integrand
-
-  elemental real(real64) function log_fpa(alpha)
-    ! prop. to p(alpha) - the prior for alpha in NSB estimator
-    use constants
-    use gamma_funcs, only: trigamma
-
-    real(real64), intent(in) :: alpha
-
-    log_fpa = log(alphabet_size * trigamma(alphabet_size * alpha + one) - trigamma(alpha + one))
-
-  end function log_fpa
 
 end module dirichlet_mod
 
@@ -182,21 +205,12 @@ module nsb_mod
   real(real64) :: log_alpha2
   real(real64) :: amax
   real(real64) :: lw_max
+  real(real64) :: ascale
 
 contains
 
-  elemental real(real64) function log_weight(alpha)
-    ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
-    use dirichlet_mod, only: log_pna, log_fpa
-
-    real(real64), intent(in) :: alpha
-
-    log_weight = log_fpa(alpha) + log_pna(alpha)
-
-  end function log_weight
-
   subroutine compute_integration_range()
-    use dirichlet_mod, only: log_pna
+    use dirichlet_mod, only: log_pna, log_weight
 
     integer(int32),parameter :: nx = 100
     real(real64)             :: dx,largest
@@ -255,6 +269,7 @@ contains
     i = maxloc(fxs, 1, fxs < largest)
     amax = xs(i)
     lw_max = log_weight(amax)
+    ascale = amax * exp(lw_max)
 
   end subroutine compute_integration_range
 
@@ -266,7 +281,7 @@ contains
     real(real64) :: alpha
 
     alpha = exp(x)
-    m_func = integrand(alpha, lw_max, 1) * alpha
+    m_func = integrand(alpha, amax, 1)
 
   end function m_func
 
@@ -278,17 +293,18 @@ contains
     real(real64) :: alpha
 
     alpha = exp(x)
-    m2_func = integrand(alpha, lw_max, 2) * alpha
+    m2_func = integrand(alpha, amax, 2)
 
   end function m2_func
 
   real(real64) function nrm_func(x)
     ! integrate over x = log(alpha)
+    use dirichlet_mod, only: integrand
     real(real64), intent(in) :: x
     real(real64) :: alpha
 
     alpha = exp(x)
-    nrm_func = exp(log_weight(alpha) - lw_max)  * alpha
+    nrm_func = integrand(alpha, amax, 0)
 
   end function nrm_func
 
