@@ -200,6 +200,8 @@ module nsb_mod
   use iso_fortran_env
   implicit none
 
+  real(real64), parameter  :: alpha1 = 1.e-8_real64
+  real(real64), parameter  :: alpha2 = 1.e4_real64
   real(real64) :: log_alpha1
   real(real64) :: log_alpha2
   real(real64) :: amax
@@ -264,21 +266,17 @@ contains
   subroutine compute_integration_range()
     use constants
     use dirichlet_mod, only: log_pna
-
-    real(real64), parameter  :: alpha1 = 1.e-8_real64
-    real(real64), parameter  :: alpha2 = 1.e4_real64
-    real(real64)             :: a1,a2,f,df,x, amx
+    real(real64)             :: a1,a2,f,df,x
     integer(int32)           :: i, counter, nbins
     integer(int32)           :: err
 
     ! initialize amax and integration range
     log_alpha1 = log(alpha1)
     log_alpha2 = log(alpha2)
-    amax = 1.0_real64
-    lw_max = log_weight(amax)
 
     a1 = alpha1
     a2 = alpha2
+    amax = -one
     do i = 1,100
        x = (a1 + a2) / two
        call log_weight_d(x, f, df)
@@ -289,12 +287,11 @@ contains
           a2 = x
        end if
        if (abs(df) < 1.e-10 .or. abs(a1-a2) < 1.e-10) then
-          amx = x
+          amax = x
           exit
        end if
     end do
 
-    amax = amx
     lw_max = log_weight(amax)
 
     call weight_std(ascale, err)
