@@ -265,18 +265,11 @@ contains
     use constants
     use dirichlet_mod, only: log_pna
 
-    real(real64)             :: alpha1 = 1.e-8_real64
-    real(real64)             :: alpha2 = 1.e4_real64
-    integer(int32),parameter :: nx = 100
-    real(real64)             :: dx,largest
-    real(real64)             :: xs(nx),fxs(nx)
+    real(real64), parameter  :: alpha1 = 1.e-8_real64
+    real(real64), parameter  :: alpha2 = 1.e4_real64
     real(real64)             :: a1,a2,f,df,x, amx
     integer(int32)           :: i, counter, nbins
     integer(int32)           :: err
-
-
-
-    largest = huge(dx)
 
     ! initialize amax and integration range
     log_alpha1 = log(alpha1)
@@ -284,8 +277,8 @@ contains
     amax = 1.0_real64
     lw_max = log_weight(amax)
 
-    a1 = 1.e-8_real64
-    a2 = 1.e4_real64
+    a1 = alpha1
+    a2 = alpha2
     do i = 1,100
        x = (a1 + a2) / two
        call log_weight_d(x, f, df)
@@ -306,7 +299,7 @@ contains
 
     call weight_std(ascale, err)
     if (err > 0) ascale = 0.0 ! integration error
-    if (ascale > largest) then
+    if (ascale > huge(x)) then
        ascale = 0
     end if
 
