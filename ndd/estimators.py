@@ -181,7 +181,7 @@ class EntropyEstimator(BaseEstimator, ABC):
             If k is not valid (wrong type, negative, too large...)
 
         """
-        MAX_LOGK = 150 * numpy.log(2)
+        MAX_LOGK = 200 * numpy.log(2)
 
         if k is None:
             return k
