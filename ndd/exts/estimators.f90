@@ -273,8 +273,8 @@ contains
     log_alpha1 = log(alpha1)
     log_alpha2 = log(alpha2)
 
-    a1 = 1.e-8_real64
-    a2 = 1.e4_real64
+    a1 = alpha1
+    a2 = alpha2
     amax = -one
     do i = 1,100
        x = (a1 + a2) / two
