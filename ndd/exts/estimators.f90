@@ -256,8 +256,8 @@ contains
 
     ! re-compute a reasonable integration range
     fxs = exp(log_weight(xs) - lw_max)
-    log_alpha1 = log(minval(xs, fxs > 0.0_real64)) - dx
-    log_alpha2 = log(maxval(xs, fxs > 0.0_real64)) + dx
+    log_alpha1 = log(minval(xs, fxs > 0.0_real64))
+    log_alpha2 = log(maxval(xs, fxs < largest))
 
     dx = (log_alpha2 - log_alpha1) / (nx * 1.0_real64)
     do i = 1,nx
@@ -271,6 +271,8 @@ contains
     amax = xs(i)
     lw_max = log_weight(amax)
 
+    write(*, *) 'range1', exp(log_alpha1), exp(log_alpha2)
+
     call weight_std(ascale, err)
     if (err > 0) ascale = 0.0 ! integration error
     if (ascale > largest) then
@@ -279,6 +281,8 @@ contains
 
     log_alpha1 = log(amax) - 4 * ascale
     log_alpha2 = log(amax) + 4 * ascale
+
+    write(*, *) 'range2', exp(log_alpha1), exp(log_alpha2)
 
     if (log_alpha1 < lamin) log_alpha1 = lamin
     if (log_alpha2 > lamax) log_alpha2 = lamax
@@ -350,9 +354,11 @@ contains
 
     err = 0
     if (ascale < 1.e-20) then
+       write(*, *) 'single point', ascale, amax
        estimate = h_bayes(amax)
        err_estimate = 0.0
     else
+       write(*, *) 'integration', ascale, amax, exp(log_alpha1), exp(log_alpha2)
        call quad(nrm_func,log_alpha1,log_alpha2, nrm, ierr)
        err = err + ierr
 
