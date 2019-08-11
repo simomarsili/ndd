@@ -265,10 +265,8 @@ contains
 
   subroutine compute_integration_range()
     use constants
-    use dirichlet_mod, only: log_pna
     real(real64)             :: a1,a2,f,df,x
-    integer(int32)           :: i, counter, nbins
-    integer(int32)           :: err
+    integer(int32)           :: i, err
 
     ! initialize amax and integration range
     log_alpha1 = log(alpha1)
@@ -284,13 +282,17 @@ contains
           exit
        end if
        call log_weight_d(x, f, df)
-       ! write(*, *) i, x, a1, a2, f, df
        if (df > 0) then
           a1 = x
        else if (df < 0) then
           a2 = x
        end if
     end do
+
+    if (amax < 0) then
+       write(0, *) 'p(alpha | x) maximization didnt converge'
+       stop
+    end if
 
     lw_max = log_weight(amax)
 
