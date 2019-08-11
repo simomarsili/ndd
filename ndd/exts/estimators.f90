@@ -200,6 +200,8 @@ module nsb_mod
   use iso_fortran_env
   implicit none
 
+  real(real64), parameter :: alpha1 = 1.e-8_real64
+  real(real64), parameter :: alpha2 = 1.e4_real64
   real(real64) :: log_alpha1
   real(real64) :: log_alpha2
   real(real64) :: amax
@@ -264,49 +266,41 @@ contains
   subroutine compute_integration_range()
     use constants
     use dirichlet_mod, only: log_pna
-
-    real(real64)             :: alpha1 = 1.e-8_real64
-    real(real64)             :: alpha2 = 1.e4_real64
-    integer(int32),parameter :: nx = 100
-    real(real64)             :: dx,largest
-    real(real64)             :: xs(nx),fxs(nx)
-    real(real64)             :: a1,a2,f,df,x, amx
-    integer(int32)           :: i, counter, nbins
-    integer(int32)           :: err
-
-
-
-    largest = huge(dx)
+    real(real64)             :: a1,a2,f,df,x
+    integer(int32)           :: i, err
 
     ! initialize amax and integration range
     log_alpha1 = log(alpha1)
     log_alpha2 = log(alpha2)
-    amax = 1.0_real64
-    lw_max = log_weight(amax)
 
     a1 = 1.e-8_real64
     a2 = 1.e4_real64
+    amax = -one
     do i = 1,100
        x = (a1 + a2) / two
+       if (abs(a2-a1)/x < 0.001) then
+          amax = x
+          exit
+       end if
        call log_weight_d(x, f, df)
-       ! write(*, *) i, x, a1, a2, f, df
+       write(*, *) i, x, a1, a2, f, df
        if (df > 0) then
           a1 = x
        else if (df < 0) then
           a2 = x
        end if
-       if (abs(df) < 1.e-10 .or. abs(a1-a2) < 1.e-10) then
-          amx = x
-          exit
-       end if
     end do
 
-    amax = amx
+    if (amax < 0) then
+       write(0, *) 'p(alpha | x) maximization didnt converge'
+       stop
+    end if
+
     lw_max = log_weight(amax)
 
     call weight_std(ascale, err)
     if (err > 0) ascale = 0.0 ! integration error
-    if (ascale > largest) then
+    if (ascale > huge(x)) then
        ascale = 0
     end if
 
