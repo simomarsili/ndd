@@ -287,6 +287,8 @@ contains
     if (log_alpha1 < lamin) log_alpha1 = lamin
     if (log_alpha2 > lamax) log_alpha2 = lamax
 
+    write(*, *) 'range3', exp(log_alpha1), exp(log_alpha2)
+
   end subroutine compute_integration_range
 
   real(real64) function m_func(x)
