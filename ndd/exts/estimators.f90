@@ -214,6 +214,10 @@ contains
     real(real64)             :: xs(nx),fxs(nx)
     real(real64)             :: a1,a2,f,x
     integer(int32)           :: i, counter, nbins
+    integer(int32)           :: err
+    real(real64)             :: lamin=log(1.e-8_real64)
+    real(real64)             :: lamax=log(1.e4_real64)
+
 
     largest = huge(dx)
 
@@ -266,7 +270,18 @@ contains
     i = maxloc(fxs, 1, fxs < largest)
     amax = xs(i)
     lw_max = log_weight(amax)
-    ascale = amax * exp(lw_max)
+
+    call weight_std(ascale, err)
+    if (err > 0) ascale = 0.0 ! integration error
+    if (ascale > largest) then
+       ascale = 0
+    end if
+
+    log_alpha1 = log(amax) - 4 * ascale
+    log_alpha2 = log(amax) + 4 * ascale
+
+    if (log_alpha1 < lamin) log_alpha1 = lamin
+    if (log_alpha2 > lamax) log_alpha2 = lamax
 
   end subroutine compute_integration_range
 
@@ -305,34 +320,68 @@ contains
 
   end function nrm_func
 
-  subroutine hnsb(estimate,err_estimate)
+  real(real64) function std_func(x)
+    ! compute the integrand of std of p(la | data)
+    ! integrate over x = log(alpha)
+    use dirichlet_mod, only: log_weight
+    real(real64), intent(in) :: x
+    real(real64) :: alpha
 
+    alpha = exp(x)
+    std_func = (x - log(amax))**2 &
+         * exp(log_weight(alpha) - lw_max)  * alpha / amax
+
+  end function std_func
+
+  subroutine weight_std(std, err)
+    real(real64), intent(out) :: std
+    integer(int32), intent(out) :: err
+
+    call quad(std_func,log_alpha1,log_alpha2, std, err)
+
+  end subroutine weight_std
+
+  subroutine hnsb(estimate,err_estimate, err)
+    use dirichlet_mod, only: h_bayes
     real(real64), intent(out) :: estimate,err_estimate
+    integer(int32), intent(out) :: err
     real(real64)              :: rslt,nrm
+    integer(int32)            :: ierr
 
-    nrm = quad(nrm_func,log_alpha1,log_alpha2)
+    err = 0
+    if (ascale < 1.e-20) then
+       estimate = h_bayes(amax)
+       err_estimate = 0.0
+    else
+       call quad(nrm_func,log_alpha1,log_alpha2, nrm, ierr)
+       err = err + ierr
 
-    estimate = quad(m_func,log_alpha1,log_alpha2)
-    estimate = estimate / nrm
+       call quad(m_func,log_alpha1,log_alpha2, estimate, ierr)
+       err = err + ierr
 
-    err_estimate = quad(m2_func,log_alpha1,log_alpha2)
-    err_estimate = err_estimate / nrm
-    err_estimate = sqrt(err_estimate - estimate**2)
+       estimate = estimate / nrm
+
+       call quad(m2_func,log_alpha1,log_alpha2, err_estimate, ierr)
+       err = err + ierr
+       err_estimate = err_estimate / nrm
+       err_estimate = sqrt(err_estimate - estimate**2)
+    end if
 
   end subroutine hnsb
 
-  real(real64) function quad(func,a1,a2)
+  subroutine quad(func,a1,a2,integral,ier)
     ! wrapper to dqag routine
     use quadrature, only: dqag
 
     real(real64),    external :: func
     real(real64),  intent(in) :: a1,a2
+    real(real64),  intent(out) :: integral
+    integer(int32), intent(out) :: ier
     integer(int32), parameter :: limit = 500
     integer(int32), parameter :: lenw = 4 * limit
     real(real64)              :: abserr
     real(real64),   parameter :: epsabs = 0.0_real64
     real(real64),   parameter :: epsrel = 0.001_real64
-    integer(int32)            :: ier
     integer(int32)            :: iwork(limit)
     integer(int32), parameter :: key = 6
     integer(int32)            :: last
@@ -340,10 +389,10 @@ contains
     real(real64),   parameter :: r8_pi = 3.141592653589793_real64
     real(real64)              :: work(lenw)
 
-    call dqag ( func, a1, a2, epsabs, epsrel, key, quad, abserr, neval, ier, &
+    call dqag ( func, a1, a2, epsabs, epsrel, key, integral, abserr, neval, ier, &
          limit, lenw, last, iwork, work )
 
-  end function quad
+  end subroutine quad
 
 end module nsb_mod
 
@@ -495,6 +544,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   real(real64), intent(in)    :: nc
   real(real64),   intent(out) :: estimate
   real(real64),   intent(out) :: err_estimate
+  integer(int32) :: err
 
 !  if (size(counts) == 1) then
 !     estimate = 0.0_real64
@@ -508,7 +558,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
   call compute_integration_range()
 
-  call hnsb(estimate,err_estimate)
+  call hnsb(estimate,err_estimate, err)
 
   call dirichlet_finalize()
 
