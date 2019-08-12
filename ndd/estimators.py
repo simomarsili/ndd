@@ -234,12 +234,16 @@ class EntropyEstimator(BaseEstimator, ABC):
 
 
 class Plugin(EntropyEstimator):
-    """Plugin entropy estimator.
+    """Plugin (maximum likelihood) entropy estimator.
+
+    Insert the maximum likelihood estimate of the PMF from empirical
+    frequencies over bins into the entropy definition.
+    For alpha > 0, the estimate depends on k (the alphabet size).
 
     Parameters
     ----------
     alpha : float
-        Add alpha pseudocounts to each frequency count. alpha >= 0.
+        Add alpha pseudocounts to the each frequency count. alpha >= 0.
         Defaults to zero pseudocounts (plugin estimator).
 
     Returns
@@ -264,9 +268,10 @@ class Plugin(EntropyEstimator):
         pk : array-like
             The number of occurrences of a set of bins.
         k : int or array-like, optional
-            Total number of bins (including unobserved bins); k >= len(pk).
-            A float is a valid input for whole numbers (e.g. k=1.e3).
-            If an array, set k = numpy.prod(k). Defaults to len(pk).
+            Alphabet size (the number of bins with non-zero probability).
+            Must be >= len(pk). A float is a valid input for whole numbers
+            (e.g. k=1.e3). If an array, set k = numpy.prod(k).
+            Default: k = sum(pk > 0)
 
         Returns
         -------
@@ -296,11 +301,6 @@ class MillerMadow(EntropyEstimator):
         ----------
         pk : array-like
             The number of occurrences of a set of bins.
-        k : int or array-like, optional
-            Alphabet size (the number of bins with non-zero probability).
-            A float is a valid input for whole numbers (e.g. k=1.e3).
-            If an array, set k = numpy.prod(k).
-            Defaults to the number of bins with frequency > 0 (Miller-Madow).
 
         Returns
         -------
@@ -308,8 +308,7 @@ class MillerMadow(EntropyEstimator):
             Entropy estimate.
 
         """
-        if k is None:
-            k = sum(pk > 0)
+        k = sum(pk > 0)
 
         plugin = Plugin()
         n = sum(pk)
@@ -318,7 +317,10 @@ class MillerMadow(EntropyEstimator):
 
 
 class NSB(EntropyEstimator):
-    """Nemenman-Shafee-Bialek (NSB) entropy estimator.
+    """
+    Nemenman-Shafee-Bialek (NSB) entropy estimator.
+
+    The estimate depends on k (the alphabet size).
 
     Parameters
     ----------
@@ -345,10 +347,9 @@ class NSB(EntropyEstimator):
         pk : array-like
             The number of occurrences of a set of bins.
         k : int or array-like
-            Total number of bins (including unobserved bins); k >= len(pk).
-            A float is a valid input for whole numbers (e.g. k=1.e3).
-            If an array, set k = numpy.prod(k). Defaults to len(pk).
-            If k is None, set k = #bins with frequency > 0 (Miller-Madow).
+            Alphabet size (the number of bins with non-zero probability).
+            Must be >= len(pk). A float is a valid input for whole numbers
+            (e.g. k=1.e3). If an array, set k = numpy.prod(k).
 
         Returns
         -------
@@ -413,41 +414,28 @@ class AsymptoticNSB(EntropyEstimator):
         return self
 
 
-class _Grassberger1(EntropyEstimator):
-    """Grassberger 1988 estimator.
-
-    see equation 7 in:
-    http://hornacek.coa.edu/dave/Junk/entropy.estimation.pdf
-    https://www.sciencedirect.com/science/article/abs/pii/0375960188901934
-    """
-
-    @check_input
-    def fit(self, pk, k=None):  # pylint: disable=unused-argument
-        """Estimator definition."""
-
-        n = sum(pk)
-
-        estimate = n * numpy.log(n)
-        for x in pk:
-            if x:
-                estimate -= x * ndd.fnsb.gamma0(x) + (1 - 2 *
-                                                      (x % 2)) / (x + 1)
-        estimate /= n
-
-        self.estimate_ = estimate
-        return self
-
-
 class Grassberger(EntropyEstimator):
-    """Grassberger 2008 estimator.
+    """Grassberger 2003 estimator.
 
     see equation 35 in:
     https://arxiv.org/pdf/physics/0307138.pdf
+
     """
 
     @check_input
     def fit(self, pk, k=None):  # pylint: disable=unused-argument
-        """Estimator definition."""
+        """
+        Parameters
+        ----------
+        pk : array-like
+            The number of occurrences of a set of bins.
+
+        Returns
+        -------
+        float
+            Entropy estimate.
+
+        """
 
         n = sum(pk)
 
