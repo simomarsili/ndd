@@ -10,7 +10,7 @@ import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
 import ndd
-from ndd.estimators import NSB, EntropyEstimator, check_input
+from ndd.estimators import NSB, EntropyEstimator
 from ndd.exceptions import NddError
 
 __all__ = ['DivergenceEstimator', 'JSDivergence']
@@ -78,7 +78,7 @@ class JSDivergence(DivergenceEstimator):
 
     """
 
-    @check_input
+    @EntropyEstimator.check_input
     def fit(self, pk, k=None):
         """
         Parameters

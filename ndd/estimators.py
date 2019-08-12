@@ -43,17 +43,6 @@ def check_estimator(estimator):
     return estimator, estimator_name
 
 
-def check_input(fit_function):  # pylint: disable=no-self-argument
-    """Check fit input args."""
-
-    def wrapper(obj, pk, k=None):
-        pk = obj.check_pk(pk)
-        k = obj.check_k(k)
-        return fit_function(obj, pk, k=k)
-
-    return wrapper
-
-
 def g_series():
     """Higher-order function storing terms of the series."""
     GG = {}
@@ -144,6 +133,17 @@ class EntropyEstimator(BaseEstimator, ABC):
         if a <= 0:
             raise AlphaError(error_msg)
         return a
+
+    @classmethod
+    def check_input(cls, fit_function):  # pylint: disable=no-self-argument
+        """Check fit input args."""
+
+        def wrapper(obj, pk, k=None):
+            pk = obj.check_pk(pk)
+            k = obj.check_k(k)
+            return fit_function(obj, pk, k=k)
+
+        return wrapper
 
     def check_pk(self, a):
         """
@@ -260,7 +260,7 @@ class Plugin(EntropyEstimator):
         else:
             self.alpha = None
 
-    @check_input
+    @EntropyEstimator.check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -294,7 +294,7 @@ class Plugin(EntropyEstimator):
 class MillerMadow(EntropyEstimator):
     """Miller-Madow entropy estimator."""
 
-    @check_input
+    @EntropyEstimator.check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -339,7 +339,7 @@ class NSB(EntropyEstimator):
         else:
             self.alpha = None
 
-    @check_input
+    @EntropyEstimator.check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -382,7 +382,7 @@ class AsymptoticNSB(EntropyEstimator):
     with largecardinalities.", equations 29, 30
     """
 
-    @check_input
+    @EntropyEstimator.check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -422,7 +422,7 @@ class Grassberger(EntropyEstimator):
 
     """
 
-    @check_input
+    @EntropyEstimator.check_input
     def fit(self, pk, k=None):  # pylint: disable=unused-argument
         """
         Parameters
