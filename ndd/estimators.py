@@ -4,7 +4,6 @@
 """Classes for entropy estimators."""
 import logging
 from abc import ABCMeta, abstractmethod
-from functools import wraps
 
 import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
@@ -42,6 +41,17 @@ def check_estimator(estimator):
         raise NddError('%s is not a valid entropy estimator' % estimator_name)
 
     return estimator, estimator_name
+
+
+def check_input(fit_function):  # pylint: disable=no-self-argument
+    """Check fit input args."""
+
+    def wrapper(obj, pk, k=None):
+        pk = obj.check_pk(pk)
+        k = obj.check_k(k)
+        return fit_function(obj, pk, k=k)
+
+    return wrapper
 
 
 def g_series():
@@ -134,21 +144,6 @@ class EntropyEstimator(BaseEstimator, ABC):
         if a <= 0:
             raise AlphaError(error_msg)
         return a
-
-    @classmethod
-    def check_input(cls, fit_function):  # pylint: disable=no-self-argument
-        """Check fit input args."""
-
-        @wraps(fit_function)
-        def wrapper(obj, pk, k=None):
-            pk = obj.check_pk(pk)
-            k = obj.check_k(k)
-            return fit_function(obj, pk, k=k)
-
-        # inherit the docstring from the fit abstract method
-        wrapper.__doc__ = cls.fit.__doc__
-
-        return wrapper
 
     def check_pk(self, a):
         """
@@ -265,7 +260,7 @@ class Plugin(EntropyEstimator):
         else:
             self.alpha = None
 
-    @EntropyEstimator.check_input
+    @check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -299,7 +294,7 @@ class Plugin(EntropyEstimator):
 class MillerMadow(EntropyEstimator):
     """Miller-Madow entropy estimator."""
 
-    @EntropyEstimator.check_input
+    @check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -344,7 +339,7 @@ class NSB(EntropyEstimator):
         else:
             self.alpha = None
 
-    @EntropyEstimator.check_input
+    @check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -387,7 +382,7 @@ class AsymptoticNSB(EntropyEstimator):
     with largecardinalities.", equations 29, 30
     """
 
-    @EntropyEstimator.check_input
+    @check_input
     def fit(self, pk, k=None):
         """
         Parameters
@@ -427,7 +422,7 @@ class Grassberger(EntropyEstimator):
 
     """
 
-    @EntropyEstimator.check_input
+    @check_input
     def fit(self, pk, k=None):  # pylint: disable=unused-argument
         """
         Parameters
