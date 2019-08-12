@@ -32,8 +32,8 @@ Basic usage
 
 The **entropy** function takes as input a vector of **frequency counts**
 (the observed frequencies for a set of classes or states) and an **alphabet size**
-(the number of classes with non-zero probability) and returns an entropy
-estimate (in nats)::
+(the number of classes with non-zero probability, including unobserved classes)
+and returns an entropy estimate (in nats)::
 
   >>> import ndd
   >>> counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
