@@ -60,7 +60,7 @@ def g_series():
     """Higher-order function storing terms of the series."""
     GG = {}
     gamma0 = ndd.fnsb.gamma0
-    C = gamma0(3 / 2)
+    log_two = numpy.log(2.0)
 
     def gterm(n):
         """Sequence of reals for the Grassberger estimator."""
@@ -70,12 +70,12 @@ def g_series():
             if n < 1:
                 value = 0.0
             elif n == 1:
-                value = -euler_gamma - numpy.log(2.0)
+                value = -euler_gamma - log_two
             elif n == 2:
                 value = 2.0 + gterm(1)
         else:
             if n % 2 == 0:
-                value = gterm(2) + gamma0((n + 1) / 2) - C
+                value = gamma0((n + 1) / 2) + log_two
             else:
                 value = gterm(n - 1)
         GG[n] = value
