@@ -4,6 +4,7 @@
 """Classes for entropy estimators."""
 import logging
 from abc import ABCMeta, abstractmethod
+from functools import wraps
 
 import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
@@ -46,6 +47,7 @@ def check_estimator(estimator):
 def check_input(fit_function):  # pylint: disable=no-self-argument
     """Check fit input args."""
 
+    @wraps(fit_function)
     def wrapper(obj, pk, k=None):
         pk = obj.check_pk(pk)
         k = obj.check_k(k)
