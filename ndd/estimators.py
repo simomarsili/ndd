@@ -223,7 +223,7 @@ class EntropyEstimator(BaseEstimator, ABC):
         k : int, optional
             Number of bins. k >= len(pk).
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to len(pk).
+            Defaults to sum(pk > 0).
 
         Returns
         -------
@@ -280,7 +280,7 @@ class Plugin(EntropyEstimator):
 
         """
         if k is None:
-            k = len(pk)
+            k = sum(pk > 0)
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
             return self
