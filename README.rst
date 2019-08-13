@@ -232,5 +232,3 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
        for two different values of the concentration parameter alpha,
        0.1 and 10.0, corresponding to average entropies of approx.
        0.8 and 0.99, respectively. Logarithm base is k (the alphabet size).
-
-
