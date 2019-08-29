@@ -83,7 +83,7 @@ def extension_args():
     args = {'name': EXT_NAME, 'sources': FSOURCES}
     platform_specific = {
         'Darwin': {
-            'extra_link_args': ['-undefined', 'dynamic_lookup']
+            'extra_link_args': ['-dynamiclib', '-undefined', 'dynamic_lookup']
         },
     }
     args.update(platform_specific.get(PLATFORM, dict()))
