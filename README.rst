@@ -10,22 +10,9 @@ The **ndd** package provides a simple Python interface to an efficient
 implementation of the `Nemenman-Schafee-Bialek (NSB) algorithm
 <https://arxiv.org/abs/physics/0108025>`_,
 a parameter-free, Bayesian entropy estimator for discrete data.
-The NSB algorithm allows entropy estimation in strongly undersampled cases,
-where the number of samples is much smaller than the number of classes with
-non-zero probability.
+The NSB algorithm allows entropy estimation when the number of samples is much
+smaller than the number of classes with non-zero probability.
 
-.. image:: ./figs/bias.svg
-   :height: 300px
-   :width: 800 px
-   :scale: 100 %
-   :alt: https://github.com/simomarsili/ndd/blob/master/figs/bias.svg
-   :align: center
-   :target: ./figs/bias.svg
-
-The figure shows the average bias vs the number of samples for the NSB
-estimator, the "plugin" or maximum-likelihood estimator and an estimator
-proposed in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_
-(Eq. 35). Check the figure [details]_.
 
 Basic usage
 ===========
@@ -224,11 +211,3 @@ Redistribution and use in source and binary forms, with or without modification,
 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-.. rubric:: Footnotes
-
-.. [details] The bias is averaged over 1000 vectors of counts extracted
-       from a Dirichlet-multinomial distribution with alphabet size k = 10^4
-       for two different values of the concentration parameter alpha,
-       0.1 and 10.0, corresponding to average entropies of approx.
-       0.8 and 0.99, respectively. Logarithm base is k (the alphabet size).
