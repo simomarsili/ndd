@@ -27,6 +27,10 @@ estimator, the "plugin" or maximum-likelihood estimator and an estimator
 proposed in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_
 (Eq. 35). Check the figure [details]_.
 
+.. math::
+
+   \hat{y} = \sin(x)
+
 Basic usage
 ===========
 
