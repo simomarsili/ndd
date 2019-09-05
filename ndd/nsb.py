@@ -175,7 +175,8 @@ def cross_entropy(pk, qk):
     Parameters
     ----------
     pk and qk : array_like
-        Probability mass functions. Normalize if needed. len(qk) = len(pk).
+        Probability mass functions. Normalize if they dont sum to 1.
+        Must be len(qk) == len(pk).
 
     Returns
     -------

@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Added
+- `ndd.cross_entropy`
 
 ## [1.6.1] - 2019-08-11
 ### Changed
