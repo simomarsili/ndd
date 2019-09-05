@@ -241,7 +241,7 @@ def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
-        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
+        Default: Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int, optional; 1<=r<=p.
@@ -306,7 +306,7 @@ def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
-        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
+        Default: Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int or None, optional; 1<=r<=p.
