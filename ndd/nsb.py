@@ -169,6 +169,36 @@ def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
     return js
 
 
+def cross_entropy(pk, qk):
+    """
+    Cross entropy: - sum(pk log(pk/qk))
+    Parameters
+    ----------
+    pk and qk : array_like
+        Probability mass functions. Normalize if needed. len(qk) = len(pk).
+
+    Returns
+    -------
+    float
+        Cross entropy
+
+    """
+
+    if len(qk) != len(pk):
+        raise PmfError('qk and pk must have the same length.')
+
+    pk = numpy.asarray(pk)
+    qk = numpy.asarray(qk)
+
+    if any(qk <= 0):
+        raise PmfError('qk must be positive')
+
+    pk = 1.0 * pk / sum(pk)
+    qk = numpy.log(1.0 * qk / sum(qk))
+
+    return -numpy.sum(pk * qk)
+
+
 def kullback_leibler_divergence(pk, qk, estimator='NSB'):
     """
     Kullback-Leibler divergence given counts pk and a reference PMF qk.
@@ -197,33 +227,13 @@ def kullback_leibler_divergence(pk, qk, estimator='NSB'):
 
     """
 
+    estimator, _ = check_estimator(estimator)
     pk = numpy.asarray(pk)
-    if is_pmf(qk):
-        log_qk = numpy.log(qk)
-    else:
-        raise PmfError('qk must be a valid PMF')
-
-    if sum(numpy.isinf(log_qk)) > 0:
-        raise PmfError('qk must be positive')
-
-    if len(log_qk) != len(pk):
-        raise PmfError('qk and pk must have the same length.')
-
     k = len(qk)
-
     if k == 1:  # single bin
         return 0.0
 
-    estimator, _ = check_estimator(estimator)
-    hp = estimator.fit(pk, k=k).estimate_
-    pk = pk / sum(pk)
-    cross_entropy = -numpy.sum(pk * log_qk)
-    kl = cross_entropy - hp
-    if numpy.isnan(kl):
-        logger.warning('nan value for KL divergence')
-        kl = numpy.nan
-
-    return kl
+    return cross_entropy(pk, qk) - estimator.fit(pk, k=k).estimate_
 
 
 def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
