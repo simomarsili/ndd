@@ -48,7 +48,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
-        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
+        Default: Nemenman-Shafee-Bialek (NSB) estimator.
     return_std : boolean, optional
         If True, also return an approximation for the standard deviation
         over the entropy posterior.
@@ -97,7 +97,7 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
-        Default: use the  Nemenman-Shafee-Bialek (NSB) estimator.
+        Default: Nemenman-Shafee-Bialek (NSB) estimator.
     axis : int, optional
         The sample-indexing axis. Defaults to 0.
     r : int, optional; ; 1<=r<=p.
@@ -125,15 +125,14 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
 
 def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
     """
-    Return the Jensen-Shannon divergence from a m-by-p matrix of counts.
+    Jensen-Shannon divergence from a m-by-p matrix of counts.
 
     Return an estimate of the Jensen-Shannon divergence between
     m unknown discrete distributions from a m-by-p input array of counts.
     The estimate (in nats) is computed as a combination of single Bayesian
     entropy estimates. If the total number of samples varies among the
-    distributions, the function returns a weighted divergence with weights
-    proportional to the total number of samples in each row
-    (see the general definition of Jensen-Shannon divergence:
+    distributions, use a weighted average (see the general definition of
+    the Jensen-Shannon divergence:
     https://en.wikipedia.org/wiki/Jensen-Shannon_divergence).
 
     Parameters
@@ -184,8 +183,8 @@ def kullback_leibler_divergence(pk, qk, k=None, estimator='NSB'):
     pk : array_like
         The number of occurrences of a set of bins.
     qk : array_like
-        Reference PMF in sum(pk log(pk/qk). len(qk) = len(pk).
-        Must be a valid PMF (non-negative, normalized).
+        Reference PMF in sum(pk log(pk/qk).
+        Must be a valid PMF (non-negative, normalized) and len(qk) = len(pk).
     k : int or array-like, optional
         Total number of bins (including unobserved bins); k >= p.
         A float is a valid input for whole numbers (e.g. k=1.e3).
