@@ -197,6 +197,7 @@ def kullback_leibler_divergence(pk, qk, estimator='NSB'):
 
     """
 
+    pk = numpy.asarray(pk)
     if is_pmf(qk):
         log_qk = numpy.log(qk)
     else:
@@ -214,8 +215,10 @@ def kullback_leibler_divergence(pk, qk, estimator='NSB'):
         return 0.0
 
     estimator, _ = check_estimator(estimator)
-    estimate = estimator.fit(pk, k=k).estimate_
-    kl = -(estimate + numpy.sum(pk * log_qk) / float(sum(pk)))
+    hp = estimator.fit(pk, k=k).estimate_
+    pk = pk / sum(pk)
+    cross_entropy = -numpy.sum(pk * log_qk)
+    kl = cross_entropy - hp
     if numpy.isnan(kl):
         logger.warning('nan value for KL divergence')
         kl = numpy.nan
