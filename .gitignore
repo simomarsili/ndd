@@ -4,6 +4,8 @@
 .cache
 .pytest_cache
 .tox
+.libs
+.coverage
 ndd.egg-info
 venv
 TODO
@@ -22,4 +24,7 @@ ndd/*.so
 ndd/*.c
 figs/*
 !tests/*.py
+docs/*
+!exts/bias.f90
+!exts/bias.rst
 
