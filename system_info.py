@@ -9,7 +9,19 @@ import numpy
 
 
 class SystemInfo:
-    """Collect system info."""
+    """Collect system infos.
+
+    Infos are defined as object properties.
+    """
+
+    @classmethod
+    def attrs(cls):
+        """Available system infos."""
+        return [p for p in dir(cls) if isinstance(getattr(cls, p), property)]
+
+    def __init__(self):
+        # collect system infos
+        self.infos = {a: getattr(self, a) for a in self.attrs()}
 
     @property
     def platform(self):
@@ -39,15 +51,15 @@ class SystemInfo:
         return subprocess.run(['gfortran', '-v'],
                               stderr=subprocess.PIPE).stderr.decode()
 
-    @classmethod
-    def attrs(cls):
-        """Available system infos."""
-        return [p for p in dir(cls) if isinstance(getattr(cls, p), property)]
+    def __call__(self):
+        return self.infos
 
     def __repr__(self):
         fmt = '\n'.join(['%s'] * 3 + ['\n'])
-        return ''.join(
-            [fmt % (a, '=' * len(a), getattr(self, a)) for a in self.attrs()])
+        return ''.join([
+            fmt % (attr, '=' * len(attr), value)
+            for attr, value in self().items()
+        ])
 
 
 if __name__ == '__main__':
