@@ -169,7 +169,7 @@ def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
     return js
 
 
-def kullback_leibler_divergence(pk, qk, k=None, estimator='NSB'):
+def kullback_leibler_divergence(pk, qk, estimator='NSB'):
     """
     Kullback-Leibler divergence given counts pk and a reference PMF qk.
 
@@ -185,10 +185,6 @@ def kullback_leibler_divergence(pk, qk, k=None, estimator='NSB'):
     qk : array_like
         Reference PMF in sum(pk log(pk/qk).
         Must be a valid PMF (non-negative, normalized) and len(qk) = len(pk).
-    k : int or array-like, optional
-        Total number of bins (including unobserved bins); k >= p.
-        A float is a valid input for whole numbers (e.g. k=1.e3).
-        If an array, set k = numpy.prod(k). Defaults to len(pk).
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
@@ -212,10 +208,10 @@ def kullback_leibler_divergence(pk, qk, k=None, estimator='NSB'):
     if len(log_qk) != len(pk):
         raise PmfError('qk and pk must have the same length.')
 
+    k = len(qk)
+
     if k == 1:  # single bin
         return 0.0
-    if k is None:
-        k = len(pk)
 
     estimator, _ = check_estimator(estimator)
     estimate = estimator.fit(pk, k=k).estimate_
