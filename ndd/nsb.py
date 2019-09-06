@@ -174,9 +174,10 @@ def cross_entropy(pk, qk):
     Cross entropy: - sum(pk log(pk/qk))
     Parameters
     ----------
-    pk and qk : array_like
-        Probability mass functions. Normalize if they dont sum to 1.
-        Must be len(qk) == len(pk).
+    pk : array_like
+        Probability mass functions. Normalize if doesnt sum to 1.
+    qk : array_like
+        Probability mass functions. Must be len(qk) == len(pk).
 
     Returns
     -------
@@ -191,11 +192,13 @@ def cross_entropy(pk, qk):
     pk = numpy.asarray(pk)
     qk = numpy.asarray(qk)
 
-    if any(qk <= 0):
-        raise PmfError('qk must be positive')
+    if any(pk < 0):
+        raise PmfError('pk entries must be positive')
+    if not is_pmf(qk):
+        raise PmfError('qk must be a valid PMF (positive, normalized)')
 
     pk = 1.0 * pk / sum(pk)
-    qk = numpy.log(1.0 * qk / sum(qk))
+    qk = numpy.log(1.0 * qk)
 
     return -numpy.sum(pk * qk)
 
