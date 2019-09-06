@@ -75,7 +75,7 @@ class DataArray(Sequence):
         self._ks = None
         self._k = k
         if ks is not None:
-            self.ks = ks
+            self.ks = numpy.asarray(ks)
 
     def __getitem__(self, index):
         cls = type(self)
@@ -96,6 +96,13 @@ class DataArray(Sequence):
     def __repr__(self):
         cls = type(self)
         return '%s(data=\n%s\nks=%s\n)' % (cls.__name__, self.data, self.ks)
+
+    def __eq__(self, other):
+        if not isinstance(other, DataArray):
+            return NotImplemented
+        return ((self.data == other.data).all()
+                and (self.ks == other.ks or (self.ks == other.ks).all())
+                and self.k() == other.k())
 
     @property
     def data(self):

@@ -12,18 +12,7 @@ import pytest
 import ndd
 import ndd.estimators
 from make_test_ref import SEED, cases
-
-
-def tests_dir():
-    """Return None if no tests dir."""
-    cwd = os.getcwd()
-    basename = os.path.basename(cwd)
-    if basename == 'tests':
-        return cwd
-    tdir = os.path.join(cwd, 'tests')
-    if os.path.exists(tdir):
-        return tdir
-    return None
+from utils import tests_dir
 
 
 def random_ndarray(n, p, seed):
