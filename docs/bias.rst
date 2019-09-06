@@ -3,13 +3,13 @@ estimator, the "plugin" or maximum-likelihood estimator and an estimator
 proposed in `Grassberger 2003 <https://arxiv.org/abs/physics/0307138>`_
 (Eq. 35)
 
-.. image:: ./bias.svg
+.. image:: ./figs/bias.svg
    :height: 300px
    :width: 800 px
    :scale: 100 %
-   :alt: https://github.com/simomarsili/ndd/blob/master/docs/bias.svg
+   :alt: https://github.com/simomarsili/ndd/blob/master/docs/figs/bias.svg
    :align: center
-   :target: ./bias.svg
+   :target: ./figs/bias.svg
 
 The bias was averaged over 1000 vectors of counts extracted
 from a Dirichlet-multinomial distribution with alphabet size k = 10^4
