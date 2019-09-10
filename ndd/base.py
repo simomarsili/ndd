@@ -53,13 +53,13 @@ class BaseEstimator:
     All estimator objects expose a ``fit`` method that takes a dataset
     (usually a 2-d array):
 
-    >>> estimator.fit(data)
+    >>> estimator.fit(data) #doctest: +SKIP
 
     **Estimator parameters**: All the parameters of an estimator can be set
     when it is instantiated or by modifying the corresponding attribute::
 
-    >>> estimator = Estimator(param1=1, param2=2)
-    >>> estimator.param1
+    >>> estimator = Estimator(param1=1, param2=2) #doctest: +SKIP
+    >>> estimator.param1 #doctest: +SKIP
     1
 
     **Estimated parameters**: When data is fitted with an estimator,

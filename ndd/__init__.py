@@ -15,22 +15,23 @@ The `ndd.entropy()` function takes as input a vector of frequency counts
 (the observed frequencies for a set of classes or states)
 and returns an entropy estimate (in nats):
 
-```python
->>> counts
-[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
+```
+>>> counts = [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
 >>> import ndd
 >>> entropy_estimate = ndd.entropy(counts)
 >>> entropy_estimate
-2.623634344902917
+2.6017414378907606
+
 ```
 
 Optionally, the uncertainty in the entropy estimate can be quantified
 by computing an approximation for the posterior standard deviation:
 
-```python
+```
 >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
 >>> std
-0.048675500725595504
+0.04090929117340808
+
 ```
 
 ### Where to get it
