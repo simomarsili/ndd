@@ -156,7 +156,7 @@ class EntropyEstimator(BaseEstimator, ABC):
 
         """
 
-        a = numpy.float64(a)
+        a = numpy.float64(list(a))
         # check ndim
         # pylint: disable=comparison-with-callable
         if a.ndim != self.input_data_ndim:

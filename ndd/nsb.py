@@ -64,9 +64,8 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
 
     estimator, _ = check_estimator(estimator)
 
-    pk = numpy.asarray(pk)
     if k is None:
-        k = sum(pk > 0)
+        k = sum([1 for x in pk if x > 0])
 
     estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_
