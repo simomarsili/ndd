@@ -116,7 +116,7 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
         ar = DataArray(ar, ks=ks, axis=axis)
 
     if r is not None:
-        return (estimator(pk, k=k) for pk, k in ar.iter_counts(r=r))
+        return estimates_from_combinations(ar, r, estimator=estimator)
 
     counts, k = ar.iter_counts()
     return estimator(counts, k=k)
@@ -295,7 +295,7 @@ def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
         ar = DataArray(ar, ks=ks, axis=axis)
 
     if r is not None:
-        return (iinfo(data, k, estimator) for data, k in ar.iter_data(r=r))
+        return estimates_from_combinations(ar, r, q=iinfo, estimator=estimator)
 
     data, k = ar.iter_data()
     return iinfo(data, k, estimator)
@@ -522,3 +522,50 @@ def select_estimator(alpha, plugin):
         else:
             estimator = NSB(alpha)
     return estimator
+
+
+def estimates_from_combinations(ar,
+                                r,
+                                *,
+                                q=from_data,
+                                estimator='NSB',
+                                subset=None):
+    """Apply the estimator function `func` to combinations of data features.
+
+    Parameters
+    ----------
+    ar : array-like
+        p-by-n data array.
+    r : int, optional; ; 1<=r<=p.
+        Length of feature combinations.
+    q : callable, optional
+        A callable returning the quantity to be estimated from data
+    estimator : str or entropy estimator instance, optional
+        If a string, use the estimator class with the same name and default
+        parameters. Check ndd.entropy_estimators for the available estimators.
+        Default: Nemenman-Shafee-Bialek (NSB) estimator.
+    subset : list, optional
+        Return only the results for combinations of features that contain
+        the `subset` of features.
+
+    Yields
+    ------
+    estimate : float
+
+    """
+    estimator, _ = check_estimator(estimator)
+
+    if not isinstance(ar, DataArray):
+        ar = DataArray(ar)
+
+    p = ar.shape[0]
+    feature_combinations = zip(combinations(range(p), r), ar.iter_data(r=r))
+
+    if subset is not None:
+        subset = set(subset)
+        for ids, (x, k) in feature_combinations:
+            if subset <= set(ids):
+                yield q(x, k, estimator=estimator)
+    else:
+        for ids, (x, k) in feature_combinations:
+            yield q(x, k, estimator=estimator)
