@@ -422,6 +422,8 @@ def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pyl
         Conditional entropy estimate
 
     """
+    # TODO: add tests if r is not None
+
     # check data shape
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
@@ -440,8 +442,12 @@ def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pyl
     estimator, _ = check_estimator(estimator)
 
     # Entropy of features on which we are conditioning
-    counts, k = ar[c].iter_counts()
-    hc = estimator(counts, k=k)
+    counts, kc = ar[c].iter_counts()
+    hc = estimator(counts, k=kc)
+
+    def centropy(x, k, estimator):
+        """Helper function for conditional entropy."""
+        return from_data(x, ks=k, estimator=estimator) - hc
 
     if r is not None:
 
@@ -450,14 +456,14 @@ def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pyl
         # include the c variables in the set
         r = r + len(c)
 
-        indices = combinations(range(p), r=r)
+        return estimates_from_combinations(ar,
+                                           r,
+                                           q=centropy,
+                                           estimator=estimator,
+                                           subset=c)
 
-        return (estimator(counts, k=k) - hc
-                for ids, (counts, k) in zip(indices, ar.iter_counts(r=r))
-                if set(c) <= set(ids))
-
-    counts, k = ar.iter_counts()
-    return estimator(counts, k=k) - hc
+    _, k = ar.iter_data()
+    return centropy(ar, k, estimator)
 
 
 def histogram(data, axis=0, r=None):
