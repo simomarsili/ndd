@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+### Fixed
+- fix coinformation function for combinations of features
 
 ## [1.6.1] - 2019-08-11
 ### Changed
