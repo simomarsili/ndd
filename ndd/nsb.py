@@ -340,9 +340,23 @@ def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
 
     """
 
-    # change sign for odd number of variables
-    return (-1)**ar.shape[0] * interaction_information(
-        ar=ar, ks=ks, estimator=estimator, axis=axis, r=r)
+    change_sign = ar.shape[0] % 2
+    iinfo = interaction_information(ar=ar,
+                                    ks=ks,
+                                    estimator=estimator,
+                                    axis=axis,
+                                    r=r)
+    if not change_sign:
+        result = iinfo
+
+    if change_sign:
+        # change sign for odd number of variables
+        if r is not None:
+            result = (-ii for ii in iinfo)
+        else:
+            result = -iinfo  # pylint:disable=invalid-unary-operand-type
+
+    return result
 
 
 def mutual_information(ar, ks=None, estimator='NSB', axis=0):
