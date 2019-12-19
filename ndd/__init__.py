@@ -1,35 +1,37 @@
 # -*- coding: utf-8 -*-
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
+# pylint: disable=line-too-long
 """
 # ndd - Bayesian entropy estimation from discrete data
 
-The **ndd** module provides a simple Python interface to an efficient 
-implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
+The **ndd** module provides a simple Python interface to an efficient
+implementation of the Nemenman-Schafee-Bialek (NSB) algorithm,
 a parameter-free, Bayesian entropy estimator for discrete data.
 
-## Basic usage 
+## Basic usage
 
-The `ndd.entropy()` function takes as input a vector of frequency counts 
-(the observed frequencies for a set of classes or states) 
-and returns an entropy estimate (in nats): 
+The `ndd.entropy()` function takes as input a vector of frequency counts
+(the observed frequencies for a set of classes or states)
+and returns an entropy estimate (in nats):
 
-```python
->>> counts
-[7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
+```
+>>> counts = [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
 >>> import ndd
 >>> entropy_estimate = ndd.entropy(counts)
 >>> entropy_estimate
-2.623634344902917
+2.6017414378907606
+
 ```
 
-Optionally, the uncertainty in the entropy estimate can be quantified 
+Optionally, the uncertainty in the entropy estimate can be quantified
 by computing an approximation for the posterior standard deviation:
 
-```python
+```
 >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
 >>> std
-0.048675500725595504
+0.04090929117340808
+
 ```
 
 ### Where to get it
@@ -108,14 +110,29 @@ and interesting links:
 
 """
 import pkg_resources
-from ndd.nsb import (entropy,  # pylint: disable=unused-import
-                     jensen_shannon_divergence,
-                     histogram, )
 
-project_name = 'ndd'
-__version__ = pkg_resources.require(project_name)[0].version
-__all__ = ["entropy",
-           "histogram",
-           "nbins",
-           "from_data",
-           "jensen_shannon_divergence"]
+from ndd import package_setup
+from ndd.divergence import DivergenceEstimator
+from ndd.estimators import EntropyEstimator
+from ndd.nsb import entropy  # pylint: disable=unused-import
+from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
+                     interaction_information, jensen_shannon_divergence,
+                     kullback_leibler_divergence, mutual_information)
+
+package_name = package_setup.package_name
+package_path = package_setup.package_path
+__version__ = pkg_resources.require(package_name)[0].version
+__all__ = [
+    'entropy',
+    'jensen_shannon_divergence',
+    'kullback_leibler_divergence',
+    'interaction_information',
+    'coinformation',
+    'mutual_information',
+    'conditional_entropy',
+    'histogram',
+    'from_data',
+]
+
+entropy_estimators = list(package_setup.subclasses(EntropyEstimator))
+divergence_estimators = list(package_setup.subclasses(DivergenceEstimator))

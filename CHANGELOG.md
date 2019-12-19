@@ -2,6 +2,72 @@
 
 ## [Unreleased]
 
+## [1.6.1] - 2019-08-11
+### Changed
+For the NSB integration:
+- Find the saddle point maximizing p(alpha | data)
+- Set the integration range at 4 standard deviations around the saddle point
+- If the standard deviation is too small, return the entropy posterior mean at
+  the saddle point
+
+## [1.6] - 2019-08-09
+### Added
+- `MillerMadow` estimator class
+- `AsymptoticNSB` estimator class
+- `Grassberger` estimator class
+### Changed
+The signature of the *entropy* function has been changed to allow
+arbitrary entropy estimators. The new signature is
+```
+entropy(pk, k=None, estimator='NSB', return_std=False)
+```
+Check `ndd.entropy_estimators` for the available estimators.
+
+## [1.5] - 2019-08-02
+### Changed
+For methods/functions working on data matrices:
+the default input is a **n-by-p** 2D array (n samples from p discrete
+variables, with different samples on different **rows**).
+Since release 1.3, the default was a transposed (**p-by-n**) data matrix.
+The behavior of functions taking frequency counts as input
+(e.g. the `ndd.entropy` function) is unchanged.
+### Added
+- builds on Windows (with MinGW-W64)
+- builds on MacOS (thanks to https://github.com/ccattuto)
+
+## [1.4] - 2019-05-20
+### Added
+- `ndd.kullback_leibler_divergence`
+
+## [1.3.2] - 2019-05-16
+### Changed
+- `r` (length of combinations) defaults to None
+
+## [1.3] - 2019-05-08
+### Changed
+- input data arrays must be p-by-n 2D ndarrays containing
+  n samples from p discrete variables. This affects all methods/functions
+  working directly on data:
+  - histogram
+  - from_data
+  - interaction_information
+  - coinformation
+  - mutual_information
+  - conditional_entropy
+
+## [1.2] - 2019-04-01
+### Changed
+- fixed conditional_entropy function
+- histogram: `axis` should be None is data matrix is tarnsposed.
+
+## [1.1] - 2019-03-26
+### Added
+- `ndd.from_data`
+- `ndd.mutual_information`
+- `ndd.conditional_information`
+- `ndd.interaction_information`
+- `ndd.coinformation`
+
 ## [1.0] - 2019-03-19
 ### Changed
 - Python3 only
@@ -18,7 +84,7 @@
 
 ## [0.8] - 2019-01-08
 ### Added
-- Entropy class. 
+- Entropy class.
 - from_data() returns an estimate from a data samples
 
 ### Changed

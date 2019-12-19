@@ -3,7 +3,7 @@ module gamma_funcs
   implicit none
 contains
   elemental function digamma (x)
-    
+
     !*****************************************************************************80
     !
     !! DIGAMMA calculates DIGAMMA ( X ) = d ( LOG ( GAMMA ( X ) ) ) / dX
@@ -87,9 +87,9 @@ contains
          - r * ( 1.0_real64 / 132.0_real64 ) ) ) ) )
 
   end function digamma
-  
+
   elemental function trigamma (x)
-    
+
     !*****************************************************************************80
     !
     !! TRIGAMMA calculates trigamma(x) = d^2 log(gamma(x)) / dx^2
@@ -172,4 +172,42 @@ contains
          + y *   b8 )))) / z
 
   end function trigamma
+
+  elemental function quadgamma (x)
+    ! computes \psi_2(x) = d^3 log(gamma(x)) / dx^3 = d^2 \psi(x) / dx^2
+    ! Simone Marsili
+    implicit none
+
+    real(real64)              :: quadgamma
+    real(real64), intent(in)  :: x
+
+    real(real64), parameter :: a = 0.0001_real64
+    real(real64), parameter :: b = 5.0_real64
+    real(real64) z
+    !  Check the input.
+    if ( x <= 0.0_real64 ) then
+       quadgamma = 0.0_real64
+       return
+    end if
+
+    !  Use small value approximation if X <= A.
+    if ( x <= a ) then
+       quadgamma = - gamma(3.0_real64) / x**3
+       return
+    end if
+
+    !  Increase argument to ( X + I ) >= B.
+    quadgamma = 0.0_real64
+    z = x
+    do while ( z < b )
+       quadgamma = quadgamma - 2.0_real64 / z**3
+       z = z + 1.0_real64
+    end do
+
+    !  Apply asymptotic formula if argument is B or greater.
+    z = 1/z
+    quadgamma = quadgamma - z**2 - z**3 - 0.5*z**4
+
+  end function quadgamma
+
 end module gamma_funcs

@@ -6,53 +6,27 @@ ndd - Bayesian entropy estimation from discrete data
 .. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
     :target: https://travis-ci.com/simomarsili/ndd
 
-The **ndd** package provides a simple Python interface to an efficient 
-implementation of the Nemenman-Schafee-Bialek (NSB) algorithm, 
+The **ndd** package provides a simple Python interface to an efficient
+implementation of the `Nemenman-Schafee-Bialek (NSB) algorithm
+<https://arxiv.org/abs/physics/0108025>`_,
 a parameter-free, Bayesian entropy estimator for discrete data.
-
-News
-====
-Starting from `v1.0`, **ndd** requires Python3.4 or later.
+The NSB algorithm allows entropy estimation when the number of samples is much
+smaller than the number of classes with non-zero probability.
 
 
 Basic usage
 ===========
 
-The **ndd.entropy** function takes as input a vector of frequency counts 
-(the observed frequencies for a set of classes or states) 
-and returns an **entropy** estimate (in nats)::
+The **entropy** function takes as input a vector of **frequency counts**
+(the observed frequencies for a set of classes or states) and an **alphabet size**
+(the number of classes with non-zero probability, including unobserved classes)
+and returns an entropy estimate (in nats)::
 
-  >>> counts
-  [7, 3, 5, 8, 9, 1, 3, 3, 1, 0, 2, 5, 2, 11, 4, 23, 5, 0, 8, 0]
   >>> import ndd
-  >>> entropy_estimate = ndd.entropy(counts)
+  >>> counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+  >>> entropy_estimate = ndd.entropy(counts, k=100)
   >>> entropy_estimate
-  2.623634344888532
-
-Optionally, the uncertainty in the entropy estimate can be quantified 
-by computing an approximation for the posterior standard deviation::
-
-  >>> entropy_estimate, std = ndd.entropy(counts, return_std=True)
-  >>> std
-  0.048675500725595504
-  
-
-The **ndd.jensen_shannon_divergence** function returns an estimate of the
-**Jensen-Shannon divergence** between two (or more) probability
-distributions. The function takes as input a n-by-p matrix of frequency
-counts with each row corresponding to a different distribution of a random
-variable taking on p different values.::
-
-  >>> counts
-  [[11, 5, 0, 3, 8, 16, 43, 4, 7, 3],
-   [1, 38, 8, 15, 1, 0, 23, 0, 3, 11]]
-  >>> import ndd
-  >>> js_estimate = ndd.jensen_shannon_divergence(counts)
-  >>> js_estimate
-  0.24166914358658187
-
-The estimate (in nats) is computed as a combination of single Bayesian entropy
-estimates. See docstrings for details.
+  2.8246841846955486
 
 Where to get it
 ===============
@@ -71,14 +45,65 @@ you can install the gfortran compiler using the following command::
 
   sudo apt-get install gfortran
 
-Running tests
-=============
-Clone the repo, install tests requirements and run the tests with `make`::
+On Windows, you can use the gfortran compiler from the
+`MinGW-w64 <https://sourceforge.net/projects/mingw-w64/files>`_ project
+(`direct link <https://sourceforge.net/projects/mingw-w64/files/latest/download>`_
+to the installer).
 
-  git clone https://github.com/simomarsili/ndd.git
-  cd ndd
-  pip install .[test]
-  make test
+If you don't have a Fortran compiler, install using the
+`ndd python wheels <https://github.com/simomarsili/ndd-wheels>`_
+with pre-compiled extensions. numpy >= 1.16 is needed.
+
+Changes
+=======
+
+**v1.6.1**
+   Changed:
+   Fixed numerical integration for large alphabet sizes.
+
+**v1.6**
+   Changed:
+
+   The signature of the *entropy* function has been changed to allow
+   arbitrary entropy estimators. The new signature is::
+
+     entropy(pk, k=None, estimator='NSB', return_std=False)
+
+   The available estimators are::
+
+     >>> import ndd
+     >>> ndd.entropy_estimators
+     ['Plugin', 'MillerMadow', 'NSB', 'AsymptoticNSB', 'Grassberger']
+
+   Check the function docstring for details.
+
+   Added:
+
+   - *MillerMadow* estimator class
+   - *AsymptoticNSB* estimator class
+   - *Grassberger* estimator class
+
+**v1.5**
+    For methods/functions working on data matrices:
+    the default input is a **n-by-p** 2D array (n samples from p discrete
+    variables, with different samples on different **rows**).
+    Since release 1.3, the default was a transposed (**p-by-n**) data matrix.
+    The behavior of functions taking frequency counts as input
+    (e.g. the *entropy* function) is unchanged.
+**v1.4**
+    Added the *kullback_leibler_divergence* function.
+**v1.1**
+    Added:
+
+    * *from_data*
+    * *mutual_information*
+    * *conditional_information*
+    * *interaction_information*
+    * *coinformation*
+**v1.0**
+    Drop support for Python < 3.4.
+**v0.9**
+    Added the `jensen_shannnon_divergence` function.
 
 References
 ==========
@@ -104,6 +129,17 @@ Some refs::
     year={2002}
   }
 
+  @article{paninski2003estimation,
+    title={Estimation of entropy and mutual information},
+    author={Paninski, Liam},
+    journal={Neural computation},
+    volume={15},
+    number={6},
+    pages={1191--1253},
+    year={2003},
+    publisher={MIT Press}
+  }
+
   @article{nemenman2004entropy,
     title={Entropy and information in neural spike trains: Progress on the sampling problem},
     author={Nemenman, Ilya and Bialek, William and van Steveninck, Rob de Ruyter},
@@ -113,6 +149,17 @@ Some refs::
     pages={056111},
     year={2004},
     publisher={APS}
+  }
+
+  @article{nemenman2011coincidences,
+    title={Coincidences and estimation of entropies of random variables with large cardinalities},
+    author={Nemenman, Ilya},
+    journal={Entropy},
+    volume={13},
+    number={12},
+    pages={2013--2023},
+    year={2011},
+    publisher={Molecular Diversity Preservation International}
   }
 
   @article{archer2013bayesian,
@@ -125,6 +172,18 @@ Some refs::
     year={2013},
     publisher={Multidisciplinary Digital Publishing Institute}
   }
+
+  @article{archer2014bayesian,
+    title={Bayesian entropy estimation for countable discrete distributions},
+    author={Archer, Evan and Park, Il Memming and Pillow, Jonathan W},
+    journal={The Journal of Machine Learning Research},
+    volume={15},
+    number={1},
+    pages={2833--2868},
+    year={2014},
+    publisher={JMLR. org}
+  }
+
 
 and interesting links:
 
@@ -152,4 +211,3 @@ Redistribution and use in source and binary forms, with or without modification,
 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
