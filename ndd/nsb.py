@@ -346,15 +346,14 @@ def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
                                     estimator=estimator,
                                     axis=axis,
                                     r=r)
-    if not change_sign:
-        result = iinfo
-
     if change_sign:
         # change sign for odd number of variables
         if r is not None:
             result = (-ii for ii in iinfo)
         else:
             result = -iinfo  # pylint:disable=invalid-unary-operand-type
+    else:
+        result = iinfo
 
     return result
 
