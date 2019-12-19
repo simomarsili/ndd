@@ -395,13 +395,20 @@ def mutual_information(ar, ks=None, estimator='NSB', axis=0):
 
     p = ar.shape[0]
 
-    if p > 2:
-        h1 = list(from_data(ar, r=1))
-        return (h1[i1] + h1[i2] - from_data(ar[i1, i2], estimator=estimator)
-                for i1, i2 in combinations(range(p), 2))
+    # entropies for single fearures
+    h1 = list(from_data(ar, r=1, estimator=estimator))
 
-    return (sum(from_data(ar, r=1, estimator=estimator)) -
-            from_data(ar, estimator=estimator))
+    if p > 2:
+
+        def mi_for_all_pairs():
+            """Yield the mutual info for all pairs of features."""
+            for i1, i2 in combinations(range(p), 2):
+                yield h1[i1] + h1[i2] - from_data(ar[i1, i2],
+                                                  estimator=estimator)
+
+        return mi_for_all_pairs()
+
+    return h1[0] + h1[1] - from_data(ar, estimator=estimator)
 
 
 def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pylint: disable=too-many-arguments
