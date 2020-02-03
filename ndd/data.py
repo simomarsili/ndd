@@ -75,7 +75,7 @@ class DataArray(Sequence):
         self._ks = None
         self._k = k
         if ks is not None:
-            self.ks = numpy.asarray(ks)
+            self.ks = ks
 
     def __getitem__(self, index):
         cls = type(self)
@@ -124,10 +124,11 @@ class DataArray(Sequence):
         p, _ = self.shape
         if is_sequence(value):
             if len(value) != p:
-                raise DataArrayError('len(ks) must be equal to p')
+                raise DataArrayError('len(ks) (%r) must be equal to p (%r)' %
+                                     (len(value), p))
             self._ks = value
         else:
-            self._ks = [value] * p
+            self._ks = value * numpy.ones(p)
 
     def counts(self, r=None):
         """Frequency array(s)."""

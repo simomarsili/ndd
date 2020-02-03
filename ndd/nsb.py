@@ -93,6 +93,7 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
         2D array of n samples from p discrete variables.
     ks : int or 1D array of length p, optional
         Alphabet size for each variable.
+        If int, the variables share the same alphabet size.
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
