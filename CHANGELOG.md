@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Fixed
 - fix coinformation function for combinations of features
+- fix from_data for scalar inputs
 
 ## [1.6.1] - 2019-08-11
 ### Changed
