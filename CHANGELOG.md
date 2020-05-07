@@ -1,6 +1,8 @@
 # Change log
 
 ## [Unreleased]
+
+## [1.6.4] - 2020-05-07
 ### Fixed
 - fix coinformation function for combinations of features
 - fix from_data for scalar inputs
