@@ -1,6 +1,7 @@
 # Change log
 
 ## [Unreleased]
+- rename version.json to package.json
 
 ## [1.6.4] - 2020-05-07
 ### Fixed

@@ -9,7 +9,7 @@ from pkg_resources import parse_version
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.13'
-VERSION_FILE = 'version.json'
+PACKAGE_FILE = 'package.json'
 SETUP_REQUIRES = ['numpy>=1.13']
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
@@ -68,7 +68,7 @@ if NUMPY_STATUS['up_to_date'] is False:
 from numpy.distutils.core import Extension  # isort:skip
 from numpy.distutils.core import setup  # isort:skip
 
-VERSION = get_version(VERSION_FILE)
+VERSION = get_version(PACKAGE_FILE)
 LONG_DESCRIPTION = get_long_description()
 
 FSOURCES = [
@@ -102,7 +102,7 @@ setup(
     author_email='simo.marsili@gmail.com',
     url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
-    data_files=[(NAME, ['ndd/version.json'])],
+    data_files=[(NAME, ['package.json'])],
     packages=['ndd'],
     package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
     ext_modules=[FNSB],

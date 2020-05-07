@@ -1,6 +1,6 @@
 include LICENSE.txt
 include README.rst
-include version.json
+include package.json
 include requirements.txt
 
 # Include the data files
