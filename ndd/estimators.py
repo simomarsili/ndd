@@ -404,7 +404,7 @@ class AsymptoticNSB(EntropyEstimator):
         ratio = delta / n
 
         if ratio > 0.1:
-            logger.warning('The AsymptoticNSB estimator should be only used '
+            logger.warning('The AsymptoticNSB estimator should only be used '
                            'in the under-sampled regime.')
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
