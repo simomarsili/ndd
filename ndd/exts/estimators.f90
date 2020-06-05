@@ -170,7 +170,8 @@ contains
 
        lw_max = log_weight(amax)
 
-       integrand = integrand * exp(log_weight(alpha) - lw_max)  * alpha / amax
+       integrand = integrand * exp(log_weight(alpha) - lw_max)  * &
+            exp(log(alpha) - log(amax))
     end if
 
   end function integrand
