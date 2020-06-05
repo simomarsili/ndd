@@ -128,7 +128,7 @@ contains
 
   end function log_weight
 
-  real(real64) function h_bayes(alpha)
+  elemental real(real64) function h_bayes(alpha)
     ! posterior average of the entropy given data and a specific alpha value
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
@@ -164,35 +164,12 @@ contains
        lw_max = log_weight(amax)
        integrand = exp(log_weight(alpha) - lw_max)  * alpha / amax
     else
-       ! compute log p(x | a)
-       lpna = log_gamma(n_data + one) &
-            + log_gamma(alpha * alphabet_size) &
-            - alphabet_size * log_gamma(alpha) &
-            - log_gamma(n_data + alpha * alphabet_size)
-
-       bsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
-       bsum = bsum &
-            + sum(multi * (log_gamma(multi_z + alpha) &
-            - log_gamma(multi_z + one)))
-
-       lpna = lpna + bsum
-
-       ! compute H_{\Dir}(\alpha)
-       hb = digamma(n_data + alpha * alphabet_size + one)
-
-       asum = n_empty_bins * alpha * digamma(alpha + one)
-       asum = asum + sum(multi * (multi_z + alpha) &
-            * digamma(multi_z + alpha + one))
-       asum = asum / (n_data + alpha * alphabet_size)
-
-       hb = hb - asum
-
-       ! compute \log p(\alpha) + \log p(x | \alpha)
-       lw = log_fpa(alpha) + lpna
+       hb = h_bayes(alpha)
 
        integrand = hb**order
 
        lw_max = log_weight(amax)
+
        integrand = integrand * exp(log_weight(alpha) - lw_max)  * alpha / amax
     end if
 
