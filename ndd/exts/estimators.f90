@@ -164,7 +164,7 @@ contains
        lw_max = log_weight(amax)
        integrand = exp(log_weight(alpha) - lw_max)  * alpha / amax
     else
-       ! lpna = log_pna(alpha)
+       ! compute log p(x | a)
        lpna = log_gamma(n_data + one) &
             + log_gamma(alpha * alphabet_size) &
             - alphabet_size * log_gamma(alpha) &
@@ -175,16 +175,20 @@ contains
             + sum(multi * (log_gamma(multi_z + alpha) &
             - log_gamma(multi_z + one)))
 
+       lpna = lpna + bsum
+
+       ! compute H_{\Dir}(\alpha)
+       hb = digamma(n_data + alpha * alphabet_size + one)
+
        asum = n_empty_bins * alpha * digamma(alpha + one)
        asum = asum + sum(multi * (multi_z + alpha) &
             * digamma(multi_z + alpha + one))
+       asum = asum / (n_data + alpha * alphabet_size)
 
-       lpna = lpna + bsum
+       hb = hb - asum
+
+       ! compute \log p(\alpha) + \log p(x | \alpha)
        lw = log_fpa(alpha) + lpna
-
-       hb = -asum
-       hb = hb / (n_data + alpha * alphabet_size)
-       hb = hb + digamma(n_data + alpha * alphabet_size + one)
 
        integrand = hb**order
 
