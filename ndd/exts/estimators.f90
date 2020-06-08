@@ -110,6 +110,20 @@ contains
 
   end function log_pna
 
+  pure real(real64) function log_pna_u(alpha)
+    ! log of "unnormalized" pna. keep only alpha-dependent terms
+    use constants
+
+    real(real64), intent(in) :: alpha
+
+    log_pna_u = log_gamma(alpha * alphabet_size) &
+         - alphabet_size * log_gamma(alpha) &
+         - log_gamma(n_data + alpha * alphabet_size) &
+         + sum(multi * (log_gamma(multi_z + alpha)))
+
+  end function log_pna_u
+
+
   elemental real(real64) function alpha_prior(alpha)
     ! prop. to p(alpha) - the prior for alpha in NSB estimator
     use constants
@@ -127,7 +141,7 @@ contains
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
     real(real64), intent(in) :: alpha
 
-    log_weight = log(alpha_prior(alpha)) + log_pna(alpha)
+    log_weight = log(alpha_prior(alpha)) + log_pna_u(alpha)
 
   end function log_weight
 
@@ -194,11 +208,11 @@ contains
 
   elemental real(real64) function log_weight(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
-    use dirichlet_mod, only: log_pna, alpha_prior
+    use dirichlet_mod, only: log_pna_u, alpha_prior
 
     real(real64), intent(in) :: alpha
 
-    log_weight = log(alpha_prior(alpha)) + log_pna(alpha)
+    log_weight = log(alpha_prior(alpha)) + log_pna_u(alpha)
 
   end function log_weight
 
@@ -208,7 +222,7 @@ contains
     use gamma_funcs, only: digamma, trigamma, quadgamma
     use dirichlet_mod, only: alphabet_size, n_data, multi,&
          multi_z
-    use dirichlet_mod, only: log_pna, alpha_prior
+    use dirichlet_mod, only: log_pna_u, alpha_prior
 
     real(real64), intent(in) :: alpha
     real(real64), intent(out) :: logw, dlogw
@@ -217,7 +231,7 @@ contains
 
     ! log weight
     prior = alpha_prior(alpha)
-    logw = log(prior) + log_pna(alpha)
+    logw = log(prior) + log_pna_u(alpha)
 
     ! log weight derivative
     dprior = alphabet_size**2 * quadgamma(alphabet_size * alpha + one) - &
