@@ -18,8 +18,9 @@ module dirichlet_mod
 
   integer(int32)              :: n_data
   real(real64)                :: alphabet_size
-  real(real64), allocatable :: multi_z(:)
-  real(real64), allocatable :: multi(:)
+  real(real64), allocatable :: multi_z(:)  ! array of observed frequencies
+  real(real64), allocatable :: multi(:)  ! multiplicities of frequency z
+  real(real64), allocatable :: lgz1(:)  ! log_gamma(z + 1)
 
 contains
 
@@ -38,6 +39,7 @@ contains
 
   subroutine compute_multiplicities(counts)
     ! set n_multi, multi_z, multi
+    use constants
     integer(int32), intent(in) :: counts(:)
     integer(int32)              :: nbins
     integer(int32)              :: i_,k_,ni_
@@ -81,11 +83,15 @@ contains
     end do
     deallocate(multi0)
 
+    ! compute log_gamma(z + 1) once for all
+    allocate(lgz1(0:n_multi),stat=err)
+    lgz1 = log_gamma(multi_z + one)
+
   end subroutine compute_multiplicities
 
   subroutine dirichlet_finalize()
 
-    deallocate(multi_z,multi)
+    deallocate(multi_z,multi, lgz1)
 
   end subroutine dirichlet_finalize
 
@@ -103,7 +109,7 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
+    wsum = sum(multi * (log_gamma(multi_z + alpha) - lgz1))
 
     log_pna = log_pna + wsum
 
