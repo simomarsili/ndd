@@ -17,7 +17,6 @@ module dirichlet_mod
   implicit none
 
   integer(int32)              :: n_data
-  integer(int32)              :: n_multi
   real(real64)                :: n_empty_bins
   real(real64)                :: alphabet_size
   integer(int32), allocatable :: multi_z(:)
@@ -46,6 +45,7 @@ contains
     integer(int32)              :: err
     integer(int32)              :: nmax
     integer(int32), allocatable :: multi0(:)
+    integer(int32)              :: n_multi
 
     ! compute multiplicities
     ! nmax is the largest number of samples in a bin
@@ -67,8 +67,10 @@ contains
 
     ! further compress data into 'sparse' multiplicities
     n_multi = count(multi0 > 0)
-    allocate(multi_z(n_multi),stat=err)
-    allocate(multi(n_multi),stat=err)
+    allocate(multi_z(0:n_multi),stat=err)
+    allocate(multi(0:n_multi),stat=err)
+    multi_z(0) = 0
+    multi(0) = n_empty_bins
     k_ = 0
     do i_ = 1, nmax
        if (multi0(i_) > 0) then
@@ -101,9 +103,7 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
-    wsum = wsum + &
-         sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
+    wsum = sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
 
     log_pna = log_pna + wsum
 
@@ -139,9 +139,7 @@ contains
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
 
-    h_bayes = - n_empty_bins * alpha * digamma(alpha + one)
-    h_bayes = h_bayes - &
-         sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
+    h_bayes = - sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
     h_bayes = h_bayes / (n_data + alpha * alphabet_size)
     h_bayes = h_bayes + digamma(n_data + alpha * alphabet_size + one)
 
@@ -229,8 +227,7 @@ contains
     - alphabet_size * digamma(alpha) &
          - alphabet_size * digamma(n_data + alpha * alphabet_size)
 
-    wsum = n_empty_bins * digamma(alpha)
-    wsum = wsum + sum(multi * (digamma(multi_z + alpha)))
+    wsum = sum(multi * (digamma(multi_z + alpha)))
 
     dlpna = dlpna + wsum
 
