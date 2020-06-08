@@ -64,7 +64,7 @@ def test_entropy(case, ref_result, capsys):
 def test_histogram_ndarray():
     N, P = 100, 3
     data = ndd.data.DataArray(random_ndarray(N, P, SEED))
-    ref_result = 9.107550241712808
+    ref_result = 9.10694087896497
     counts, k = data.iter_counts()
     estimate = ndd.entropy(counts, k=k)
     assert numpy.isclose(estimate, ref_result)  # pylint: disable=protected-access
@@ -73,7 +73,7 @@ def test_histogram_ndarray():
 def test_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    ref_result = 9.107550241712808
+    ref_result = 9.10694087896497
     assert numpy.isclose(
         ndd.nsb.from_data(data),  # pylint: disable=protected-access
         ref_result)
@@ -83,7 +83,7 @@ def test_combinations_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
     hs_pairs = ndd.nsb.from_data(data, r=2)  # pylint: disable=protected-access
-    ref_result = 18.847999689904068
+    ref_result = 18.845851695565234
     assert numpy.isclose(sum(hs_pairs), ref_result)
 
 
@@ -93,7 +93,7 @@ def test_KLD():
     qk = random.dirichlet([ALPHA] * P)
     pk = random.multinomial(N, qk)
     estimator = ndd.kullback_leibler_divergence
-    ref_result = -0.04070168209104397
+    ref_result = -0.04293719438189214
     assert numpy.isclose(estimator(pk, qk), ref_result)
 
 
@@ -103,7 +103,7 @@ def test_JSD():
     pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.divergence.JSDivergence()
-    ref_result = -0.017281201076104313
+    ref_result = -0.0179963577515192
     assert numpy.isclose(estimator(counts), ref_result)
 
 
