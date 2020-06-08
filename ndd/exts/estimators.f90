@@ -20,7 +20,6 @@ module dirichlet_mod
   real(real64)                :: alphabet_size
   real(real64), allocatable :: multi_z(:)  ! array of observed frequencies
   real(real64), allocatable :: multi(:)  ! multiplicities of frequency z
-  real(real64), allocatable :: lgz1(:)  ! log_gamma(z + 1)
 
 contains
 
@@ -83,15 +82,11 @@ contains
     end do
     deallocate(multi0)
 
-    ! compute log_gamma(z + 1) once for all
-    allocate(lgz1(0:n_multi),stat=err)
-    lgz1 = log_gamma(multi_z + one)
-
   end subroutine compute_multiplicities
 
   subroutine dirichlet_finalize()
 
-    deallocate(multi_z,multi, lgz1)
+    deallocate(multi_z,multi)
 
   end subroutine dirichlet_finalize
 
@@ -109,7 +104,7 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(multi * (log_gamma(multi_z + alpha) - lgz1))
+    wsum = sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
 
     log_pna = log_pna + wsum
 
