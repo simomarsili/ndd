@@ -109,22 +109,24 @@ contains
 
   end function log_pna
 
-  elemental real(real64) function log_fpa(alpha)
+  elemental real(real64) function alpha_prior(alpha)
     ! prop. to p(alpha) - the prior for alpha in NSB estimator
     use constants
     use gamma_funcs, only: trigamma
 
     real(real64), intent(in) :: alpha
 
-    log_fpa = log(alphabet_size * trigamma(alphabet_size * alpha + one) - trigamma(alpha + one))
+    alpha_prior = alphabet_size * trigamma(alphabet_size * alpha + one) - &
+         trigamma(alpha + one)
 
-  end function log_fpa
+  end function alpha_prior
+
 
   elemental real(real64) function log_weight(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
     real(real64), intent(in) :: alpha
 
-    log_weight = log_fpa(alpha) + log_pna(alpha)
+    log_weight = log(alpha_prior(alpha)) + log_pna(alpha)
 
   end function log_weight
 
@@ -194,11 +196,11 @@ contains
 
   elemental real(real64) function log_weight(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
-    use dirichlet_mod, only: log_pna, log_fpa
+    use dirichlet_mod, only: log_pna, alpha_prior
 
     real(real64), intent(in) :: alpha
 
-    log_weight = log_fpa(alpha) + log_pna(alpha)
+    log_weight = log(alpha_prior(alpha)) + log_pna(alpha)
 
   end function log_weight
 
@@ -208,15 +210,14 @@ contains
     use gamma_funcs, only: digamma, trigamma, quadgamma
     use dirichlet_mod, only: alphabet_size, n_empty_bins, n_data, multi,&
          multi_z
-    use dirichlet_mod, only: log_pna, log_fpa
+    use dirichlet_mod, only: log_pna, alpha_prior
 
     real(real64), intent(in) :: alpha
     real(real64), intent(out) :: logw, dlogw
 
     real(real64) :: fpa, dfpa, lpna, dlpna, wsum
 
-    fpa = alphabet_size * trigamma(alphabet_size * alpha + one) - &
-         trigamma(alpha + one)
+    fpa = alpha_prior(alpha)
 
     dfpa = alphabet_size**2 * quadgamma(alphabet_size * alpha + one) - &
          quadgamma(alpha + one)
@@ -240,7 +241,7 @@ contains
 
     dlpna = dlpna + wsum
 
-    logw = log(fpa) + lpna
+    logw = log(alpha_prior(alpha)) + lpna
     dlogw = dfpa / fpa + dlpna
 
   end subroutine log_weight_d
