@@ -283,6 +283,10 @@ contains
     log_alpha1 = log(amax) - 4 * ascale
     log_alpha2 = log(amax) + 4 * ascale
 
+    ! check integration boundaries
+    if (log_alpha1 < log(alpha1)) log_alpha1 = log(alpha1)
+    if (log_alpha2 > log(alpha2)) log_alpha2 = log(alpha2)
+
   end subroutine compute_integration_range
 
   real(real64) function m_func(x)
