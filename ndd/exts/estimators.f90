@@ -258,6 +258,7 @@ contains
     log_alpha1 = log(alpha1)
     log_alpha2 = log(alpha2)
 
+    ! find the location of the maximum of log w(alpha) = log p(alpha | x)
     a1 = alpha1
     a2 = alpha2
     amax = -one
