@@ -215,22 +215,15 @@ contains
     real(real64), intent(in) :: alpha
     real(real64), intent(out) :: logw, dlogw
 
-    real(real64) :: fpa, dfpa, lpna, dlpna, wsum
+    real(real64) :: prior, dprior, lpna, dlpna, wsum
 
-    fpa = alpha_prior(alpha)
+    ! log weight
+    prior = alpha_prior(alpha)
+    logw = log(prior) + log_pna(alpha)
 
-    dfpa = alphabet_size**2 * quadgamma(alphabet_size * alpha + one) - &
+    ! log weight derivative
+    dprior = alphabet_size**2 * quadgamma(alphabet_size * alpha + one) - &
          quadgamma(alpha + one)
-
-    lpna = log_gamma(n_data + one) + log_gamma(alpha * alphabet_size) &
-         - alphabet_size * log_gamma(alpha) &
-         - log_gamma(n_data + alpha * alphabet_size)
-
-    wsum = n_empty_bins * (log_gamma(alpha) - log_gamma(one))
-    wsum = wsum + &
-         sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
-
-    lpna = lpna + wsum
 
     dlpna = alphabet_size * digamma(alpha * alphabet_size) &
     - alphabet_size * digamma(alpha) &
@@ -241,8 +234,7 @@ contains
 
     dlpna = dlpna + wsum
 
-    logw = log(alpha_prior(alpha)) + lpna
-    dlogw = dfpa / fpa + dlpna
+    dlogw = dprior / prior + dlpna
 
   end subroutine log_weight_d
 
