@@ -193,7 +193,6 @@ module nsb_mod
   real(real64) :: log_alpha1
   real(real64) :: log_alpha2
   real(real64) :: amax
-  real(real64) :: lw_max
   real(real64) :: ascale
 
 contains
@@ -272,8 +271,6 @@ contains
        stop
     end if
 
-    lw_max = log_weight(amax)
-
     call weight_std(ascale, err)
     if (err > 0) ascale = 0.0 ! integration error
     if (ascale > huge(x)) then
@@ -333,7 +330,7 @@ contains
 
     alpha = exp(x)
     var_func = (x - log(amax))**2 &
-         * exp(log_weight(alpha) - lw_max)  * alpha / amax
+         * exp(log_weight(alpha) - log_weight(amax))  * alpha / amax
 
   end function var_func
 
