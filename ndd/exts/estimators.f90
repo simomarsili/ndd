@@ -17,7 +17,6 @@ module dirichlet_mod
   implicit none
 
   integer(int32)              :: n_data
-  real(real64)                :: n_empty_bins
   real(real64)                :: alphabet_size
   integer(int32), allocatable :: multi_z(:)
   integer(int32), allocatable :: multi(:)
@@ -45,6 +44,7 @@ contains
     integer(int32)              :: err
     integer(int32)              :: nmax
     integer(int32), allocatable :: multi0(:)
+    real(real64)                :: n_empty_bins
     integer(int32)              :: n_multi
 
     ! compute multiplicities
@@ -206,7 +206,7 @@ contains
     ! compute value and derivative of log p(a | x)
     use constants
     use gamma_funcs, only: digamma, trigamma, quadgamma
-    use dirichlet_mod, only: alphabet_size, n_empty_bins, n_data, multi,&
+    use dirichlet_mod, only: alphabet_size, n_data, multi,&
          multi_z
     use dirichlet_mod, only: log_pna, alpha_prior
 
