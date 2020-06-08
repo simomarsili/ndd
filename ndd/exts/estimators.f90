@@ -283,11 +283,6 @@ contains
     log_alpha1 = log(amax) - 4 * ascale
     log_alpha2 = log(amax) + 4 * ascale
 
-    if (log_alpha1 < log(alpha1)) log_alpha1 = log(alpha1)
-    if (log_alpha2 > log(alpha2)) log_alpha2 = log(alpha2)
-
-    ! write(*, *) 'amax', amax, amx, lw_max
-
   end subroutine compute_integration_range
 
   real(real64) function m_func(x)
@@ -325,7 +320,7 @@ contains
 
   end function nrm_func
 
-  real(real64) function std_func(x)
+  real(real64) function var_func(x)
     ! compute the integrand of std of p(la | data)
     ! integrate over x = log(alpha)
     use dirichlet_mod, only: log_weight
@@ -333,16 +328,19 @@ contains
     real(real64) :: alpha
 
     alpha = exp(x)
-    std_func = (x - log(amax))**2 &
+    var_func = (x - log(amax))**2 &
          * exp(log_weight(alpha) - lw_max)  * alpha / amax
 
-  end function std_func
+  end function var_func
 
   subroutine weight_std(std, err)
     real(real64), intent(out) :: std
     integer(int32), intent(out) :: err
+    real(real64) :: var, nrm
 
-    call quad(std_func,log_alpha1,log_alpha2, std, err)
+    call quad(var_func,log_alpha1,log_alpha2, var, err)
+    call quad(nrm_func,log_alpha1,log_alpha2, nrm, err)
+    std = sqrt(var/nrm)
 
   end subroutine weight_std
 
