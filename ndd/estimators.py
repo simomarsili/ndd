@@ -199,7 +199,8 @@ class EntropyEstimator(BaseEstimator, ABC):
             if logk > MAX_LOGK:
                 # too large a number; backoff to n_bins?
                 # TODO: log warning
-                raise CardinalityError('k must be smaller than 2^40 ')
+                raise CardinalityError('k is too large (%e).'
+                                       'Must be < 2^200 ' % numpy.exp(logk))
             k = numpy.prod(k)
         else:
             # if a scalar check size
@@ -207,7 +208,8 @@ class EntropyEstimator(BaseEstimator, ABC):
                 print('k: ', k)
                 raise CardinalityError('k must be > 0')
             if numpy.log(k) > MAX_LOGK:
-                raise CardinalityError('k must be smaller than 2^40 ')
+                raise CardinalityError('k is too large (%e).'
+                                       'Must be < 2^200 ' % k)
         if not k.is_integer():
             raise CardinalityError('k must be a whole number (got %r).' % k)
 
