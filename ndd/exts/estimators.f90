@@ -18,8 +18,8 @@ module dirichlet_mod
 
   integer(int32)              :: n_data
   real(real64)                :: alphabet_size
-  integer(int32), allocatable :: multi_z(:)
-  integer(int32), allocatable :: multi(:)
+  real(real64), allocatable :: multi_z(:)
+  real(real64), allocatable :: multi(:)
 
 contains
 
