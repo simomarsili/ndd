@@ -147,7 +147,8 @@ class EntropyEstimator(BaseEstimator, ABC):
             raise AlphaError(error_msg)
         return a
 
-    def check_pk(self, a):
+    @staticmethod
+    def check_pk(a):
         """
         Convert the array of counts to int32.
 
@@ -161,9 +162,9 @@ class EntropyEstimator(BaseEstimator, ABC):
         a = numpy.int32(a)
         # check ndim
         # pylint: disable=comparison-with-callable
-        if a.ndim != self.input_data_ndim:
-            raise CountsError('counts array must be %s-dimensional' %
-                              self.input_data_ndim)
+        # if a.ndim != self.input_data_ndim:
+        #     raise CountsError('counts array must be %s-dimensional' %
+        #                      self.input_data_ndim)
         negative = numpy.any([a < 0])
         if negative:
             raise CountsError('counts array has negative values')
@@ -283,7 +284,7 @@ class Plugin(EntropyEstimator):
 
         """
         if k is None:
-            k = sum(pk > 0)
+            k = numpy.sum(pk > 0)
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
             return self
@@ -311,10 +312,10 @@ class MillerMadow(EntropyEstimator):
             Entropy estimate.
 
         """
-        k = sum(pk > 0)
+        k = numpy.sum(pk > 0)
 
         plugin = Plugin()
-        n = sum(pk)
+        n = numpy.sum(pk)
         self.estimate_ = plugin(pk) + 0.5 * (k - 1) / n
         return self
 
@@ -398,8 +399,8 @@ class AsymptoticNSB(EntropyEstimator):
         float
             Entropy estimate.
         """
-        kn = sum(pk > 0)  # number of sampled bins
-        n = sum(pk)  # number of samples
+        kn = numpy.sum(pk > 0)  # number of sampled bins
+        n = numpy.sum(pk)  # number of samples
         # under-sampled regime when ratio < 0.1 (Nemenman2011)
         delta = n - kn + 1
         ratio = delta / n
@@ -440,7 +441,7 @@ class Grassberger(EntropyEstimator):
 
         """
 
-        n = sum(pk)
+        n = numpy.sum(pk)
 
         gg = g_series()  # init the G series
         estimate = n * numpy.log(n)

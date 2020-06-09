@@ -68,7 +68,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
     pk = numpy.asarray(pk).flatten()
 
     if not isinstance(estimator, NSB) and k is None:
-        k = sum([1 for x in pk if x > 0])
+        k = numpy.sum(pk > 0)
 
     estimator = estimator.fit(pk, k=k)
     S, err = estimator.estimate_, estimator.err_
@@ -200,7 +200,7 @@ def cross_entropy(pk, qk):
     if not is_pmf(qk):
         raise PmfError('qk must be a valid PMF (positive, normalized)')
 
-    pk = 1.0 * pk / sum(pk)
+    pk = 1.0 * pk / numpy.sum(pk)
     qk = numpy.log(1.0 * qk)
 
     return -numpy.sum(pk * qk)
@@ -538,7 +538,7 @@ def is_pmf(a):
     """If a is a valid probability mass function."""
     a = numpy.float64(a)
     not_negative = numpy.all(a >= 0)
-    normalized = numpy.isclose(sum(a), 1.0)
+    normalized = numpy.isclose(numpy.sum(a), 1.0)
     return not_negative and normalized
 
 
