@@ -40,11 +40,11 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
     ----------
     pk : array-like
         The number of occurrences of a set of bins.
-    k : int or array-like, optional
+    k : int or array-like (optional if estimator != NSB)
         Alphabet size (the number of bins with non-zero probability).
         Must be >= len(pk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
-        Default: k = sum(pk > 0)
+        If estimator != NSB estimator, defaults to sum(pk > 0)
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
@@ -67,7 +67,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
     # flatten the array
     pk = numpy.asarray(pk).flatten()
 
-    if k is None:
+    if not isinstance(estimator, NSB) and k is None:
         k = sum([1 for x in pk if x > 0])
 
     estimator = estimator.fit(pk, k=k)
