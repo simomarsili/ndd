@@ -160,11 +160,6 @@ class EntropyEstimator(BaseEstimator, ABC):
         """
 
         a = numpy.int32(a)
-        # check ndim
-        # pylint: disable=comparison-with-callable
-        # if a.ndim != self.input_data_ndim:
-        #     raise CountsError('counts array must be %s-dimensional' %
-        #                      self.input_data_ndim)
         negative = numpy.any([a < 0])
         if negative:
             raise CountsError('counts array has negative values')
