@@ -160,6 +160,7 @@ contains
 
   end function h_dir
 
+
   elemental real(real64) function integrand(alpha, amax, order)
     ! posterior average of the entropy given the data and alpha
     ! computed from histogram multiplicities
@@ -571,6 +572,142 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   call dirichlet_finalize()
 
 end subroutine nsb
+
+subroutine phony_1(n,counts,nc,estimate,err_estimate)
+  use iso_fortran_env
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use nsb_mod, only: hnsb
+  use nsb_mod, only: compute_integration_range
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: counts(n)
+  real(real64), intent(in)    :: nc
+  real(real64),   intent(out) :: estimate
+  real(real64),   intent(out) :: err_estimate
+  integer(int32) :: err
+  real :: start, finish
+
+  call cpu_time(start)
+
+  call initialize_dirichlet(counts, nc)
+
+  ! call compute_multiplicities(counts)
+
+  ! call compute_integration_range()
+
+  ! call hnsb(estimate,err_estimate, err)
+
+  call dirichlet_finalize()
+
+  call cpu_time(finish)
+
+  estimate = finish - start
+
+end subroutine phony_1
+
+
+subroutine phony_2(n,counts,nc,estimate,err_estimate)
+  use iso_fortran_env
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use nsb_mod, only: hnsb
+  use nsb_mod, only: compute_integration_range
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: counts(n)
+  real(real64), intent(in)    :: nc
+  real(real64),   intent(out) :: estimate
+  real(real64),   intent(out) :: err_estimate
+  integer(int32) :: err
+  real :: start, finish
+
+  call cpu_time(start)
+
+  call initialize_dirichlet(counts, nc)
+
+  call compute_multiplicities(counts)
+
+  ! call compute_integration_range()
+
+  ! call hnsb(estimate,err_estimate, err)
+
+  call dirichlet_finalize()
+
+  call cpu_time(finish)
+
+  estimate = finish - start
+
+end subroutine phony_2
+
+
+subroutine phony_3(n,counts,nc,estimate,err_estimate)
+  use iso_fortran_env
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use nsb_mod, only: hnsb
+  use nsb_mod, only: compute_integration_range
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: counts(n)
+  real(real64), intent(in)    :: nc
+  real(real64),   intent(out) :: estimate
+  real(real64),   intent(out) :: err_estimate
+  integer(int32) :: err
+  real :: start, finish
+
+  call cpu_time(start)
+
+  call initialize_dirichlet(counts, nc)
+
+  call compute_multiplicities(counts)
+
+  call compute_integration_range()
+
+  ! call hnsb(estimate,err_estimate, err)
+
+  call dirichlet_finalize()
+
+  call cpu_time(finish)
+
+  estimate = finish - start
+
+end subroutine phony_3
+
+
+subroutine phony_4(n,counts,nc,estimate,err_estimate)
+  use iso_fortran_env
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use nsb_mod, only: hnsb
+  use nsb_mod, only: compute_integration_range
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  integer(int32), intent(in)  :: counts(n)
+  real(real64), intent(in)    :: nc
+  real(real64),   intent(out) :: estimate
+  real(real64),   intent(out) :: err_estimate
+  integer(int32) :: err
+  real :: start, finish
+
+  call cpu_time(start)
+
+  call initialize_dirichlet(counts, nc)
+
+  call compute_multiplicities(counts)
+
+  call compute_integration_range()
+
+  call hnsb(estimate,err_estimate, err)
+
+  call dirichlet_finalize()
+
+  call cpu_time(finish)
+
+  estimate = finish - start
+
+end subroutine phony_4
+
 
 subroutine plugin2d(n,m,counts,estimate)
   ! plugin estimator - no prior, no regularization
