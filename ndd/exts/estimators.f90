@@ -32,8 +32,6 @@ contains
     alphabet_size = nc
     n_data = sum(counts)
 
-    call compute_multiplicities(counts)
-
   end subroutine initialize_dirichlet
 
   subroutine compute_multiplicities(counts)
@@ -84,11 +82,17 @@ contains
 
   end subroutine compute_multiplicities
 
-  subroutine dirichlet_finalize()
+  subroutine finalize()
 
-    deallocate(multi_z,multi)
+    if (allocated(multi)) then
+       deallocate(multi)
+    end if
 
-  end subroutine dirichlet_finalize
+    if (allocated(multi_z)) then
+       deallocate(multi_z)
+    end if
+
+  end subroutine finalize
 
   pure real(real64) function log_pna(alpha)
     ! log(p(n|a)) (log of) marginal probability of data given alpha
@@ -523,7 +527,7 @@ end subroutine pseudo
 subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
   use dirichlet_mod, only: h_dir
   implicit none
 
@@ -543,13 +547,13 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
 
   estimate = h_dir(alpha)
 
-  call dirichlet_finalize()
+  call finalize()
 
 end subroutine dirichlet
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -569,13 +573,13 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
   call hnsb(estimate,err_estimate, err)
 
-  call dirichlet_finalize()
+  call finalize()
 
 end subroutine nsb
 
 subroutine phony_1(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -598,7 +602,7 @@ subroutine phony_1(n,counts,nc,estimate,err_estimate)
 
   ! call hnsb(estimate,err_estimate, err)
 
-  call dirichlet_finalize()
+  call finalize()
 
   call cpu_time(finish)
 
@@ -609,7 +613,7 @@ end subroutine phony_1
 
 subroutine phony_2(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -632,7 +636,7 @@ subroutine phony_2(n,counts,nc,estimate,err_estimate)
 
   ! call hnsb(estimate,err_estimate, err)
 
-  call dirichlet_finalize()
+  call finalize()
 
   call cpu_time(finish)
 
@@ -643,7 +647,7 @@ end subroutine phony_2
 
 subroutine phony_3(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -666,7 +670,7 @@ subroutine phony_3(n,counts,nc,estimate,err_estimate)
 
   ! call hnsb(estimate,err_estimate, err)
 
-  call dirichlet_finalize()
+  call finalize()
 
   call cpu_time(finish)
 
@@ -677,7 +681,7 @@ end subroutine phony_3
 
 subroutine phony_4(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
+  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -700,7 +704,7 @@ subroutine phony_4(n,counts,nc,estimate,err_estimate)
 
   call hnsb(estimate,err_estimate, err)
 
-  call dirichlet_finalize()
+  call finalize()
 
   call cpu_time(finish)
 
