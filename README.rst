@@ -59,6 +59,13 @@ Changes
 
 **v1.6.1**
    Changed:
+
+   Removed unnecessary checks on input arrays => large speedup
+
+   entropy() function: default NSB estimator needs `k` as input
+
+**v1.6.1**
+   Changed:
    Fixed numerical integration for large alphabet sizes.
 
 **v1.6**
