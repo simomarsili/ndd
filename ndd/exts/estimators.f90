@@ -145,7 +145,7 @@ contains
 
   end function log_weight
 
-  elemental real(real64) function h_bayes(alpha)
+  elemental real(real64) function h_dir(alpha)
     ! posterior average of the entropy given data and a specific alpha value
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
@@ -154,11 +154,11 @@ contains
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
 
-    h_bayes = - sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
-    h_bayes = h_bayes / (n_data + alpha * alphabet_size)
-    h_bayes = h_bayes + digamma(n_data + alpha * alphabet_size + one)
+    h_dir = - sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
+    h_dir = h_dir / (n_data + alpha * alphabet_size)
+    h_dir = h_dir + digamma(n_data + alpha * alphabet_size + one)
 
-  end function h_bayes
+  end function h_dir
 
   elemental real(real64) function integrand(alpha, amax, order)
     ! posterior average of the entropy given the data and alpha
@@ -179,7 +179,7 @@ contains
        lw_max = log_weight(amax)
        integrand = exp(log_weight(alpha) - lw_max)  * alpha / amax
     else
-       hb = h_bayes(alpha)
+       hb = h_dir(alpha)
 
        integrand = hb**order
 
@@ -356,7 +356,7 @@ contains
   end subroutine weight_std
 
   subroutine hnsb(estimate,err_estimate, err)
-    use dirichlet_mod, only: h_bayes
+    use dirichlet_mod, only: h_dir
     real(real64), intent(out) :: estimate,err_estimate
     integer(int32), intent(out) :: err
     real(real64)              :: rslt,nrm
@@ -364,7 +364,7 @@ contains
 
     err = 0
     if (ascale < 1.e-20) then
-       estimate = h_bayes(amax)
+       estimate = h_dir(amax)
        err_estimate = 0.0
     else
        call quad(nrm_func,log_alpha1,log_alpha2, nrm, ierr)
@@ -523,7 +523,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use iso_fortran_env
   use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, dirichlet_finalize
-  use dirichlet_mod, only: h_bayes
+  use dirichlet_mod, only: h_dir
   implicit none
 
   integer(int32), intent(in)  :: n
@@ -540,7 +540,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   call initialize_dirichlet(counts, nc)
   call compute_multiplicities(counts)
 
-  estimate = h_bayes(alpha)
+  estimate = h_dir(alpha)
 
   call dirichlet_finalize()
 
