@@ -119,7 +119,7 @@ try:
                          kullback_leibler_divergence, mutual_information)
     from ndd.divergence import DivergenceEstimator
     from ndd.estimators import EntropyEstimator
-except ModuleNotFoundError:
+except ImportError:
     pass  # __init__ is executed by setup.py
 
 __title__ = 'ndd'
