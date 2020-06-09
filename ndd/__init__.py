@@ -112,12 +112,17 @@ and interesting links:
 import pkg_resources
 
 from ndd import package_setup
-from ndd.divergence import DivergenceEstimator
-from ndd.estimators import EntropyEstimator
-from ndd.nsb import entropy  # pylint: disable=unused-import
-from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
-                     interaction_information, jensen_shannon_divergence,
-                     kullback_leibler_divergence, mutual_information)
+
+try:
+    from ndd.nsb import entropy  # pylint: disable=unused-import
+    from ndd.nsb import (coinformation, conditional_entropy, from_data,
+                         histogram, interaction_information,
+                         jensen_shannon_divergence,
+                         kullback_leibler_divergence, mutual_information)
+    from ndd.divergence import DivergenceEstimator
+    from ndd.estimators import EntropyEstimator
+except ModuleNotFoundError:
+    pass  # __init__ is executed by setup.py
 
 __title__ = 'ndd'
 __url__ = 'https://github.com/simomarsili/ndd'
@@ -155,5 +160,8 @@ __all__ = [
     'from_data',
 ]
 
-entropy_estimators = list(package_setup.subclasses(EntropyEstimator))
-divergence_estimators = list(package_setup.subclasses(DivergenceEstimator))
+try:
+    entropy_estimators = list(package_setup.subclasses(EntropyEstimator))
+    divergence_estimators = list(package_setup.subclasses(DivergenceEstimator))
+except NameError:
+    pass  # __init__ is executed by setup.py

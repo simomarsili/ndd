@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 """Setup module."""
-# pylint: disable=wrong-import-position
-from __future__ import print_function
-
 import codecs
 import platform
+# pylint: disable=wrong-import-position
 from os import path
 
 from pkg_resources import parse_version
 from setuptools import find_packages
 
-NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.13'
-PACKAGE_FILE = 'package.json'
-SETUP_REQUIRES = ['numpy>=1.13']
+SETUP_REQUIRES = ['numpy>=' + NUMPY_MIN_VERSION]
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 PLATFORM = platform.system()
@@ -55,17 +51,6 @@ def get_numpy_status():
     return status
 
 
-def get_version(source):
-    """ Retrieve version number."""
-    import json
-    with open(source, 'r') as _vf:
-        version_data = json.load(_vf)
-    try:
-        return version_data['version']
-    except KeyError:
-        raise KeyError('check version file: no version number')
-
-
 # check numpy first
 NUMPY_STATUS = get_numpy_status()
 NUMPY_REQ_STR = "ndd requires NumPy >= %s. Run 'pip install -U numpy' " % NUMPY_MIN_VERSION
@@ -84,8 +69,18 @@ readme_file = path.join(base_dir, 'README.rst')
 # single top-level package
 package_name = get_package_name()
 
-VERSION = get_version(PACKAGE_FILE)
+# get project info from the __init__.py module of the top-level package
+project_info = {}
+with open(path.join(package_name, '__init__.py')) as fp:
+    exec(fp.read(), project_info)  # pylint: disable=exec-used
+
+project_name = project_info['__title__']
+version = project_info['__version__']
+
 long_description = get_long_description(readme_file)
+
+packages = find_packages(exclude=['tests'])
+modules = []
 
 FSOURCES = [
     'ndd/nsb.pyf', 'ndd/exts/gamma.f90', 'ndd/exts/quad.f90',
@@ -109,36 +104,22 @@ def extension_args():
 FNSB = Extension(**extension_args())
 
 setup(
-    name=NAME,
-    version=VERSION,
-    description='Bayesian entropy estimation from discrete data',
+    name=project_name,
+    version=version,
+    description=project_info.get('__summary__'),
     long_description=long_description,
     # long_description_content_type="text/markdown",
-    author='Simone Marsili',
-    author_email='simo.marsili@gmail.com',
-    url='https://github.com/simomarsili/ndd',
+    author=project_info.get('__author__'),
+    author_email=project_info.get('__email__'),
+    url=project_info.get('__url__'),
     keywords='entropy estimation Bayes discrete_data',
-    data_files=[(NAME, ['package.json'])],
-    packages=['ndd'],
-    package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
+    packages=packages,
     ext_modules=[FNSB],
     # python_requires='>=3.4',
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
-    extras_require={'test': ['pytest']},
-    license='BSD 3-Clause',
+    extras_require=EXTRAS_REQUIRES,
+    license=project_info.get('__license__'),
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Bio-Informatics',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Scientific/Engineering :: Information Analysis',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-    ],
+    classifiers=project_info.get('__classifiers__'),
 )
