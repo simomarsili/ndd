@@ -1,7 +1,9 @@
 # Change log
 
 ## [Unreleased]
+### Changed
 - rename version.json to package.json
+- check_pk: elements of input counts array are converted to int32 with no check
 ### Fixed
 - robust integration range
 
