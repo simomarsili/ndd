@@ -114,6 +114,7 @@ setup(
     url=project_info.get('__url__'),
     keywords='entropy estimation Bayes discrete_data',
     packages=packages,
+    package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
     ext_modules=[FNSB],
     # python_requires='>=3.4',
     setup_requires=SETUP_REQUIRES,
