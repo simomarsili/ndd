@@ -3,9 +3,12 @@
 # pylint: disable=wrong-import-position
 from __future__ import print_function
 
+import codecs
 import platform
+from os import path
 
 from pkg_resources import parse_version
+from setuptools import find_packages
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.13'
@@ -14,6 +17,22 @@ SETUP_REQUIRES = ['numpy>=1.13']
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 PLATFORM = platform.system()
+
+
+def get_long_description(readme):
+    """Get the long description from the README file."""
+    with codecs.open(readme, encoding='utf-8') as _rf:
+        return _rf.read()
+
+
+def get_package_name():
+    'The top-level package name.'
+    top_level_packages = [
+        p for p in find_packages(exclude=['tests']) if '.' not in p
+    ]
+    if len(top_level_packages) != 1:
+        raise ValueError('Project must contain a single top-level package.')
+    return top_level_packages[0]
 
 
 def get_numpy_status():
@@ -47,15 +66,6 @@ def get_version(source):
         raise KeyError('check version file: no version number')
 
 
-def get_long_description():
-    """Get the long description from the README file."""
-    from os import path
-    import codecs
-    here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as _rf:
-        return _rf.read()
-
-
 # check numpy first
 NUMPY_STATUS = get_numpy_status()
 NUMPY_REQ_STR = "ndd requires NumPy >= %s. Run 'pip install -U numpy' " % NUMPY_MIN_VERSION
@@ -68,8 +78,14 @@ if NUMPY_STATUS['up_to_date'] is False:
 from numpy.distutils.core import Extension  # isort:skip
 from numpy.distutils.core import setup  # isort:skip
 
+base_dir = path.abspath(path.dirname(__file__))
+readme_file = path.join(base_dir, 'README.rst')
+
+# single top-level package
+package_name = get_package_name()
+
 VERSION = get_version(PACKAGE_FILE)
-LONG_DESCRIPTION = get_long_description()
+long_description = get_long_description(readme_file)
 
 FSOURCES = [
     'ndd/nsb.pyf', 'ndd/exts/gamma.f90', 'ndd/exts/quad.f90',
@@ -96,7 +112,7 @@ setup(
     name=NAME,
     version=VERSION,
     description='Bayesian entropy estimation from discrete data',
-    long_description=LONG_DESCRIPTION,
+    long_description=long_description,
     # long_description_content_type="text/markdown",
     author='Simone Marsili',
     author_email='simo.marsili@gmail.com',
