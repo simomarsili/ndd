@@ -4,6 +4,7 @@
 ### Changed
 - rename version.json to package.json
 - check_pk: elements of input counts array are converted to int32 with no check
+- entropy() function: NSB estimator needs cardinality `k` as input
 ### Fixed
 - robust integration range
 
