@@ -149,6 +149,8 @@ class EntropyEstimator(BaseEstimator, ABC):
 
     def check_pk(self, a):
         """
+        Convert the array of counts to int32.
+
         Raises
         ------
         CountsError
@@ -156,19 +158,16 @@ class EntropyEstimator(BaseEstimator, ABC):
 
         """
 
-        a = numpy.float64(list(a))
+        a = numpy.int32(a)
         # check ndim
         # pylint: disable=comparison-with-callable
         if a.ndim != self.input_data_ndim:
             raise CountsError('counts array must be %s-dimensional' %
                               self.input_data_ndim)
-        not_integers = not numpy.all([x.is_integer() for x in a.flat])
         negative = numpy.any([a < 0])
-        if not_integers:
-            raise CountsError('counts array has non-integer values')
         if negative:
             raise CountsError('counts array has negative values')
-        return numpy.int32(a)
+        return a
 
     @staticmethod
     def check_k(k):
