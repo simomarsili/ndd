@@ -1,34 +1,19 @@
 # -*- coding: utf-8 -*-
 """Setup module."""
-import codecs
-import platform
 # pylint: disable=wrong-import-position
-from os import path
+from __future__ import print_function
+
+import platform
 
 from pkg_resources import parse_version
-from setuptools import find_packages
 
+NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.13'
-SETUP_REQUIRES = ['numpy>=' + NUMPY_MIN_VERSION]
+PACKAGE_FILE = 'package.json'
+SETUP_REQUIRES = ['numpy>=1.13']
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 PLATFORM = platform.system()
-
-
-def get_long_description(readme):
-    """Get the long description from the README file."""
-    with codecs.open(readme, encoding='utf-8') as _rf:
-        return _rf.read()
-
-
-def get_package_name():
-    'The top-level package name.'
-    top_level_packages = [
-        p for p in find_packages(exclude=['tests']) if '.' not in p
-    ]
-    if len(top_level_packages) != 1:
-        raise ValueError('Project must contain a single top-level package.')
-    return top_level_packages[0]
 
 
 def get_numpy_status():
@@ -51,6 +36,26 @@ def get_numpy_status():
     return status
 
 
+def get_version(source):
+    """ Retrieve version number."""
+    import json
+    with open(source, 'r') as _vf:
+        version_data = json.load(_vf)
+    try:
+        return version_data['version']
+    except KeyError:
+        raise KeyError('check version file: no version number')
+
+
+def get_long_description():
+    """Get the long description from the README file."""
+    from os import path
+    import codecs
+    here = path.abspath(path.dirname(__file__))
+    with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as _rf:
+        return _rf.read()
+
+
 # check numpy first
 NUMPY_STATUS = get_numpy_status()
 NUMPY_REQ_STR = "ndd requires NumPy >= %s. Run 'pip install -U numpy' " % NUMPY_MIN_VERSION
@@ -63,24 +68,8 @@ if NUMPY_STATUS['up_to_date'] is False:
 from numpy.distutils.core import Extension  # isort:skip
 from numpy.distutils.core import setup  # isort:skip
 
-base_dir = path.abspath(path.dirname(__file__))
-readme_file = path.join(base_dir, 'README.rst')
-
-# single top-level package
-package_name = get_package_name()
-
-# get project info from the __init__.py module of the top-level package
-project_info = {}
-with open(path.join(package_name, '__init__.py')) as fp:
-    exec(fp.read(), project_info)  # pylint: disable=exec-used
-
-project_name = project_info['__title__']
-version = project_info['__version__']
-
-long_description = get_long_description(readme_file)
-
-packages = find_packages(exclude=['tests'])
-modules = []
+VERSION = get_version(PACKAGE_FILE)
+LONG_DESCRIPTION = get_long_description()
 
 FSOURCES = [
     'ndd/nsb.pyf', 'ndd/exts/gamma.f90', 'ndd/exts/quad.f90',
@@ -104,23 +93,36 @@ def extension_args():
 FNSB = Extension(**extension_args())
 
 setup(
-    name=project_name,
-    version=version,
-    description=project_info.get('__summary__'),
-    long_description=long_description,
+    name=NAME,
+    version=VERSION,
+    description='Bayesian entropy estimation from discrete data',
+    long_description=LONG_DESCRIPTION,
     # long_description_content_type="text/markdown",
-    author=project_info.get('__author__'),
-    author_email=project_info.get('__email__'),
-    url=project_info.get('__url__'),
+    author='Simone Marsili',
+    author_email='simo.marsili@gmail.com',
+    url='https://github.com/simomarsili/ndd',
     keywords='entropy estimation Bayes discrete_data',
-    packages=packages,
+    data_files=[(NAME, ['package.json'])],
+    packages=['ndd'],
     package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
     ext_modules=[FNSB],
     # python_requires='>=3.4',
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
-    extras_require=EXTRAS_REQUIRES,
-    license=project_info.get('__license__'),
+    extras_require={'test': ['pytest']},
+    license='BSD 3-Clause',
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=project_info.get('__classifiers__'),
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+    ],
 )

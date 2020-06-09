@@ -109,40 +109,19 @@ and interesting links:
 - [Il Memming Park on discrete entropy estimators](https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/)
 
 """
+import pkg_resources
+
 from ndd import package_setup
+from ndd.divergence import DivergenceEstimator
+from ndd.estimators import EntropyEstimator
+from ndd.nsb import entropy  # pylint: disable=unused-import
+from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
+                     interaction_information, jensen_shannon_divergence,
+                     kullback_leibler_divergence, mutual_information)
 
-try:
-    from ndd.nsb import entropy  # pylint: disable=unused-import
-    from ndd.nsb import (coinformation, conditional_entropy, from_data,
-                         histogram, interaction_information,
-                         jensen_shannon_divergence,
-                         kullback_leibler_divergence, mutual_information)
-    from ndd.divergence import DivergenceEstimator
-    from ndd.estimators import EntropyEstimator
-except ImportError:
-    pass  # __init__ is executed by setup.py
-
-__title__ = 'ndd'
-__url__ = 'https://github.com/simomarsili/ndd'
-__version__ = '1.6.4'
-__author__ = 'Simone Marsili'
-__email__ = 'simo.marsili@gmail.com'
-__license__ = 'BSD 3-Clause'
-__copyright__ = 'Copyright (c) 2016-2020, Simone Marsili'
-__classifiers__ = [
-    'Development Status :: 3 - Alpha',
-    'Intended Audience :: Science/Research',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Scientific/Engineering :: Bio-Informatics',
-    'Topic :: Scientific/Engineering :: Artificial Intelligence',
-    'Topic :: Scientific/Engineering :: Information Analysis',
-    'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
-]
-
+package_name = package_setup.package_name
+package_path = package_setup.package_path
+__version__ = pkg_resources.require(package_name)[0].version
 __all__ = [
     'entropy',
     'jensen_shannon_divergence',
@@ -155,8 +134,5 @@ __all__ = [
     'from_data',
 ]
 
-try:
-    entropy_estimators = list(package_setup.subclasses(EntropyEstimator))
-    divergence_estimators = list(package_setup.subclasses(DivergenceEstimator))
-except NameError:
-    pass  # __init__ is executed by setup.py
+entropy_estimators = list(package_setup.subclasses(EntropyEstimator))
+divergence_estimators = list(package_setup.subclasses(DivergenceEstimator))
