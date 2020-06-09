@@ -145,9 +145,6 @@ __classifiers__ = [
     'Programming Language :: Python :: 3.7',
 ]
 
-package_name = package_setup.package_name
-package_path = package_setup.package_path
-__version__ = pkg_resources.require(package_name)[0].version
 __all__ = [
     'entropy',
     'jensen_shannon_divergence',
