@@ -57,6 +57,13 @@ with pre-compiled extensions. numpy >= 1.16 is needed.
 Changes
 =======
 
+**v1.7**
+   Changed:
+
+   estimation is much faster (removed unnecessary checks on input counts)
+
+   `entropy()` function needs cardinality `k` for the default (NSB) estimator
+
 **v1.6.1**
    Changed:
    Fixed numerical integration for large alphabet sizes.

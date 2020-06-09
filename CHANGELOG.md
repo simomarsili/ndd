@@ -1,6 +1,6 @@
 # Change log
 
-## [Unreleased]
+## [1.7] - 2020-06-09
 ### Changed
 - rename version.json to package.json
 - check_pk: elements of input counts array are converted to int32 with no check
