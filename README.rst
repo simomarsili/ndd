@@ -28,6 +28,15 @@ and returns an entropy estimate (in nats)::
   >>> entropy_estimate
   2.8400090835681375
 
+The uncertainty in the entropy estimate can be quantified using the posterior
+variance::
+
+  >>> import ndd
+  >>> counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+  >>> entropy_estimate = ndd.entropy(counts, k=100)
+  >>> entropy_estimate
+  2.8400090835681375
+
 Where to get it
 ===============
 Install using pip::
@@ -56,6 +65,12 @@ with pre-compiled extensions. numpy >= 1.16 is needed.
 
 Changes
 =======
+
+**v2.0**
+   Added:
+
+   full Bayesian error estimate (from direct computation of the posterior
+   variance of the entropy)
 
 **v1.7**
    Changed:

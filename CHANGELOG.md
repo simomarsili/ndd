@@ -1,5 +1,11 @@
 # Change log
 
+## [2.0] - 2020-06-10
+
+### Added
+- full Bayesian error estimate (from direct computation of the posterior
+  variance of the entropy)
+
 ## [1.7] - 2020-06-09
 ### Changed
 - rename version.json to package.json
