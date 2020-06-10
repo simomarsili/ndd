@@ -20,6 +20,7 @@ module dirichlet_mod
   real(real64)                :: alphabet_size
   real(real64), allocatable :: multi_z(:)  ! array of observed frequencies
   real(real64), allocatable :: multi(:)  ! multiplicities of frequency z
+  real(real64), allocatable :: phi(:)  ! wrk array for var
 
 contains
 
@@ -28,6 +29,7 @@ contains
     ! set n_multi, multi_z, multi
     integer(int32), intent(in) :: counts(:)
     real(real64), intent(in) :: nc
+    integer(int32) :: err
 
     alphabet_size = nc
     n_data = sum(counts)
@@ -80,6 +82,8 @@ contains
     end do
     deallocate(multi0)
 
+    allocate(phi(0:n_multi), stat=err)
+
   end subroutine compute_multiplicities
 
   subroutine finalize()
@@ -90,6 +94,10 @@ contains
 
     if (allocated(multi_z)) then
        deallocate(multi_z)
+    end if
+
+    if (allocated(phi)) then
+       deallocate(phi)
     end if
 
   end subroutine finalize
@@ -164,8 +172,40 @@ contains
 
   end function h_dir
 
+  real(real64) function h_var(alpha)
+    ! posterior average of the entropy given data and a specific alpha value
+    ! computed from histogram multiplicities
+    use gamma_funcs, only: digamma, trigamma
+    use constants
 
-  elemental real(real64) function integrand(alpha, amax, order)
+    real(real64), intent(in) :: alpha
+    integer(int32) :: i_
+    real(real64) :: c, nu, ni, xi, jsum
+
+    nu = n_data + alpha * alphabet_size
+    phi = digamma(multi_z + alpha + one) - &
+         digamma(nu + two)
+    c = trigamma(nu + two)
+
+    h_var = 0.0
+    do i_ = 0, size(multi)-1
+       ni = multi_z(i_) + alpha
+       xi = phi(i_)
+       jsum = sum(multi * ni * (multi_z + alpha) * &
+            (xi * phi - c))
+       h_var = h_var + multi(i_) * jsum
+       h_var = h_var - multi(i_) * ni**2 * (xi**2 - c)
+       xi = xi + 1 / (ni + one)
+       h_var = h_var + multi(i_) * (ni + one) * ni * &
+            (xi**2 + trigamma(ni + two) - c)
+    end do
+
+    h_var = h_var / (nu * (nu + one))
+
+  end function h_var
+
+
+  real(real64) function integrand(alpha, amax, order)
     ! posterior average of the entropy given the data and alpha
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
@@ -184,9 +224,11 @@ contains
        lw_max = log_weight(amax)
        integrand = exp(log_weight(alpha) - lw_max)  * alpha / amax
     else
-       hb = h_dir(alpha)
-
-       integrand = hb**order
+       if (order == 1) then
+          integrand = h_dir(alpha)
+       else if (order == 2) then
+          integrand = h_var(alpha)
+       end if
 
        lw_max = log_weight(amax)
 
@@ -361,7 +403,7 @@ contains
   end subroutine weight_std
 
   subroutine hnsb(estimate,err_estimate, err)
-    use dirichlet_mod, only: h_dir
+    use dirichlet_mod, only: h_dir, h_var
     real(real64), intent(out) :: estimate,err_estimate
     integer(int32), intent(out) :: err
     real(real64)              :: rslt,nrm
@@ -384,6 +426,9 @@ contains
        err = err + ierr
        err_estimate = err_estimate / nrm
        err_estimate = sqrt(err_estimate - estimate**2)
+       if (isnan(err_estimate)) then
+          err_estimate = 0.0_real64
+       end if
     end if
 
   end subroutine hnsb
