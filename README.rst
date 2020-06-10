@@ -28,9 +28,10 @@ and returns an entropy estimate (in nats)::
   >>> entropy_estimate
   2.8400090835681375
 
-The uncertainty in the entropy estimate can be quantified using the posterior
-variance (see Eq. 13 in `Archer 2013
-<https://pillowlab.princeton.edu/pubs/Archer13_MIestim_Entropy.pdf>`_)::
+The uncertainty in the entropy estimate can be quantified using the
+posterior variance (see Eq. 13 in `Archer 2013
+<https://pillowlab.princeton.edu/pubs/Archer13_MIestim_Entropy.pdf>`_)
+that is computed efficiently using a multiplicities-based implementation::
 
   >>> entropy_estimate = ndd.entropy(counts, k=100, return_std=True)
   >>> entropy_estimate
@@ -65,7 +66,7 @@ with pre-compiled extensions. numpy >= 1.16 is needed.
 Changes
 =======
 
-**v2.0**
+**v1.8**
    Added:
 
    full Bayesian error estimate (from direct computation of the posterior
