@@ -1,6 +1,6 @@
 # Change log
 
-## [2.0] - 2020-06-10
+## [1.8] - 2020-06-10
 
 ### Added
 - full Bayesian error estimate (from direct computation of the posterior

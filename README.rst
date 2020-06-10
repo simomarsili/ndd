@@ -29,7 +29,8 @@ and returns an entropy estimate (in nats)::
   2.8400090835681375
 
 The uncertainty in the entropy estimate can be quantified using the posterior
-variance::
+variance (see Eq. 13 in `[archer2013bayesian]
+<https://pillowlab.princeton.edu/pubs/Archer13_MIestim_Entropy.pdf>`_)::
 
   >>> import ndd
   >>> counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
