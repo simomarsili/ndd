@@ -35,12 +35,13 @@ def _frequencies_from_array(ar):
 def _frequencies_from_records(records, ids=None, size_mb=None):
     """Frequencies from records generator."""
 
-    x = set()
-    if isinstance(ids, numbers.Integral):
-        x.add(ids)
-    else:
-        x.update(ids)
-    ids = x
+    if ids is not None:
+        x = set()
+        if isinstance(ids, numbers.Integral):
+            x.add(ids)
+        else:
+            x.update(ids)
+        ids = x
 
     is_1d = None
 
@@ -163,3 +164,18 @@ def frequencies(source, size_mb=None, sets=None):  # pylint: disable=too-many-br
         source = source[sets]
         return _frequencies_from_array(source)
     return _frequencies_from_array(source)
+
+
+def multiplicities(source, size_mb=None, sets=None):
+    """Return multiplicities array."""
+
+    def get_multi(a):
+        a = Counter(a.values())
+        return numpy.array(list(a.keys())), numpy.array(list(a.values()))
+
+    counts = frequencies(source, size_mb=size_mb, sets=sets)
+
+    if isinstance(counts, GeneratorType):
+        return (get_multi(f) for f in counts)
+
+    return get_multi(counts)
