@@ -95,8 +95,8 @@ def frequencies(source, size_mb=None, sets=None):  # pylint: disable=too-many-br
     Returns
     -------
     counts : dict-like
-        A dict-like object that supports iteration over key-count pairs as
-        `counts.items()`
+        A dict-like object.
+        **Supports iteration over key-count pairs as `counts.items()`**
 
     """
 
