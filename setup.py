@@ -5,6 +5,9 @@ from __future__ import print_function
 
 import platform
 
+# import setuptools before imporing setup from numpy.distutils.core
+# https://stackoverflow.com/a/55358607
+import setuptools  # pylint: disable=unused-import
 from pkg_resources import parse_version
 
 NAME = 'ndd'
