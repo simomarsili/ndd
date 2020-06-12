@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """Counting routines."""
+import collections
+import collections.abc
 import numbers
-from collections import Counter
-from collections.abc import Sequence
+from abc import ABC, abstractmethod
 from types import GeneratorType
 
 import numpy
+
+from ndd.base import BaseEstimator
 
 try:
     from pandas import DataFrame, Series
@@ -20,6 +23,92 @@ except ImportError:
     bounter_is_installed = False
 else:
     bounter_is_installed = True
+
+
+class BaseCounter(BaseEstimator, ABC):
+    """Fit frequencies/multiplicities from discrete data."""
+
+    def __init__(self, columns=None):
+        self.counts_ = None
+        self.multiplicities_ = None
+
+        multiple_sets = (columns
+                         and (not isinstance(columns,
+                                             (tuple, numbers.Integral))))
+        if columns is not None:
+            if multiple_sets:
+                columns = (self.get_indices(c) for c in columns)
+            else:
+                columns = self.get_indices(columns)
+        self.multiple_sets = multiple_sets
+        self.columns = columns
+
+    @abstractmethod
+    def get_indices(self, index):
+        """Preprocess data."""
+
+    @abstractmethod
+    def preprocess(self, data):
+        """Preprocess data."""
+
+    @abstractmethod
+    def fit(self, data):
+        """Fit to data."""
+
+
+class ArrayCounter(BaseCounter):
+    """Counts from array data."""
+
+    def get_indices(self, index):
+        """Return int or list."""
+        if isinstance(index, numbers.Integral):
+            return index
+        if isinstance(index, tuple):
+            ids = list(index)
+        if len(ids) == 1:
+            ids = ids[0]
+        return ids
+
+    def preprocess(self, data):
+        """Prepare array"""
+
+        if pandas_is_installed:
+            if isinstance(data, (DataFrame, Series)):
+                data = data.to_numpy()
+
+        if data.ndim > 2:
+            raise ValueError('data should be max 2D')
+
+        if isinstance(data, numpy.ndarray):
+            # work with transposed arrays
+            data = data.T
+        else:
+            data = numpy.asarray(data).T
+
+        if self.columns is not None and data.ndim == 2:
+            if self.multiple_sets:
+                print(list(self.columns))
+                return (data[s] for s in self.columns)
+            return data[self.columns]
+        return data
+
+    @staticmethod
+    def counts(data):
+        """Return a {key: counts} dict."""
+        axis = -1 if data.ndim == 2 else None
+        if axis:
+            u, c = numpy.unique(data, axis=axis, return_counts=1)
+            return {k: n for k, n in zip(zip(*u), c)}
+        u, c = numpy.unique(data, return_counts=1)
+        return {k: n for k, n in zip(u, c)}
+
+    def fit(self, data):
+        """Return a {key: counts} dict."""
+        data = self.preprocess(data)
+        if self.multiple_sets:
+            self.counts_ = (self.counts(d) for d in data)
+        else:
+            self.counts_ = self.counts(data)
 
 
 def _frequencies_from_array(ar):
@@ -48,7 +137,7 @@ def _frequencies_from_records(records, ids=None, size_mb=None):
     def is_sequence(obj):
         if isinstance(obj, str):
             return True
-        return not isinstance(obj, Sequence)
+        return not isinstance(obj, collections.abc.Sequence)
 
     def stringify(features):
         nonlocal is_1d
@@ -69,7 +158,7 @@ def _frequencies_from_records(records, ids=None, size_mb=None):
         # approximate counting using bounter
         counts = bounter(size_mb=size_mb)
     else:
-        counts = Counter()
+        counts = collections.Counter()
     counts.update(stringify(row) for row in records)
     return counts
 
@@ -85,7 +174,7 @@ def frequencies(source, size_mb=None, sets=None):  # pylint: disable=too-many-br
         If dataframe/2D array: 2D array of n samples from p discrete variables.
     size_mb : int
         Limit the size of counts dict using approximate counting.
-        Replace the Counter dict with a bounter object:
+        Replace the collections.Counter dict with a bounter object:
         https://github.com/RaRe-Technologies/bounter
     sets : int or tuple or iterable
         m-tuple of indices. Return the frequencies of the classes for the
@@ -159,7 +248,6 @@ def frequencies(source, size_mb=None, sets=None):  # pylint: disable=too-many-br
         if multiple_sets:
             return (_frequencies_from_array(source[get_indices(s)])
                     for s in sets)
-        print('sets ', get_indices(sets))
         sets = get_indices(sets)
         source = source[sets]
         return _frequencies_from_array(source)
@@ -170,7 +258,7 @@ def multiplicities(source, size_mb=None, sets=None):
     """Return multiplicities array."""
 
     def get_multi(a):
-        a = Counter(a.values())
+        a = collections.Counter(a.values())
         return numpy.array(list(a.keys())), numpy.array(list(a.values()))
 
     counts = frequencies(source, size_mb=size_mb, sets=sets)
