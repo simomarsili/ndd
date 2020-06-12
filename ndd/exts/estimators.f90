@@ -59,11 +59,11 @@ contains
 
     ! further compress data into 'sparse' multiplicities
     n_multi = count(multi0 > 0)
-    allocate(multi_z(0:n_multi),stat=err)
-    allocate(multi(0:n_multi),stat=err)
-    multi_z(0) = 0
-    multi(0) = n_empty_bins
-    k_ = 0
+    allocate(multi_z(n_multi+1),stat=err)
+    allocate(multi(n_multi+1),stat=err)
+    multi_z(1) = 0
+    multi(1) = n_empty_bins
+    k_ = 1
     do i_ = 1, nmax
        if (multi0(i_) > 0) then
           k_ = k_ + 1
@@ -73,7 +73,7 @@ contains
     end do
     deallocate(multi0)
 
-    allocate(phi(0:n_multi), stat=err)
+    allocate(phi(n_multi+1), stat=err)
 
     n_data = sum(multi * multi_z)
 
