@@ -25,3 +25,6 @@ clean:
 	rm -r build README.rst
 f2py:
 	(cd ndd/exts; rm nsb.pyf; f2py estimators.f90 -m fnsb -h nsb.pyf; mv nsb.pyf ../)
+
+timings:
+	$(PYTHON) utils/timings.py
