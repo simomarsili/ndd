@@ -2,6 +2,7 @@ include LICENSE.txt
 include README.rst
 include package.json
 include requirements.txt
+include dev_requirements.txt
 
 # Include the data files
 #recursive-include data *
