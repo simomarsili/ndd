@@ -18,14 +18,14 @@ module dirichlet_mod
 
   integer(int32)              :: n_data
   real(real64)                :: alphabet_size
-  real(real64), allocatable :: multi_z(:)  ! array of observed frequencies
-  real(real64), allocatable :: multi(:)  ! multiplicities of frequency z
+  real(real64), allocatable :: hns(:)  ! array of observed frequencies
+  real(real64), allocatable :: hzs(:)  ! multiplicities of frequency z
   real(real64), allocatable :: phi(:)  ! wrk array for var
 
 contains
 
   subroutine initialize_from_counts(counts, nc)
-    ! set n_multi, multi_z, multi
+    ! set n_multi, hns, multi
     use constants
     integer(int32), intent(in) :: counts(:)
     real(real64), intent(in) :: nc
@@ -59,34 +59,34 @@ contains
 
     ! further compress data into 'sparse' multiplicities
     n_multi = count(multi0 > 0)
-    allocate(multi_z(n_multi+1),stat=err)
-    allocate(multi(n_multi+1),stat=err)
-    multi_z(1) = 0
-    multi(1) = n_empty_bins
+    allocate(hns(n_multi+1),stat=err)
+    allocate(hzs(n_multi+1),stat=err)
+    hns(1) = 0
+    hzs(1) = n_empty_bins
     k_ = 1
     do i_ = 1, nmax
        if (multi0(i_) > 0) then
           k_ = k_ + 1
-          multi_z(k_) = i_
-          multi(k_) = multi0(i_)
+          hns(k_) = i_
+          hzs(k_) = multi0(i_)
        end if
     end do
     deallocate(multi0)
 
     allocate(phi(n_multi+1), stat=err)
 
-    n_data = sum(multi * multi_z)
+    n_data = sum(hzs * hns)
 
   end subroutine initialize_from_counts
 
   subroutine finalize()
 
-    if (allocated(multi)) then
-       deallocate(multi)
+    if (allocated(hzs)) then
+       deallocate(hzs)
     end if
 
-    if (allocated(multi_z)) then
-       deallocate(multi_z)
+    if (allocated(hns)) then
+       deallocate(hns)
     end if
 
     if (allocated(phi)) then
@@ -109,7 +109,7 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
+    wsum = sum(hzs * (log_gamma(hns + alpha) - log_gamma(hns + one)))
 
     log_pna = log_pna + wsum
 
@@ -124,7 +124,7 @@ contains
     log_pna_u = log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size) &
-         + sum(multi * (log_gamma(multi_z + alpha)))
+         + sum(hzs * (log_gamma(hns + alpha)))
 
   end function log_pna_u
 
@@ -159,7 +159,7 @@ contains
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
 
-    h_dir = - sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
+    h_dir = - sum(hzs * (hns + alpha) * digamma(hns + alpha + one))
     h_dir = h_dir / (n_data + alpha * alphabet_size)
     h_dir = h_dir + digamma(n_data + alpha * alphabet_size + one)
 
@@ -176,20 +176,20 @@ contains
     real(real64) :: c, nu, ni, xi, jsum
 
     nu = n_data + alpha * alphabet_size
-    phi = digamma(multi_z + alpha + one) - &
+    phi = digamma(hns + alpha + one) - &
          digamma(nu + two)
     c = trigamma(nu + two)
 
     h_var = 0.0
-    do i_ = 0, size(multi)-1
-       ni = multi_z(i_) + alpha
+    do i_ = 0, size(hzs)-1
+       ni = hns(i_) + alpha
        xi = phi(i_)
-       jsum = sum(multi * ni * (multi_z + alpha) * &
+       jsum = sum(hzs * ni * (hns + alpha) * &
             (xi * phi - c))
-       h_var = h_var + multi(i_) * jsum
-       h_var = h_var - multi(i_) * ni**2 * (xi**2 - c)
+       h_var = h_var + hzs(i_) * jsum
+       h_var = h_var - hzs(i_) * ni**2 * (xi**2 - c)
        xi = xi + 1 / (ni + one)
-       h_var = h_var + multi(i_) * (ni + one) * ni * &
+       h_var = h_var + hzs(i_) * (ni + one) * ni * &
             (xi**2 + trigamma(ni + two) - c)
     end do
 
@@ -260,8 +260,8 @@ contains
     ! compute value and derivative of log p(a | x)
     use constants
     use gamma_funcs, only: digamma, trigamma, quadgamma
-    use dirichlet_mod, only: alphabet_size, n_data, multi,&
-         multi_z
+    use dirichlet_mod, only: alphabet_size, n_data, hzs,&
+         hns
     use dirichlet_mod, only: log_pna_u, alpha_prior
 
     real(real64), intent(in) :: alpha
@@ -281,7 +281,7 @@ contains
     - alphabet_size * digamma(alpha) &
          - alphabet_size * digamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(multi * (digamma(multi_z + alpha)))
+    wsum = sum(hzs * (digamma(hns + alpha)))
 
     dlpna = dlpna + wsum
 
