@@ -80,11 +80,10 @@ contains
   end subroutine initialize_from_counts
 
   subroutine initialize_from_multiplicities(hn1, hz1)
-    ! set n_multi, hn, multi
-    use constants
+    ! set hn, hz, n_data, alphabet_size
     real(real64), intent(in) :: hn1(:)
     real(real64), intent(in) :: hz1(:)
-    integer(int32)              :: err
+    integer(int32)           :: err
 
 
     allocate(hn, source=hn1, stat=err)
@@ -629,6 +628,30 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   call finalize()
 
 end subroutine nsb
+
+subroutine nsb_from_multiplicities(n, hn1, hz1, estimate, err_estimate)
+  use iso_fortran_env
+  use dirichlet_mod, only: initialize_from_multiplicities, finalize
+  use nsb_mod, only: hnsb
+  use nsb_mod, only: compute_integration_range
+  implicit none
+
+  integer(int32), intent(in)  :: n
+  real(real64), intent(in)    :: hn1(n)
+  real(real64), intent(in)    :: hz1(n)
+  real(real64),   intent(out) :: estimate
+  real(real64),   intent(out) :: err_estimate
+  integer(int32) :: err
+
+  call initialize_from_multiplicities(hn1, hz1)
+
+  call compute_integration_range()
+
+  call hnsb(estimate,err_estimate, err)
+
+  call finalize()
+
+end subroutine nsb_from_multiplicities
 
 subroutine phony_1(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
