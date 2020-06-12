@@ -18,14 +18,14 @@ module dirichlet_mod
 
   integer(int32)              :: n_data
   real(real64)                :: alphabet_size
-  real(real64), allocatable :: hns(:)  ! array of observed frequencies
-  real(real64), allocatable :: hzs(:)  ! multiplicities of frequency z
+  real(real64), allocatable :: hn(:)  ! array of observed frequencies
+  real(real64), allocatable :: hz(:)  ! multiplicities of frequency z
   real(real64), allocatable :: phi(:)  ! wrk array for var
 
 contains
 
   subroutine initialize_from_counts(counts, nc)
-    ! set n_multi, hns, multi
+    ! set n_multi, hn, multi
     use constants
     integer(int32), intent(in) :: counts(:)
     real(real64), intent(in) :: nc
@@ -59,34 +59,52 @@ contains
 
     ! further compress data into 'sparse' multiplicities
     n_multi = count(multi0 > 0)
-    allocate(hns(n_multi+1),stat=err)
-    allocate(hzs(n_multi+1),stat=err)
-    hns(1) = 0
-    hzs(1) = n_empty_bins
+    allocate(hn(n_multi+1),stat=err)
+    allocate(hz(n_multi+1),stat=err)
+    hn(1) = 0
+    hz(1) = n_empty_bins
     k_ = 1
     do i_ = 1, nmax
        if (multi0(i_) > 0) then
           k_ = k_ + 1
-          hns(k_) = i_
-          hzs(k_) = multi0(i_)
+          hn(k_) = i_
+          hz(k_) = multi0(i_)
        end if
     end do
     deallocate(multi0)
 
     allocate(phi(n_multi+1), stat=err)
 
-    n_data = sum(hzs * hns)
+    n_data = sum(hz * hn)
 
   end subroutine initialize_from_counts
 
+  subroutine initialize_from_multiplicities(hn1, hz1)
+    ! set n_multi, hn, multi
+    use constants
+    real(real64), intent(in) :: hn1(:)
+    real(real64), intent(in) :: hz1(:)
+    integer(int32)              :: err
+
+
+    allocate(hn, source=hn1, stat=err)
+    allocate(hz, source=hz1, stat=err)
+
+    allocate(phi, mold=hn1, stat=err)
+
+    alphabet_size = sum(hz)
+    n_data = sum(hz * hn)
+
+  end subroutine initialize_from_multiplicities
+
   subroutine finalize()
 
-    if (allocated(hzs)) then
-       deallocate(hzs)
+    if (allocated(hz)) then
+       deallocate(hz)
     end if
 
-    if (allocated(hns)) then
-       deallocate(hns)
+    if (allocated(hn)) then
+       deallocate(hn)
     end if
 
     if (allocated(phi)) then
@@ -109,7 +127,7 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(hzs * (log_gamma(hns + alpha) - log_gamma(hns + one)))
+    wsum = sum(hz * (log_gamma(hn + alpha) - log_gamma(hn + one)))
 
     log_pna = log_pna + wsum
 
@@ -124,7 +142,7 @@ contains
     log_pna_u = log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size) &
-         + sum(hzs * (log_gamma(hns + alpha)))
+         + sum(hz * (log_gamma(hn + alpha)))
 
   end function log_pna_u
 
@@ -159,7 +177,7 @@ contains
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
 
-    h_dir = - sum(hzs * (hns + alpha) * digamma(hns + alpha + one))
+    h_dir = - sum(hz * (hn + alpha) * digamma(hn + alpha + one))
     h_dir = h_dir / (n_data + alpha * alphabet_size)
     h_dir = h_dir + digamma(n_data + alpha * alphabet_size + one)
 
@@ -176,20 +194,20 @@ contains
     real(real64) :: c, nu, ni, xi, jsum
 
     nu = n_data + alpha * alphabet_size
-    phi = digamma(hns + alpha + one) - &
+    phi = digamma(hn + alpha + one) - &
          digamma(nu + two)
     c = trigamma(nu + two)
 
     h_var = 0.0
-    do i_ = 0, size(hzs)-1
-       ni = hns(i_) + alpha
+    do i_ = 0, size(hz)-1
+       ni = hn(i_) + alpha
        xi = phi(i_)
-       jsum = sum(hzs * ni * (hns + alpha) * &
+       jsum = sum(hz * ni * (hn + alpha) * &
             (xi * phi - c))
-       h_var = h_var + hzs(i_) * jsum
-       h_var = h_var - hzs(i_) * ni**2 * (xi**2 - c)
+       h_var = h_var + hz(i_) * jsum
+       h_var = h_var - hz(i_) * ni**2 * (xi**2 - c)
        xi = xi + 1 / (ni + one)
-       h_var = h_var + hzs(i_) * (ni + one) * ni * &
+       h_var = h_var + hz(i_) * (ni + one) * ni * &
             (xi**2 + trigamma(ni + two) - c)
     end do
 
@@ -260,8 +278,8 @@ contains
     ! compute value and derivative of log p(a | x)
     use constants
     use gamma_funcs, only: digamma, trigamma, quadgamma
-    use dirichlet_mod, only: alphabet_size, n_data, hzs,&
-         hns
+    use dirichlet_mod, only: alphabet_size, n_data, hz,&
+         hn
     use dirichlet_mod, only: log_pna_u, alpha_prior
 
     real(real64), intent(in) :: alpha
@@ -281,7 +299,7 @@ contains
     - alphabet_size * digamma(alpha) &
          - alphabet_size * digamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(hzs * (digamma(hns + alpha)))
+    wsum = sum(hz * (digamma(hn + alpha)))
 
     dlpna = dlpna + wsum
 
