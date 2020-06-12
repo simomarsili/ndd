@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
+"""Test DataArray class"""
 import numpy
 
 from ndd.data import DataArray
