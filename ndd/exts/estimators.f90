@@ -18,28 +18,17 @@ module dirichlet_mod
 
   integer(int32)              :: n_data
   real(real64)                :: alphabet_size
-  real(real64), allocatable :: multi_z(:)  ! array of observed frequencies
-  real(real64), allocatable :: multi(:)  ! multiplicities of frequency z
+  real(real64), allocatable :: hn(:)  ! array of observed frequencies
+  real(real64), allocatable :: hz(:)  ! multiplicities of frequency z
   real(real64), allocatable :: phi(:)  ! wrk array for var
 
 contains
 
-  subroutine initialize_dirichlet(counts, nc)
-    ! set alphabet_size, n_data
-    ! set n_multi, multi_z, multi
-    integer(int32), intent(in) :: counts(:)
-    real(real64), intent(in) :: nc
-    integer(int32) :: err
-
-    alphabet_size = nc
-    n_data = sum(counts)
-
-  end subroutine initialize_dirichlet
-
-  subroutine compute_multiplicities(counts)
-    ! set n_multi, multi_z, multi
+  subroutine initialize_from_counts(counts, nc)
+    ! set n_multi, hn, multi
     use constants
     integer(int32), intent(in) :: counts(:)
+    real(real64), intent(in) :: nc
     integer(int32)              :: nbins
     integer(int32)              :: i_,k_,ni_
     integer(int32)              :: err
@@ -47,6 +36,8 @@ contains
     integer(int32), allocatable :: multi0(:)
     real(real64)                :: n_empty_bins
     integer(int32)              :: n_multi
+
+    alphabet_size = nc
 
     ! compute multiplicities
     ! nmax is the largest number of samples in a bin
@@ -68,32 +59,52 @@ contains
 
     ! further compress data into 'sparse' multiplicities
     n_multi = count(multi0 > 0)
-    allocate(multi_z(0:n_multi),stat=err)
-    allocate(multi(0:n_multi),stat=err)
-    multi_z(0) = 0
-    multi(0) = n_empty_bins
-    k_ = 0
+    allocate(hn(n_multi+1),stat=err)
+    allocate(hz(n_multi+1),stat=err)
+    hn(1) = 0
+    hz(1) = n_empty_bins
+    k_ = 1
     do i_ = 1, nmax
        if (multi0(i_) > 0) then
           k_ = k_ + 1
-          multi_z(k_) = i_
-          multi(k_) = multi0(i_)
+          hn(k_) = i_
+          hz(k_) = multi0(i_)
        end if
     end do
     deallocate(multi0)
 
-    allocate(phi(0:n_multi), stat=err)
+    allocate(phi(n_multi+1), stat=err)
 
-  end subroutine compute_multiplicities
+    n_data = sum(hz * hn)
+
+  end subroutine initialize_from_counts
+
+  subroutine initialize_from_multiplicities(hn1, hz1)
+    ! set n_multi, hn, multi
+    use constants
+    real(real64), intent(in) :: hn1(:)
+    real(real64), intent(in) :: hz1(:)
+    integer(int32)              :: err
+
+
+    allocate(hn, source=hn1, stat=err)
+    allocate(hz, source=hz1, stat=err)
+
+    allocate(phi, mold=hn1, stat=err)
+
+    alphabet_size = sum(hz)
+    n_data = sum(hz * hn)
+
+  end subroutine initialize_from_multiplicities
 
   subroutine finalize()
 
-    if (allocated(multi)) then
-       deallocate(multi)
+    if (allocated(hz)) then
+       deallocate(hz)
     end if
 
-    if (allocated(multi_z)) then
-       deallocate(multi_z)
+    if (allocated(hn)) then
+       deallocate(hn)
     end if
 
     if (allocated(phi)) then
@@ -116,7 +127,7 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(multi * (log_gamma(multi_z + alpha) - log_gamma(multi_z + one)))
+    wsum = sum(hz * (log_gamma(hn + alpha) - log_gamma(hn + one)))
 
     log_pna = log_pna + wsum
 
@@ -131,7 +142,7 @@ contains
     log_pna_u = log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size) &
-         + sum(multi * (log_gamma(multi_z + alpha)))
+         + sum(hz * (log_gamma(hn + alpha)))
 
   end function log_pna_u
 
@@ -166,7 +177,7 @@ contains
     real(real64), intent(in) :: alpha
     integer(int32) :: i_
 
-    h_dir = - sum(multi * (multi_z + alpha) * digamma(multi_z + alpha + one))
+    h_dir = - sum(hz * (hn + alpha) * digamma(hn + alpha + one))
     h_dir = h_dir / (n_data + alpha * alphabet_size)
     h_dir = h_dir + digamma(n_data + alpha * alphabet_size + one)
 
@@ -183,20 +194,20 @@ contains
     real(real64) :: c, nu, ni, xi, jsum
 
     nu = n_data + alpha * alphabet_size
-    phi = digamma(multi_z + alpha + one) - &
+    phi = digamma(hn + alpha + one) - &
          digamma(nu + two)
     c = trigamma(nu + two)
 
     h_var = 0.0
-    do i_ = 0, size(multi)-1
-       ni = multi_z(i_) + alpha
+    do i_ = 0, size(hz)-1
+       ni = hn(i_) + alpha
        xi = phi(i_)
-       jsum = sum(multi * ni * (multi_z + alpha) * &
+       jsum = sum(hz * ni * (hn + alpha) * &
             (xi * phi - c))
-       h_var = h_var + multi(i_) * jsum
-       h_var = h_var - multi(i_) * ni**2 * (xi**2 - c)
+       h_var = h_var + hz(i_) * jsum
+       h_var = h_var - hz(i_) * ni**2 * (xi**2 - c)
        xi = xi + 1 / (ni + one)
-       h_var = h_var + multi(i_) * (ni + one) * ni * &
+       h_var = h_var + hz(i_) * (ni + one) * ni * &
             (xi**2 + trigamma(ni + two) - c)
     end do
 
@@ -267,8 +278,8 @@ contains
     ! compute value and derivative of log p(a | x)
     use constants
     use gamma_funcs, only: digamma, trigamma, quadgamma
-    use dirichlet_mod, only: alphabet_size, n_data, multi,&
-         multi_z
+    use dirichlet_mod, only: alphabet_size, n_data, hz,&
+         hn
     use dirichlet_mod, only: log_pna_u, alpha_prior
 
     real(real64), intent(in) :: alpha
@@ -288,7 +299,7 @@ contains
     - alphabet_size * digamma(alpha) &
          - alphabet_size * digamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(multi * (digamma(multi_z + alpha)))
+    wsum = sum(hz * (digamma(hn + alpha)))
 
     dlpna = dlpna + wsum
 
@@ -572,7 +583,7 @@ end subroutine pseudo
 subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use dirichlet_mod, only: h_dir
   implicit none
 
@@ -587,8 +598,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
 !     return
 !  end if
 
-  call initialize_dirichlet(counts, nc)
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   estimate = h_dir(alpha)
 
@@ -598,7 +608,7 @@ end subroutine dirichlet
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -610,9 +620,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   real(real64),   intent(out) :: err_estimate
   integer(int32) :: err
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   call compute_integration_range()
 
@@ -624,7 +632,7 @@ end subroutine nsb
 
 subroutine phony_1(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -639,9 +647,7 @@ subroutine phony_1(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  ! call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   ! call compute_integration_range()
 
@@ -658,7 +664,7 @@ end subroutine phony_1
 
 subroutine phony_2(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -673,9 +679,7 @@ subroutine phony_2(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   ! call compute_integration_range()
 
@@ -692,7 +696,7 @@ end subroutine phony_2
 
 subroutine phony_3(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -707,9 +711,7 @@ subroutine phony_3(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   call compute_integration_range()
 
@@ -726,7 +728,7 @@ end subroutine phony_3
 
 subroutine phony_4(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -741,9 +743,7 @@ subroutine phony_4(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   call compute_integration_range()
 
