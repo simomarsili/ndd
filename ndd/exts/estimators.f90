@@ -24,22 +24,11 @@ module dirichlet_mod
 
 contains
 
-  subroutine initialize_dirichlet(counts, nc)
-    ! set alphabet_size, n_data
-    ! set n_multi, multi_z, multi
-    integer(int32), intent(in) :: counts(:)
-    real(real64), intent(in) :: nc
-    integer(int32) :: err
-
-    alphabet_size = nc
-    n_data = sum(counts)
-
-  end subroutine initialize_dirichlet
-
-  subroutine compute_multiplicities(counts)
+  subroutine initialize_from_counts(counts, nc)
     ! set n_multi, multi_z, multi
     use constants
     integer(int32), intent(in) :: counts(:)
+    real(real64), intent(in) :: nc
     integer(int32)              :: nbins
     integer(int32)              :: i_,k_,ni_
     integer(int32)              :: err
@@ -47,6 +36,8 @@ contains
     integer(int32), allocatable :: multi0(:)
     real(real64)                :: n_empty_bins
     integer(int32)              :: n_multi
+
+    alphabet_size = nc
 
     ! compute multiplicities
     ! nmax is the largest number of samples in a bin
@@ -84,7 +75,9 @@ contains
 
     allocate(phi(0:n_multi), stat=err)
 
-  end subroutine compute_multiplicities
+    n_data = sum(multi * multi_z)
+
+  end subroutine initialize_from_counts
 
   subroutine finalize()
 
@@ -572,7 +565,7 @@ end subroutine pseudo
 subroutine dirichlet(n,counts,nc,alpha,estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use dirichlet_mod, only: h_dir
   implicit none
 
@@ -587,8 +580,7 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
 !     return
 !  end if
 
-  call initialize_dirichlet(counts, nc)
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   estimate = h_dir(alpha)
 
@@ -598,7 +590,7 @@ end subroutine dirichlet
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -610,9 +602,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   real(real64),   intent(out) :: err_estimate
   integer(int32) :: err
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   call compute_integration_range()
 
@@ -624,7 +614,7 @@ end subroutine nsb
 
 subroutine phony_1(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -639,9 +629,7 @@ subroutine phony_1(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  ! call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   ! call compute_integration_range()
 
@@ -658,7 +646,7 @@ end subroutine phony_1
 
 subroutine phony_2(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -673,9 +661,7 @@ subroutine phony_2(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   ! call compute_integration_range()
 
@@ -692,7 +678,7 @@ end subroutine phony_2
 
 subroutine phony_3(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -707,9 +693,7 @@ subroutine phony_3(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   call compute_integration_range()
 
@@ -726,7 +710,7 @@ end subroutine phony_3
 
 subroutine phony_4(n,counts,nc,estimate,err_estimate)
   use iso_fortran_env
-  use dirichlet_mod, only: initialize_dirichlet, compute_multiplicities, finalize
+  use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -741,9 +725,7 @@ subroutine phony_4(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_dirichlet(counts, nc)
-
-  call compute_multiplicities(counts)
+  call initialize_from_counts(counts, nc)
 
   call compute_integration_range()
 
