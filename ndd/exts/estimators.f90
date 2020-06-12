@@ -84,10 +84,11 @@ contains
     integer           :: err
 
 
-    allocate(hn, source=hn1, stat=err)
-    allocate(hz, source=hz1, stat=err)
-
-    allocate(phi, mold=hn1, stat=err)
+    allocate(hn(size(hn1)), stat=err)
+    allocate(hz(size(hz1)), stat=err)
+    allocate(phi(size(hn1)), stat=err)
+    hn = hn1
+    hz = hz1
 
     alphabet_size = sum(hz)
     n_data = sum(hz * hn)
