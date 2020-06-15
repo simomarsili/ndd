@@ -3,12 +3,9 @@
 import collections
 import collections.abc
 import numbers
-from abc import ABC, abstractmethod
 from types import GeneratorType
 
 import numpy
-
-from ndd.base import BaseEstimator
 
 try:
     from pandas import DataFrame, Series
@@ -25,90 +22,141 @@ else:
     bounter_is_installed = True
 
 
-class BaseCounter(BaseEstimator, ABC):
-    """Fit frequencies/multiplicities from discrete data."""
+class MultiCounter(collections.abc.MutableMapping):
+    """Container for data. Cache multiplicities.
 
-    def __init__(self, columns=None):
-        self.counts_ = None
-        self.multiplicities_ = None
+    Parameters
+    ----------
+    data : array_like
+        Data in any form that can be converted to a ndarray. This includes
+        lists, lists of tuples, tuples, tuples of tuples, tuples of lists and
+        ndarrays.
+    stat : str, optional, default: 'multiplicities'
+        Valid values are 'counts' and 'multiplicities'
+    order : int or None, optional, default: None
+        Store statistics up to order `order`. Default: save all statistics.
 
-        multiple_sets = (columns
-                         and (not isinstance(columns,
-                                             (tuple, numbers.Integral))))
-        if columns is not None:
-            if multiple_sets:
-                columns = (self.get_indices(c) for c in columns)
-            else:
-                columns = self.get_indices(columns)
-        self.multiple_sets = multiple_sets
-        self.columns = columns
+    """
 
-    @abstractmethod
-    def get_indices(self, index):
-        """Preprocess data."""
+    def __init__(self, data, stat='multiplicities', order=None):
+        if stat in 'counts multiplicities'.split():
+            self.stat = stat
+        else:
+            raise ValueError('Valid values for `star` are '
+                             'counts, multiplicities')
+        self.statistics = dict()
+        self.order = order if order is not None else numpy.float('inf')
 
-    @abstractmethod
-    def preprocess(self, data):
-        """Preprocess data."""
+        # work with transposed arrays
+        self.data = numpy.asarray(data).T
 
-    @abstractmethod
-    def fit(self, data):
-        """Fit to data."""
-
-
-class ArrayCounter(BaseCounter):
-    """Counts from array data."""
-
-    def get_indices(self, index):
-        """Return int or list."""
-        if isinstance(index, numbers.Integral):
-            return index
-        if isinstance(index, tuple):
-            ids = list(index)
-        if len(ids) == 1:
-            ids = ids[0]
-        return ids
-
-    def preprocess(self, data):
-        """Prepare array"""
-
-        if pandas_is_installed:
-            if isinstance(data, (DataFrame, Series)):
-                data = data.to_numpy()
-
-        if data.ndim > 2:
+        if self.data.ndim > 2:
             raise ValueError('data should be max 2D')
 
-        if isinstance(data, numpy.ndarray):
-            # work with transposed arrays
-            data = data.T
-        else:
-            data = numpy.asarray(data).T
+    def __missing__(self, key):
+        raise KeyError(key)
 
-        if self.columns is not None and data.ndim == 2:
-            if self.multiple_sets:
-                print(list(self.columns))
-                return (data[s] for s in self.columns)
-            return data[self.columns]
-        return data
+    def __getitem__(self, key):
+        try:
+            return self.statistics[key]
+        except KeyError:
+            pass
+        return self.__missing__(key)
+
+    def get(self, key, default=None):
+        return self[key] if key in self else default
+
+    def counts(self, key='full'):
+        """Return counts.
+        counts(key) will update the statistics for indices `key`
+        if key not in statistics dict.
+        """
+        if key not in self.statistics:  # compute statistics
+            if key == 'full':
+                data, order = self.data, 0
+            else:
+                index, order = self.array_index(key)
+                data = self.data[index]
+
+            stats = self._counts(data)
+            if order <= self.order:  # save statistics
+                self.statistics[key] = stats
+        else:
+            stats = self.statistics[key]
+
+        return stats
+
+    def __len__(self):
+        return len(self.statistics)
+
+    def __iter__(self):
+        return iter(self.statistics)
+
+    def __contains__(self, key):
+        return key in self.statistics
+
+    def __bool__(self):
+        return self.data
+
+    def __setitem__(self, key, value):
+        """Set item on mapping."""
+        self.statistics[key] = value
+
+    def __delitem__(self, key):
+        """Delete item from mapping."""
+        try:
+            del self.statistics[key]
+        except KeyError:
+            raise KeyError('Key not found in mapping: {!r}'.format(key))
+
+    def popitem(self):
+        """Remove and return an item pair from mapping.
+        Raise KeyError is data is empty."""
+        try:
+            return self.statistics.popitem()
+        except KeyError:
+            raise KeyError('No keys found in mapping.')
+
+    def pop(self, key, *args):  # pylint: disable=arguments-differ
+        """Remove *key* from mapping and return its value.
+        Raise KeyError if *key* not in mapping."""
+        try:
+            return self.statistics.pop(key, *args)
+        except KeyError:
+            raise KeyError('Key not found in mapping: {!r}'.format(key))
+
+    def clear(self):
+        'Clear mapping.'
+        self.statistics.clear()
 
     @staticmethod
-    def counts(data):
-        """Return a {key: counts} dict."""
-        axis = -1 if data.ndim == 2 else None
-        if axis:
-            u, c = numpy.unique(data, axis=axis, return_counts=1)
-            return {k: n for k, n in zip(zip(*u), c)}
-        u, c = numpy.unique(data, return_counts=1)
-        return {k: n for k, n in zip(u, c)}
+    def array_index(index):
+        """Return int or list."""
+        if isinstance(index, numbers.Integral):
+            return index, 1
+        ids = list(index)
+        if len(ids) == 1:
+            return ids[0], 1
+        return ids, len(ids)
 
-    def fit(self, data):
-        """Return a {key: counts} dict."""
-        data = self.preprocess(data)
-        if self.multiple_sets:
-            self.counts_ = (self.counts(d) for d in data)
-        else:
-            self.counts_ = self.counts(data)
+    def _counts(self, data):
+        """
+        Return a (keys/counts) tuple from data ndarray.
+        Samples are indexed by axis -1.
+
+        """
+        axis = -1 if self.data.ndim == 2 else None
+        u, c = numpy.unique(data, return_counts=1, axis=axis)
+
+        if self.stat == 'counts':
+            return list(u), list(c)
+
+        muls = collections.Counter(c)
+        keys = list(muls.keys())
+        values = list(muls.values())
+        keys.append(0)
+        values.append(0)
+        return keys, values
 
 
 def _frequencies_from_array(ar):
