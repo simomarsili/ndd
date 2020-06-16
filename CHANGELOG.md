@@ -1,5 +1,10 @@
 # Change log
 
+## Unreleased
+
+### Fixed
+- integration for large cardinalities
+
 ## [1.8] - 2020-06-10
 
 ### Added
