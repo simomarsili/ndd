@@ -197,7 +197,7 @@ contains
     c = trigamma(nu + two)
 
     h_var = 0.0
-    do i_ = 0, size(hz)-1
+    do i_ = 1, size(hz)
        ni = hn(i_) + alpha
        xi = phi(i_)
        jsum = sum(hz * ni * (hn + alpha) * &
