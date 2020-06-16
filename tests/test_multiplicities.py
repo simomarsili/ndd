@@ -49,7 +49,8 @@ def test_nsb_from_multiplicities(data_1d):
     frequencies = compute_frequencies(data_1d)
     hn, hz = compute_multiplicities(data_1d)
     estimate_from_counts = ndd.fnsb.nsb(frequencies, K)[0]
-    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz)[0]
+    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz,
+                                                                    K)[0]
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
 
 
@@ -85,5 +86,6 @@ def test_nsb(data_1d):
     _, hf = counter1.counts()
     hn, hz = counter2.counts(k=K)
     estimate_from_counts = ndd.fnsb.nsb(hf, K)[0]
-    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz)[0]
+    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz,
+                                                                    K)[0]
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)

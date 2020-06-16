@@ -19,9 +19,10 @@ python module fnsb ! in
                 integer dimension(:),intent(in) :: counts
                 real(kind=8) intent(in) :: nc
             end subroutine initialize_from_counts
-            subroutine initialize_from_multiplicities(hn1,hz1) ! in :fnsb:estimators.f90:dirichlet_mod
+            subroutine initialize_from_multiplicities(hn1,hz1,nc) ! in :fnsb:estimators.f90:dirichlet_mod
                 real(kind=8) dimension(:),intent(in) :: hn1
                 real(kind=8) dimension(:),intent(in) :: hz1
+                real(kind=8) intent(in) :: nc
             end subroutine initialize_from_multiplicities
             subroutine finalize ! in :fnsb:estimators.f90:dirichlet_mod
             end subroutine finalize
@@ -157,12 +158,13 @@ python module fnsb ! in
             real(kind=8) intent(out) :: estimate
             real(kind=8) intent(out) :: err_estimate
         end subroutine nsb
-        subroutine nsb_from_multiplicities(n,hn1,hz1,estimate,err_estimate) ! in :fnsb:estimators.f90
+        subroutine nsb_from_multiplicities(n,hn1,hz1,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use dirichlet_mod, only: initialize_from_multiplicities,finalize
             use nsb_mod, only: compute_integration_range
             integer, optional,intent(in),check(len(hn1)>=n),depend(hn1) :: n=len(hn1)
             real(kind=8) dimension(n),intent(in) :: hn1
             real(kind=8) dimension(n),intent(in),depend(n) :: hz1
+            real(kind=8) intent(in) :: nc
             real(kind=8) intent(out) :: estimate
             real(kind=8) intent(out) :: err_estimate
         end subroutine nsb_from_multiplicities

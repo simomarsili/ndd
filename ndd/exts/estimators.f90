@@ -77,20 +77,40 @@ contains
 
   end subroutine initialize_from_counts
 
-  subroutine initialize_from_multiplicities(hn1, hz1)
+  subroutine initialize_from_multiplicities(hn1, hz1, nc)
     ! set hn, hz, n_data, alphabet_size
     real(8), intent(in) :: hn1(:)
     real(8), intent(in) :: hz1(:)
-    integer           :: err
+    real(8), intent(in)    :: nc
+    integer           :: idx=-1, err, j, nm
 
+    nm = size(hn1)
+    ! check if zeros are included in mults arrays
+    if (any(int(hn1) == 0)) then  ! we work with floats
+       allocate(hn(nm), stat=err)
+       allocate(hz(nm), stat=err)
+       allocate(phi(nm), stat=err)
+       hn = hn1
+       hz = hz1
+       idx = -1
+       do j = 1, nm
+          if (int(hn1(j)) == 0) then
+             idx = j
+             exit
+          end if
+       end do
+       hz(idx) = hz1(idx) + nc - sum(hz1)
+    else
+       allocate(hn(nm + 1), stat=err)
+       allocate(hz(nm + 1), stat=err)
+       allocate(phi(nm + 1), stat=err)
+       hn(1) = 0.d0
+       hz(1) = nc - sum(hz1)
+       hn(2:) = hn1
+       hz(2:) = hz1
+    end if
 
-    allocate(hn(size(hn1)), stat=err)
-    allocate(hz(size(hz1)), stat=err)
-    allocate(phi(size(hn1)), stat=err)
-    hn = hn1
-    hz = hz1
-
-    alphabet_size = sum(hz)
+    alphabet_size = nc
     n_data = sum(hz * hn)
 
   end subroutine initialize_from_multiplicities
@@ -627,7 +647,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
 end subroutine nsb
 
-subroutine nsb_from_multiplicities(n, hn1, hz1, estimate, err_estimate)
+subroutine nsb_from_multiplicities(n, hn1, hz1, nc, estimate, err_estimate)
   use dirichlet_mod, only: initialize_from_multiplicities, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
@@ -636,11 +656,12 @@ subroutine nsb_from_multiplicities(n, hn1, hz1, estimate, err_estimate)
   integer, intent(in)  :: n
   real(8), intent(in)    :: hn1(n)
   real(8), intent(in)    :: hz1(n)
+  real(8), intent(in)    :: nc
   real(8),   intent(out) :: estimate
   real(8),   intent(out) :: err_estimate
   integer :: err
 
-  call initialize_from_multiplicities(hn1, hz1)
+  call initialize_from_multiplicities(hn1, hz1, nc)
 
   call compute_integration_range()
 
