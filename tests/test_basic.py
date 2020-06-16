@@ -164,4 +164,4 @@ def test_error_estimate():
 def test_large_cardinality():
     counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
     result = ndd.entropy(counts, k=1.e50)
-    assert not numpy.isnan(result)
+    assert result == 115.12913725676123
