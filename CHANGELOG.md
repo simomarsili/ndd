@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## [1.8.2] - 2020-06-16
+## [1.8.3] - 2020-06-16
 ### Fixed
 - integration for large cardinalities
 
