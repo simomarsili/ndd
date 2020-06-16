@@ -408,6 +408,10 @@ contains
     call quad(nrm_func,log_alpha1,log_alpha2, nrm, err)
     std = sqrt(var/nrm)
 
+    if (isnan(std)) then
+       err = 1
+    end if
+
   end subroutine weight_std
 
   subroutine hnsb(estimate,err_estimate, err)
