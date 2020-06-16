@@ -66,7 +66,7 @@ class MultiCounter(collections.abc.MutableMapping):
     def get(self, key, default=None):
         return self[key] if key in self else default
 
-    def counts(self, key='full'):
+    def counts(self, key='full', k=None):
         """Return counts.
         counts(key) will update the statistics for indices `key`
         if key not in statistics dict.
@@ -84,7 +84,14 @@ class MultiCounter(collections.abc.MutableMapping):
         else:
             stats = self.statistics[key]
 
-        return stats
+        keys, values = stats
+
+        if k is not None:
+            # append statistics for non-observed bins
+            keys.append(0)
+            values.append(k - sum(values))
+
+        return keys, values
 
     def __len__(self):
         return len(self.statistics)
