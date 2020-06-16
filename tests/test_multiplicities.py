@@ -42,9 +42,7 @@ def compute_multiplicities(a):
 
 
 def identical_sorted(a, b):
-    a = sorted(list(a))
-    b = sorted(list(b))
-    return a == b
+    return sorted(list(a)) == sorted(list(b))
 
 
 def test_nsb_from_multiplicities(data_1d):
@@ -85,9 +83,7 @@ def test_nsb(data_1d):
     counter1 = MultiCounter(data_1d, stat='counts')
     counter2 = MultiCounter(data_1d, stat='multiplicities')
     _, hf = counter1.counts()
-    hn, hz = counter2.counts()
-    n_observed_bins = len(hf)
-    hz[-1] = (K - n_observed_bins)
+    hn, hz = counter2.counts(k=K)
     estimate_from_counts = ndd.fnsb.nsb(hf, K)[0]
     estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz)[0]
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)

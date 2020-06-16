@@ -7,6 +7,8 @@ from types import GeneratorType
 
 import numpy
 
+from ndd.exceptions import NddError
+
 try:
     from pandas import DataFrame, Series
 except ImportError:
@@ -66,11 +68,29 @@ class MultiCounter(collections.abc.MutableMapping):
     def get(self, key, default=None):
         return self[key] if key in self else default
 
-    def counts(self, key='full', k=None):
+    def counts(self, key=None, k=None):
         """Return counts.
         counts(key) will update the statistics for indices `key`
         if key not in statistics dict.
+
+        Parameters
+        ----------
+        key : int or tuple or `full`
+            Return statistics for the set of features in `key`.
+            Defaults: return the statistics for the full set of features.
+        k : int or dict or None
+            Cardinality. If k is a dict, set k = k[key].
+            If `key not in k` and key is a tuple, then set k to the product
+            of `(k[x] for x in key)`. No effect if stat='counts'
+
+        Returns
+        -------
+        keys, values
+
         """
+        if key is None:
+            key = 'full'
+
         if key not in self.statistics:  # compute statistics
             if key == 'full':
                 data, order = self.data, 0
@@ -86,10 +106,20 @@ class MultiCounter(collections.abc.MutableMapping):
 
         keys, values = stats
 
-        if k is not None:
+        if self.stat == 'multiplicities' and k is not None:
             # append statistics for non-observed bins
+            if isinstance(k, collections.Mapping):
+                try:
+                    k = k[key]
+                except KeyError:
+                    if order > 1:  # use combinatorics
+                        try:
+                            k = numpy.prod(k[x] for x in key)
+                        except KeyError:
+                            return NddError('counts(): check k dictionary')
+            k = k - sum(values)
             keys.append(0)
-            values.append(k - sum(values))
+            values.append(k)
 
         return keys, values
 
