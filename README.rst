@@ -66,7 +66,7 @@ with pre-compiled extensions. numpy >= 1.16 is needed.
 Changes
 =======
 
-**unreleased**
+**v.1.8.1**
    Fixed:
 
    integration for huge cardinalities
