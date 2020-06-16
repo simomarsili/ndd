@@ -7,7 +7,9 @@ default:
 build:
 	$(PYTHON) setup.py build
 install:
-	$(PYTHON) setup.py install --prefix $(INSTALL_PATH)
+	rm -rf build/ ndd/fnsb* ; pip3 install .
+dev_install:
+	rm -rf build/ ndd/fnsb* ; pip3 install -e .
 user:
 	$(PYTHON) setup.py install --prefix $(HOME)/.local
 dist:

@@ -1,7 +1,12 @@
 # Change log
 
-## [1.8] - 2020-06-10
+## Unreleased
 
+## [1.8.3] - 2020-06-16
+### Fixed
+- integration for large cardinalities
+
+## [1.8] - 2020-06-10
 ### Added
 - full Bayesian error estimate (from direct computation of the posterior
   variance of the entropy)

@@ -153,3 +153,15 @@ def test_xor():
     data = numpy.array([xor() for k in range(500)])
     estimate = ndd.conditional_entropy(data, c=[0, 1])
     assert numpy.isclose(estimate, 0, atol=0.01)
+
+
+def test_error_estimate():
+    counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+    result = ndd.entropy(counts, k=100, return_std=True)
+    assert result == (2.8400090835681375, 0.10884840411906187)
+
+
+def test_large_cardinality():
+    counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+    result = ndd.entropy(counts, k=1.e50)
+    assert result == 115.12913725676123

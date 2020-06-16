@@ -197,7 +197,7 @@ contains
     c = trigamma(nu + two)
 
     h_var = 0.0
-    do i_ = 0, size(hz)-1
+    do i_ = 1, size(hz)
        ni = hn(i_) + alpha
        xi = phi(i_)
        jsum = sum(hz * ni * (hn + alpha) * &
@@ -407,6 +407,10 @@ contains
     call quad(var_func,log_alpha1,log_alpha2, var, err)
     call quad(nrm_func,log_alpha1,log_alpha2, nrm, err)
     std = sqrt(var/nrm)
+
+    if (isnan(std)) then
+       err = 1
+    end if
 
   end subroutine weight_std
 
