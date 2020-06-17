@@ -3,30 +3,33 @@ PYTHON=python3
 VERSION=$(shell python3 -c "import ndd; print(ndd.__version__)")
 
 default:
-	$(PYTHON) setup.py install --prefix $(INSTALL_PATH)
+	make dev_install; make test
 build:
 	$(PYTHON) setup.py build
 install:
-	rm -rf build/ ndd/fnsb* ; pip3 install .
+	make veryclean ; pip3 install .
 dev_install:
-	rm -rf build/ ndd/fnsb* ; pip3 install -e .
-user:
-	$(PYTHON) setup.py install --prefix $(HOME)/.local
+	make veryclean ; pip3 install -e .
+test:
+	(cd tests; pytest)
+clean:
+	$(RM) ndd/exts/*.o ndd/exts/*.mod ndd/fnsb*
+veryclean:
+	make clean
+	$(RM) -- **/*~
+	$(RM) -- **/*#
+	$(RM) -r .tox .cache .pytest_cache .libs __pycache__ ndd.egg-info dist build ndd/__pycache__
+	pip3 uninstall ndd
+f2py:
+	(cd ndd/exts; $(RM) nsb.pyf; f2py estimators.f90 -m fnsb -h nsb.pyf; mv nsb.pyf ../)
+timings:
+	$(PYTHON) utils/timings.py
 dist:
 	@if [ "$(shell git rev-parse --abbrev-ref HEAD)" != "master" ]; then (echo "run `make dist` only in master branch"; exit 1); fi
-	rm -f dist/*
+	$(RM) -f dist/*
 	$(PYTHON) setup.py sdist
 tag:
 	@if [ "$(shell git rev-parse --abbrev-ref HEAD)" != "master" ]; then (echo "run `make tag` only in master branch"; exit 1); fi
 	@echo "tagging v$(VERSION)..."
 	git tag v$(VERSION)
 	git push origin v$(VERSION)
-test:
-	(cd tests; pytest -v)
-clean:
-	rm -r build README.rst
-f2py:
-	(cd ndd/exts; rm nsb.pyf; f2py estimators.f90 -m fnsb -h nsb.pyf; mv nsb.pyf ../)
-
-timings:
-	$(PYTHON) utils/timings.py
