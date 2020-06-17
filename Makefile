@@ -8,9 +8,9 @@ default:
 build:
 	$(PYTHON) setup.py build
 install:
-	make veryclean ; pip3 install .
+	make veryclean ; make f2py; pip3 install .
 dev_install:
-	make veryclean ; pip3 install -e .
+	make veryclean ; make f2py; pip3 install -e .
 test:
 	(cd tests; pytest)
 clean:

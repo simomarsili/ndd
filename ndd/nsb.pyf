@@ -149,6 +149,15 @@ python module fnsb ! in
             real(kind=8) intent(in) :: alpha
             real(kind=8) intent(out) :: estimate
         end subroutine dirichlet
+        subroutine dirichlet_from_multiplicities(n,hn1,hz1,nc,alpha,estimate) ! in :fnsb:estimators.f90
+            use dirichlet_mod, only: h_dir
+            integer, optional,intent(in),check(len(hn1)>=n),depend(hn1) :: n=len(hn1)
+            real(kind=8) dimension(n),intent(in) :: hn1
+            real(kind=8) dimension(n),intent(in),depend(n) :: hz1
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(in) :: alpha
+            real(kind=8) intent(out) :: estimate
+        end subroutine dirichlet_from_multiplicities
         subroutine nsb(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use dirichlet_mod, only: initialize_from_counts,finalize
             use nsb_mod, only: compute_integration_range

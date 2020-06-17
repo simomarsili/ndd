@@ -100,3 +100,26 @@ def test_nsb_estimator(data_1d):
     estimate_from_counts = NSB()(hf, k=K)
     estimate_from_multiplicities = NSB()((hn, hz), k=K)
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+
+
+def test_ww(data_1d):
+    alpha = 0.1
+    counter1 = MultiCounter(data_1d, stat='counts')
+    counter2 = MultiCounter(data_1d, stat='multiplicities')
+    _, hf = counter1.counts()
+    hn, hz = counter2.counts(k=K)
+    estimate_from_counts = ndd.fnsb.dirichlet(hf, K, alpha)
+    estimate_from_multiplicities = ndd.fnsb.dirichlet_from_multiplicities(
+        hn, hz, K, alpha)
+    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+
+
+def test_ww_estimator(data_1d):
+    alpha = 0.1
+    counter1 = MultiCounter(data_1d, stat='counts')
+    counter2 = MultiCounter(data_1d, stat='multiplicities')
+    _, hf = counter1.counts()
+    hn, hz = counter2.counts(k=K)
+    estimate_from_counts = NSB(alpha=alpha)(hf, k=K)
+    estimate_from_multiplicities = NSB(alpha=alpha)((hn, hz), k=K)
+    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)

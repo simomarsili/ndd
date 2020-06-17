@@ -611,11 +611,6 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   real(8),   intent(in)  :: alpha
   real(8),   intent(out) :: estimate
 
-!  if (size(counts) == 1) then
-!     estimate = 0.0d0
-!     return
-!  end if
-
   call initialize_from_counts(counts, nc)
 
   estimate = h_dir(alpha)
@@ -623,6 +618,27 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   call finalize()
 
 end subroutine dirichlet
+
+subroutine dirichlet_from_multiplicities(n, hn1, hz1, nc, alpha, estimate)
+  ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
+  use dirichlet_mod, only: initialize_from_multiplicities, finalize
+  use dirichlet_mod, only: h_dir
+  implicit none
+
+  integer, intent(in)  :: n
+  real(8), intent(in)    :: hn1(n)
+  real(8), intent(in)    :: hz1(n)
+  real(8), intent(in)    :: nc
+  real(8),   intent(in)  :: alpha
+  real(8),   intent(out) :: estimate
+
+  call initialize_from_multiplicities(hn1, hz1, nc)
+
+  estimate = h_dir(alpha)
+
+  call finalize()
+
+end subroutine dirichlet_from_multiplicities
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use dirichlet_mod, only: initialize_from_counts, finalize
