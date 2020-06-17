@@ -134,5 +134,5 @@ __all__ = [
     'from_data',
 ]
 
-entropy_estimators = list(package_setup.subclasses(EntropyEstimator))
-divergence_estimators = list(package_setup.subclasses(DivergenceEstimator))
+entropy_estimators = package_setup.subclasses(EntropyEstimator)
+divergence_estimators = package_setup.subclasses(DivergenceEstimator)

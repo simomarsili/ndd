@@ -10,7 +10,6 @@ import numpy.random as random
 import pytest
 
 import ndd
-import ndd.estimators
 from make_test_ref import SEED, cases
 from utils import tests_dir
 
@@ -165,3 +164,13 @@ def test_large_cardinality():
     counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
     result = ndd.entropy(counts, k=1.e50)
     assert result == 115.12913725676123
+
+
+estimators = dict(ndd.entropy_estimators)
+estimators.pop('NSB')
+
+
+@pytest.mark.parametrize('estimator', estimators.values())
+def test_multiplicities_not_implemented(estimator):
+    with pytest.raises(NotImplementedError):
+        estimator().fit(([0, 1, 2], [2, 2, 1]), k=2)

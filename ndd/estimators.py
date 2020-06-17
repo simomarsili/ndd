@@ -9,7 +9,6 @@ from functools import wraps
 import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
-import ndd
 import ndd.fnsb
 from ndd.base import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError, NddError
@@ -276,6 +275,9 @@ class Plugin(EntropyEstimator):
             Entropy estimate.
 
         """
+        if self.input_is_multiplicities:
+            raise NotImplementedError('%s estimator takes counts as input' %
+                                      self.__class__.__name__)
         if k is None:
             k = numpy.sum(pk > 0)
         if k == 1:
@@ -305,6 +307,9 @@ class MillerMadow(EntropyEstimator):
             Entropy estimate.
 
         """
+        if self.input_is_multiplicities:
+            raise NotImplementedError('%s estimator takes counts as input' %
+                                      self.__class__.__name__)
         k = numpy.sum(pk > 0)
 
         plugin = Plugin()
@@ -397,6 +402,9 @@ class AsymptoticNSB(EntropyEstimator):
         float
             Entropy estimate.
         """
+        if self.input_is_multiplicities:
+            raise NotImplementedError('%s estimator takes counts as input' %
+                                      self.__class__.__name__)
         kn = numpy.sum(pk > 0)  # number of sampled bins
         n = numpy.sum(pk)  # number of samples
         # under-sampled regime when ratio < 0.1 (Nemenman2011)
@@ -438,7 +446,9 @@ class Grassberger(EntropyEstimator):
             Entropy estimate.
 
         """
-
+        if self.input_is_multiplicities:
+            raise NotImplementedError('%s estimator takes counts as input' %
+                                      self.__class__.__name__)
         n = numpy.sum(pk)
 
         gg = g_series()  # init the G series
