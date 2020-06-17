@@ -3,7 +3,7 @@
 # License: BSD 3 clause
 """Classes for entropy estimators."""
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod  # python >= 3.4
 from functools import wraps
 
 import numpy
@@ -82,11 +82,6 @@ def g_series():
         return value
 
     return gterm
-
-
-# compatible with both Python 2 and 3
-# https://stackoverflow.com/a/38668373
-ABC = ABCMeta('ABC', (object, ), {'__slots__': ()})
 
 
 class EntropyEstimator(BaseEstimator, ABC):
