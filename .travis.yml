@@ -1,10 +1,6 @@
 language: python
 matrix:
   include:
-    - python: nightly
-      env: TOXENV=pynightly
-    - python: 3.8-dev
-      env: TOXENV=py38-dev
     - python: 3.8
       env: TOXENV=py38
     - python: 3.7
