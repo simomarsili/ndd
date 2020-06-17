@@ -10,9 +10,9 @@ import platform
 from pkg_resources import parse_version
 
 NAME = 'ndd'
-NUMPY_MIN_VERSION = '1.13'
+NUMPY_MIN_VERSION = '1.17'
 PACKAGE_FILE = 'package.json'
-SETUP_REQUIRES = ['numpy>=1.13']
+SETUP_REQUIRES = ['numpy>=1.17']
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 PLATFORM = platform.system()
@@ -108,7 +108,7 @@ setup(
     packages=['ndd'],
     package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
     ext_modules=[FNSB],
-    # python_requires='>=3.4',
+    python_requires='>=3.5',
     setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
     extras_require={'test': ['pytest']},
