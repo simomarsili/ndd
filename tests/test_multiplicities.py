@@ -8,6 +8,7 @@ import pytest
 
 import ndd.fnsb
 from ndd.counters import MultiCounter
+from ndd.estimators import NSB
 
 K = 4
 N = 10000
@@ -88,4 +89,14 @@ def test_nsb(data_1d):
     estimate_from_counts = ndd.fnsb.nsb(hf, K)[0]
     estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz,
                                                                     K)[0]
+    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+
+
+def test_nsb_estimator(data_1d):
+    counter1 = MultiCounter(data_1d, stat='counts')
+    counter2 = MultiCounter(data_1d, stat='multiplicities')
+    _, hf = counter1.counts()
+    hn, hz = counter2.counts(k=K)
+    estimate_from_counts = NSB()(hf, k=K)
+    estimate_from_multiplicities = NSB()((hn, hz), k=K)
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)

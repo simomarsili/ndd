@@ -40,6 +40,11 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
     ----------
     pk : array-like
         The number of occurrences of a set of bins.
+        If a 2-tuple of arrays: counts encoded as "multiplicities" or
+        "frequency distribution". pk[0] contains the observed
+        counts values and pk[1] the corresponding frequencies.
+        For example: the array of counts [0, 1, 2, 1, 0] corresponds to
+        ([0, 1, 2], [2, 2, 1]).
     k : int or array-like (optional if estimator != NSB)
         Alphabet size (the number of bins with non-zero probability).
         Must be >= len(pk). A float is a valid input for whole numbers
@@ -71,6 +76,7 @@ def entropy(pk, k=None, estimator='NSB', return_std=False):
         k = numpy.sum(pk > 0)
 
     estimator = estimator.fit(pk, k=k)
+
     S, err = estimator.estimate_, estimator.err_
 
     if numpy.isnan(S):

@@ -101,6 +101,7 @@ class EntropyEstimator(BaseEstimator, ABC):
         self.estimate_ = None
         self.err_ = None
         self.input_data_ndim = 1
+        self.input_is_multiplicities = False
 
     def __call__(self, pk, k=None):
         """Fit and return the estimated value."""
@@ -142,8 +143,7 @@ class EntropyEstimator(BaseEstimator, ABC):
             raise AlphaError(error_msg)
         return a
 
-    @staticmethod
-    def check_pk(a):
+    def check_pk(self, a):
         """
         Convert the array of counts to int32.
 
@@ -153,8 +153,11 @@ class EntropyEstimator(BaseEstimator, ABC):
             If pk is not a valid array of counts.
 
         """
-
+        if isinstance(a, tuple):
+            self.input_is_multiplicities = True
         a = numpy.int32(a)
+        if a.ndim != 2 or len(a) != 2:
+            self.input_is_multiplicities = False
         negative = numpy.any([a < 0])
         if negative:
             raise CountsError('counts array has negative values')
@@ -356,8 +359,13 @@ class NSB(EntropyEstimator):
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
             return self
+
         if self.alpha is None:
-            self.estimate_, self.err_ = ndd.fnsb.nsb(pk, k)
+            if self.input_is_multiplicities:
+                self.estimate_, self.err_ = ndd.fnsb.nsb_from_multiplicities(
+                    pk[0], pk[1], k)
+            else:
+                self.estimate_, self.err_ = ndd.fnsb.nsb(pk, k)
         else:
             self.estimate_ = ndd.fnsb.dirichlet(pk, k, self.alpha)
         return self
