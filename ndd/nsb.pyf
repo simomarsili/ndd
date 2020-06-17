@@ -141,22 +141,24 @@ python module fnsb ! in
             real(kind=8) intent(in) :: alpha
             real(kind=8) intent(out) :: estimate
         end subroutine pseudo
-        subroutine dirichlet(n,counts,nc,alpha,estimate) ! in :fnsb:estimators.f90
-            use dirichlet_mod, only: h_dir
+        subroutine dirichlet(n,counts,nc,alpha,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use dirichlet_mod, only: h_dir,h_var
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts
             real(kind=8) intent(in) :: nc
             real(kind=8) intent(in) :: alpha
             real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
         end subroutine dirichlet
-        subroutine dirichlet_from_multiplicities(n,hn1,hz1,nc,alpha,estimate) ! in :fnsb:estimators.f90
-            use dirichlet_mod, only: h_dir
+        subroutine dirichlet_from_multiplicities(n,hn1,hz1,nc,alpha,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use dirichlet_mod, only: h_dir,h_var
             integer, optional,intent(in),check(len(hn1)>=n),depend(hn1) :: n=len(hn1)
             real(kind=8) dimension(n),intent(in) :: hn1
             real(kind=8) dimension(n),intent(in),depend(n) :: hz1
             real(kind=8) intent(in) :: nc
             real(kind=8) intent(in) :: alpha
             real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
         end subroutine dirichlet_from_multiplicities
         subroutine nsb(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use dirichlet_mod, only: initialize_from_counts,finalize

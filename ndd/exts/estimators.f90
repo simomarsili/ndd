@@ -599,10 +599,10 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
 
 end subroutine pseudo
 
-subroutine dirichlet(n,counts,nc,alpha,estimate)
+subroutine dirichlet(n, counts, nc, alpha, estimate, err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use dirichlet_mod, only: initialize_from_counts, finalize
-  use dirichlet_mod, only: h_dir
+  use dirichlet_mod, only: h_dir, h_var
   implicit none
 
   integer, intent(in)  :: n
@@ -610,19 +610,23 @@ subroutine dirichlet(n,counts,nc,alpha,estimate)
   real(8), intent(in)    :: nc
   real(8),   intent(in)  :: alpha
   real(8),   intent(out) :: estimate
+  real(8),   intent(out) :: err_estimate
 
   call initialize_from_counts(counts, nc)
 
   estimate = h_dir(alpha)
 
+  err_estimate = sqrt(h_var(alpha) - estimate**2)
+
   call finalize()
 
 end subroutine dirichlet
 
-subroutine dirichlet_from_multiplicities(n, hn1, hz1, nc, alpha, estimate)
+subroutine dirichlet_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
+  err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use dirichlet_mod, only: initialize_from_multiplicities, finalize
-  use dirichlet_mod, only: h_dir
+  use dirichlet_mod, only: h_dir, h_var
   implicit none
 
   integer, intent(in)  :: n
@@ -631,10 +635,13 @@ subroutine dirichlet_from_multiplicities(n, hn1, hz1, nc, alpha, estimate)
   real(8), intent(in)    :: nc
   real(8),   intent(in)  :: alpha
   real(8),   intent(out) :: estimate
+  real(8),   intent(out) :: err_estimate
 
   call initialize_from_multiplicities(hn1, hz1, nc)
 
   estimate = h_dir(alpha)
+
+  err_estimate = sqrt(h_var(alpha) - estimate**2)
 
   call finalize()
 
