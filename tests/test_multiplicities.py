@@ -108,8 +108,8 @@ def test_ww(data_1d):
     counter2 = MultiCounter(data_1d, stat='multiplicities')
     _, hf = counter1.counts()
     hn, hz = counter2.counts(k=K)
-    estimate_from_counts = ndd.fnsb.dirichlet(hf, K, alpha)[0]
-    estimate_from_multiplicities = ndd.fnsb.dirichlet_from_multiplicities(
+    estimate_from_counts = ndd.fnsb.ww(hf, K, alpha)[0]
+    estimate_from_multiplicities = ndd.fnsb.ww_from_multiplicities(
         hn, hz, K, alpha)[0]
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
 

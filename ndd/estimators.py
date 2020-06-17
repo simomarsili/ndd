@@ -374,11 +374,10 @@ class NSB(EntropyEstimator):
                 self.estimate_, self.err_ = ndd.fnsb.nsb(pk, k)
         else:  # wolpert-wolf estimator
             if self.input_is_multiplicities:
-                self.estimate_, self.err_ = ndd.fnsb.dirichlet_from_multiplicities(
+                self.estimate_, self.err_ = ndd.fnsb.ww_from_multiplicities(
                     pk[0], pk[1], k, self.alpha)
             else:
-                self.estimate_, self.err_ = ndd.fnsb.dirichlet(
-                    pk, k, self.alpha)
+                self.estimate_, self.err_ = ndd.fnsb.ww(pk, k, self.alpha)
         return self
 
 

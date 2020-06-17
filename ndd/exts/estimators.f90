@@ -599,7 +599,7 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
 
 end subroutine pseudo
 
-subroutine dirichlet(n, counts, nc, alpha, estimate, err_estimate)
+subroutine ww(n, counts, nc, alpha, estimate, err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use dirichlet_mod, only: initialize_from_counts, finalize
   use dirichlet_mod, only: h_dir, h_var
@@ -620,9 +620,9 @@ subroutine dirichlet(n, counts, nc, alpha, estimate, err_estimate)
 
   call finalize()
 
-end subroutine dirichlet
+end subroutine ww
 
-subroutine dirichlet_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
+subroutine ww_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
   err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use dirichlet_mod, only: initialize_from_multiplicities, finalize
@@ -645,7 +645,7 @@ subroutine dirichlet_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
 
   call finalize()
 
-end subroutine dirichlet_from_multiplicities
+end subroutine ww_from_multiplicities
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use dirichlet_mod, only: initialize_from_counts, finalize
