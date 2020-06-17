@@ -1,6 +1,14 @@
 # Change log
 
 ## Unreleased
+### Changed
+- the entropy functions takes frequency counts (multiplicities) as input via
+  the `zk` optional argument
+- renamed `pk` to `nk`
+- the signature of the *entropy* function is:
+  ```
+  entropy(nk, k=None, zk=None, estimator='NSB', return_std=False)
+  ```
 
 ## [1.8.3] - 2020-06-16
 ### Fixed

@@ -29,7 +29,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def entropy(nk, zk=None, k=None, estimator='NSB', return_std=False):
+def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     """
     Entropy estimate from an array of counts.
 
@@ -40,14 +40,14 @@ def entropy(nk, zk=None, k=None, estimator='NSB', return_std=False):
     ----------
     nk : array-like
         The number of occurrences of a set of bins.
-    zk : array_like, optional
-        Counts distribution or "multiplicities". If passed, nk contains
-        the observed counts values.
     k : int or array-like (optional if estimator != NSB)
         Alphabet size (the number of bins with non-zero probability).
         Must be >= len(nk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
         If estimator != NSB estimator, defaults to sum(nk > 0)
+    zk : array_like, optional
+        Counts distribution or "multiplicities". If passed, nk contains
+        the observed counts values.
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.

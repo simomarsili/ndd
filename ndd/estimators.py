@@ -48,12 +48,12 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
     """Check fit input args."""
 
     @wraps(fit_function)
-    def wrapper(obj, nk, zk=None, k=None):
+    def wrapper(obj, nk, k=None, zk=None):
         nk = obj.check_nk(nk)
         if zk is not None:
             zk = obj.check_nk(zk)
         k = obj.check_k(k)
-        return fit_function(obj, nk, zk=zk, k=k)
+        return fit_function(obj, nk, k=k, zk=zk)
 
     return wrapper
 
@@ -104,9 +104,9 @@ class EntropyEstimator(BaseEstimator, ABC):
         self.err_ = None
         self.input_data_ndim = 1
 
-    def __call__(self, nk, zk=None, k=None):
+    def __call__(self, nk, k=None, zk=None):
         """Fit and return the estimated value."""
-        return self.fit(nk, zk=None, k=k).estimate_
+        return self.fit(nk, k=k, zk=zk).estimate_
 
     @property
     def algorithm(self):
@@ -207,7 +207,7 @@ class EntropyEstimator(BaseEstimator, ABC):
         return k
 
     @abstractmethod
-    def fit(self, nk, zk=None, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Compute an entropy estimate from nk.
 
@@ -215,13 +215,13 @@ class EntropyEstimator(BaseEstimator, ABC):
         ----------
         nk : array_like, shape (n_bins,)
             The number of occurrences of a set of bins.
-        zk : array_like, optional
-            Counts distribution or "multiplicities". If passed, nk contains
-            the observed counts values.
         k : int, optional
             Number of bins. k >= len(nk).
             Float values are valid input for whole numbers (e.g. k=1.e3).
             Defaults to sum(nk > 0).
+        zk : array_like, optional
+            Counts distribution or "multiplicities". If passed, nk contains
+            the observed counts values.
 
         Returns
         -------
@@ -259,20 +259,20 @@ class Plugin(EntropyEstimator):
             self.alpha = None
 
     @check_input
-    def fit(self, nk, zk=None, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
         nk : array-like
             The number of occurrences of a set of bins.
-        zk : array_like, optional
-            Counts distribution or "multiplicities". If passed, nk contains
-            the observed counts values.
         k : int or array-like, optional
             Alphabet size (the number of bins with non-zero probability).
             Must be >= len(nk). A float is a valid input for whole numbers
             (e.g. k=1.e3). If an array, set k = numpy.prod(k).
             Default: k = sum(nk > 0)
+        zk : array_like, optional
+            Counts distribution or "multiplicities". If passed, nk contains
+            the observed counts values.
 
         Returns
         -------
@@ -299,7 +299,7 @@ class MillerMadow(EntropyEstimator):
     """Miller-Madow entropy estimator."""
 
     @check_input
-    def fit(self, nk, zk=None, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
@@ -347,19 +347,19 @@ class NSB(EntropyEstimator):
             self.alpha = None
 
     @check_input
-    def fit(self, nk, zk=None, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
         nk : array-like
             The number of occurrences of a set of bins.
-        zk : array_like, optional
-            Counts distribution or "multiplicities". If passed, nk contains
-            the observed counts values.
         k : int or array-like
             Alphabet size (the number of bins with non-zero probability).
             Must be >= len(nk). A float is a valid input for whole numbers
             (e.g. k=1.e3). If an array, set k = numpy.prod(k).
+        zk : array_like, optional
+            Counts distribution or "multiplicities". If passed, nk contains
+            the observed counts values.
 
         Returns
         -------
@@ -402,7 +402,7 @@ class AsymptoticNSB(EntropyEstimator):
     """
 
     @check_input
-    def fit(self, nk, zk=None, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
@@ -445,7 +445,7 @@ class Grassberger(EntropyEstimator):
     """
 
     @check_input
-    def fit(self, nk, zk=None, k=None):  # pylint: disable=unused-argument
+    def fit(self, nk, k=None, zk=None):  # pylint: disable=unused-argument
         """
         Parameters
         ----------

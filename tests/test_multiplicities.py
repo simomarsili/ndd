@@ -102,7 +102,8 @@ def test_nsb(counts_1d, multi_1d):
 
 def test_nsb_estimator(counts_1d, multi_1d):
     estimate_from_counts = NSB()(counts_1d, k=K)
-    estimate_from_multiplicities = NSB()(*multi_1d, k=K)
+    nk, zk = multi_1d
+    estimate_from_multiplicities = NSB()(nk, zk=zk, k=K)
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
 
 
@@ -117,5 +118,6 @@ def test_ww(counts_1d, multi_1d):
 def test_ww_estimator(counts_1d, multi_1d):
     alpha = 0.1
     estimate_from_counts = NSB(alpha=alpha)(counts_1d, k=K)
-    estimate_from_multiplicities = NSB(alpha=alpha)(*multi_1d, k=K)
+    nk, zk = multi_1d
+    estimate_from_multiplicities = NSB(alpha=alpha)(nk, zk=zk, k=K)
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)

@@ -44,14 +44,13 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         return self.entropy_estimator.__class__.__name__
 
     @abstractmethod
-    def fit(self, nk, zk=None, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
         nk : array_like
             n-by-p array. Different rows correspond to counts from different
             distributions with the same discrete sample space.
-
         k : int, optional
             Number of bins. k >= p if nk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
@@ -80,14 +79,13 @@ class JSDivergence(DivergenceEstimator):
     """
 
     @check_input
-    def fit(self, nk, zk=None, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
         nk : array_like
             n-by-p array. Different rows correspond to counts from different
             distributions with the same discrete sample space.
-
         k : int, optional
             Number of bins. k >= p if nk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).

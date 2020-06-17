@@ -27,7 +27,7 @@ def dimul(alpha, n, size=None):
 def entropy(counts, k):
     """ndd.entropy() execution time"""
     start = time.time()
-    _ = ndd.entropy(counts, k, return_std=True)
+    _ = ndd.entropy(counts, k=k, return_std=True)
     end = time.time()
     return end - start, 0
 
@@ -60,7 +60,7 @@ def average_timings(ar):
 
 def cprofile(ar):
     """Run cprofile"""
-    return [ndd.entropy(x, K) for x in ar]
+    return [ndd.entropy(x, k=K) for x in ar]
 
 
 if __name__ == '__main__':

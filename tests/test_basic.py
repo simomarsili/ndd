@@ -173,4 +173,4 @@ estimators.pop('NSB')
 @pytest.mark.parametrize('estimator', estimators.values())
 def test_multiplicities_not_implemented(estimator):
     with pytest.raises(NotImplementedError):
-        estimator().fit([0, 1, 2], [2, 2, 1], k=2)
+        estimator().fit([0, 1, 2], zk=[2, 2, 1], k=2)
