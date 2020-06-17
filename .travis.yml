@@ -13,8 +13,6 @@ matrix:
       env: TOXENV=py36
     - python: 3.5
       env: TOXENV=py35
-virtualenv:
-  system_site_packages: true
 before_install:
   - pip install -U numpy
   - sudo apt-get install gfortran
