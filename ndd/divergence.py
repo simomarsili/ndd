@@ -9,9 +9,10 @@ from abc import ABCMeta, abstractmethod
 import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
-import ndd
 from ndd.estimators import NSB, EntropyEstimator, check_input
+from ndd.estimators import estimators as entropy_estimators
 from ndd.exceptions import NddError
+from ndd.package_setup import subclasses
 
 __all__ = ['DivergenceEstimator', 'JSDivergence']
 
@@ -31,7 +32,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         self.input_data_ndim = 2
 
         estimator_name = type(entropy).__name__
-        if estimator_name not in ndd.entropy_estimators:
+        if estimator_name not in entropy_estimators:
             raise NddError('%s is not a valid entropy estimator' %
                            estimator_name)
 
@@ -115,3 +116,6 @@ class JSDivergence(DivergenceEstimator):
                           sum(ws[i] * self.entropy_estimator(x, k=k)
                               for i, x in enumerate(pk)))
         return self
+
+
+estimators = subclasses(DivergenceEstimator)

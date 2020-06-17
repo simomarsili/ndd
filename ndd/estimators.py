@@ -12,6 +12,7 @@ from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 import ndd.fnsb
 from ndd.base import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError, NddError
+from ndd.package_setup import subclasses
 
 logger = logging.getLogger(__name__)
 
@@ -460,3 +461,6 @@ class Grassberger(EntropyEstimator):
 
         self.estimate_ = estimate
         return self
+
+
+estimators = subclasses(EntropyEstimator)
