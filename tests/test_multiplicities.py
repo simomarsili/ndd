@@ -25,6 +25,18 @@ def data_2d():
     return numpy.random.randint(K, size=(N, P))
 
 
+@pytest.fixture
+def counts_1d(data_1d):
+    counter = MultiCounter(data_1d, stat='counts')
+    return counter.counts()[1]
+
+
+@pytest.fixture
+def multi_1d(data_1d):
+    counter = MultiCounter(data_1d, stat='multiplicities')
+    return counter.counts(k=K)
+
+
 def compute_frequencies(a):
     """Frequencies from 1D array"""
     return list(Counter(a).values())
@@ -81,45 +93,29 @@ def test_counter_2d_columns(data_2d):
     assert identical_sorted(mult, mult0.values())
 
 
-def test_nsb(data_1d):
-    counter1 = MultiCounter(data_1d, stat='counts')
-    counter2 = MultiCounter(data_1d, stat='multiplicities')
-    _, hf = counter1.counts()
-    hn, hz = counter2.counts(k=K)
-    estimate_from_counts = ndd.fnsb.nsb(hf, K)[0]
-    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz,
-                                                                    K)[0]
+def test_nsb(counts_1d, multi_1d):
+    estimate_from_counts = ndd.fnsb.nsb(counts_1d, K)[0]
+    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(
+        multi_1d[0], multi_1d[1], K)[0]
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
 
 
-def test_nsb_estimator(data_1d):
-    counter1 = MultiCounter(data_1d, stat='counts')
-    counter2 = MultiCounter(data_1d, stat='multiplicities')
-    _, hf = counter1.counts()
-    hn, hz = counter2.counts(k=K)
-    estimate_from_counts = NSB()(hf, k=K)
-    estimate_from_multiplicities = NSB()((hn, hz), k=K)
+def test_nsb_estimator(counts_1d, multi_1d):
+    estimate_from_counts = NSB()(counts_1d, k=K)
+    estimate_from_multiplicities = NSB()(multi_1d, k=K)
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
 
 
-def test_ww(data_1d):
+def test_ww(counts_1d, multi_1d):
     alpha = 0.1
-    counter1 = MultiCounter(data_1d, stat='counts')
-    counter2 = MultiCounter(data_1d, stat='multiplicities')
-    _, hf = counter1.counts()
-    hn, hz = counter2.counts(k=K)
-    estimate_from_counts = ndd.fnsb.ww(hf, K, alpha)[0]
+    estimate_from_counts = ndd.fnsb.ww(counts_1d, K, alpha)[0]
     estimate_from_multiplicities = ndd.fnsb.ww_from_multiplicities(
-        hn, hz, K, alpha)[0]
+        multi_1d[0], multi_1d[1], K, alpha)[0]
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
 
 
-def test_ww_estimator(data_1d):
+def test_ww_estimator(counts_1d, multi_1d):
     alpha = 0.1
-    counter1 = MultiCounter(data_1d, stat='counts')
-    counter2 = MultiCounter(data_1d, stat='multiplicities')
-    _, hf = counter1.counts()
-    hn, hz = counter2.counts(k=K)
-    estimate_from_counts = NSB(alpha=alpha)(hf, k=K)
-    estimate_from_multiplicities = NSB(alpha=alpha)((hn, hz), k=K)
+    estimate_from_counts = NSB(alpha=alpha)(counts_1d, k=K)
+    estimate_from_multiplicities = NSB(alpha=alpha)(multi_1d, k=K)
     assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
