@@ -44,7 +44,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         return self.entropy_estimator.__class__.__name__
 
     @abstractmethod
-    def fit(self, pk, k=None):
+    def fit(self, pk, zk=None, k=None):
         """
         Parameters
         ----------
@@ -80,7 +80,7 @@ class JSDivergence(DivergenceEstimator):
     """
 
     @check_input
-    def fit(self, pk, k=None):
+    def fit(self, pk, zk=None, k=None):
         """
         Parameters
         ----------
