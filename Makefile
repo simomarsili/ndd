@@ -1,6 +1,7 @@
 INSTALL_PATH=/usr/local
 PYTHON=python3
 VERSION=$(shell python3 -c "import ndd; print(ndd.__version__)")
+.PHONY: default build install dev_install test clean veryclean f2py timings dist ta
 
 default:
 	make dev_install; make test
