@@ -818,68 +818,6 @@ subroutine phony_4(n,counts,nc,estimate,err_estimate)
 end subroutine phony_4
 
 
-subroutine plugin2d(n,m,counts,estimate)
-  ! plugin estimator - no prior, no regularization
-  implicit none
-
-  integer, intent(in) :: n
-  integer, intent(in) :: m
-  integer, intent(in) :: counts(n,m)
-  real(8),  intent(out) :: estimate(m)
-
-  integer :: k
-
-  do k = 1,m
-     call plugin(n, counts(:,k), estimate(k))
-  end do
-
-end subroutine plugin2d
-
-subroutine pseudo2d(n,m,counts,nc,alpha,estimate)
-  implicit none
-
-  integer, intent(in)  :: n
-  integer, intent(in)  :: m
-  integer, intent(in)  :: counts(n,m)
-  integer, intent(in)  :: nc
-  real(8),   intent(in)  :: alpha
-  real(8),   intent(out) :: estimate(m)
-
-  integer :: nbins,n_data
-  integer :: i
-  real(8)   :: ni
-  integer :: k
-
-  if (alpha < 1.0d-10) then
-     ! if alpha == 0.0 (no pseudocounts)
-     do k = 1,m
-        call plugin(n, counts(:,k), estimate(k))
-     end do
-  else
-     do k = 1,m
-        call pseudo(n,counts(:,k),nc,alpha,estimate(k))
-     end do
-  end if
-
-end subroutine pseudo2d
-
-subroutine dirichlet2d(n,m,counts,nc,alpha,estimate)
-  implicit none
-
-  integer, intent(in)  :: n
-  integer, intent(in)  :: m
-  integer, intent(in)  :: counts(n,m)
-  real(8), intent(in)    :: nc
-  real(8),   intent(in)  :: alpha
-  real(8),   intent(out) :: estimate(m)
-  integer :: k
-
-  do k = 1,m
-     call dirichlet(n,counts(:,k),nc,alpha,estimate(k))
-  end do
-
-end subroutine dirichlet2d
-
 subroutine nsb2d(n,m,counts,nc,estimate,err_estimate)
   implicit none
 
