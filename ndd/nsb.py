@@ -29,25 +29,25 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def entropy(pk, zk=None, k=None, estimator='NSB', return_std=False):
+def entropy(nk, zk=None, k=None, estimator='NSB', return_std=False):
     """
     Entropy estimate from an array of counts.
 
     Return a Bayesian estimate for the entropy of an unknown discrete
-    distribution from an input array of counts pk.
+    distribution from an input array of counts nk.
 
     Parameters
     ----------
-    pk : array-like
+    nk : array-like
         The number of occurrences of a set of bins.
     zk : array_like, optional
-        Counts distribution or "multiplicities". If passed, pk contains
+        Counts distribution or "multiplicities". If passed, nk contains
         the observed counts values.
     k : int or array-like (optional if estimator != NSB)
         Alphabet size (the number of bins with non-zero probability).
-        Must be >= len(pk). A float is a valid input for whole numbers
+        Must be >= len(nk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
-        If estimator != NSB estimator, defaults to sum(pk > 0)
+        If estimator != NSB estimator, defaults to sum(nk > 0)
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
@@ -68,15 +68,15 @@ def entropy(pk, zk=None, k=None, estimator='NSB', return_std=False):
     estimator, _ = check_estimator(estimator)
 
     # flatten the array
-    # pk = numpy.asarray(pk).flatten()
+    # nk = numpy.asarray(nk).flatten()
 
     if not isinstance(estimator, NSB) and k is None:
-        k = numpy.sum(pk > 0)
+        k = numpy.sum(nk > 0)
 
     if zk is not None:
-        estimator = estimator.fit(pk, zk=zk, k=k)
+        estimator = estimator.fit(nk, zk=zk, k=k)
     else:
-        estimator = estimator.fit(pk, k=k)
+        estimator = estimator.fit(nk, k=k)
 
     S, err = estimator.estimate_, estimator.err_
 
@@ -133,7 +133,7 @@ def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
     return estimator(counts, k=k)
 
 
-def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
+def jensen_shannon_divergence(nk, k=None, estimator='NSB'):
     """
     Jensen-Shannon divergence from a m-by-p matrix of counts.
 
@@ -148,7 +148,7 @@ def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
     Parameters
     ----------
 
-    pk : array-like, shape (m, p)
+    nk : array-like, shape (m, p)
         Matrix of frequency counts. Each row corresponds to the number of
         occurrences of a set of bins from a different distribution.
     k : int or array-like, optional
@@ -169,7 +169,7 @@ def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
 
     estimator, _ = check_estimator(estimator)
 
-    estimator = JSDivergence(estimator).fit(pk, k=k)
+    estimator = JSDivergence(estimator).fit(nk, k=k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
@@ -179,15 +179,15 @@ def jensen_shannon_divergence(pk, k=None, estimator='NSB'):
     return js
 
 
-def cross_entropy(pk, qk):
+def cross_entropy(nk, qk):
     """
-    Cross entropy: - sum(pk log(pk/qk))
+    Cross entropy: - sum(nk log(nk/qk))
     Parameters
     ----------
-    pk : array_like
+    nk : array_like
         Probability mass function. Normalize if doesnt sum to 1.
     qk : array_like
-        Probability mass function. Must be len(qk) == len(pk).
+        Probability mass function. Must be len(qk) == len(nk).
 
     Returns
     -------
@@ -196,39 +196,39 @@ def cross_entropy(pk, qk):
 
     """
 
-    if len(qk) != len(pk):
-        raise PmfError('qk and pk must have the same length.')
+    if len(qk) != len(nk):
+        raise PmfError('qk and nk must have the same length.')
 
-    pk = numpy.asarray(pk)
+    nk = numpy.asarray(nk)
     qk = numpy.asarray(qk)
 
-    if any(pk < 0):
-        raise PmfError('pk entries must be positive')
+    if any(nk < 0):
+        raise PmfError('nk entries must be positive')
     if not is_pmf(qk):
         raise PmfError('qk must be a valid PMF (positive, normalized)')
 
-    pk = 1.0 * pk / numpy.sum(pk)
+    nk = 1.0 * nk / numpy.sum(nk)
     qk = numpy.log(1.0 * qk)
 
-    return -numpy.sum(pk * qk)
+    return -numpy.sum(nk * qk)
 
 
-def kullback_leibler_divergence(pk, qk, estimator='NSB'):
+def kullback_leibler_divergence(nk, qk, estimator='NSB'):
     """
-    Kullback-Leibler divergence given counts pk and a reference PMF qk.
+    Kullback-Leibler divergence given counts nk and a reference PMF qk.
 
-    Return an estimate of the Kullback-Leibler given an array of counts pk and
+    Return an estimate of the Kullback-Leibler given an array of counts nk and
     a reference PMF qk. The estimate (in nats) is computed as:
-    - S_p - sum(pk * log(qk)) / sum(pk)
-    where S_p is the entropy estimate from counts pk.
+    - S_p - sum(nk * log(qk)) / sum(nk)
+    where S_p is the entropy estimate from counts nk.
 
     Parameters
     ----------
-    pk : array_like
+    nk : array_like
         The number of occurrences of a set of bins.
     qk : array_like
-        Reference PMF in sum(pk log(pk/qk).
-        Must be a valid PMF (non-negative, normalized) and len(qk) = len(pk).
+        Reference PMF in sum(nk log(nk/qk).
+        Must be a valid PMF (non-negative, normalized) and len(qk) = len(nk).
     estimator : str or entropy estimator instance, optional
         If a string, use the estimator class with the same name and default
         parameters. Check ndd.entropy_estimators for the available estimators.
@@ -242,12 +242,12 @@ def kullback_leibler_divergence(pk, qk, estimator='NSB'):
     """
 
     estimator, _ = check_estimator(estimator)
-    pk = numpy.asarray(pk)
+    nk = numpy.asarray(nk)
     k = len(qk)
     if k == 1:  # single bin
         return 0.0
 
-    return cross_entropy(pk, qk) - estimator.fit(pk, k=k).estimate_
+    return cross_entropy(nk, qk) - estimator.fit(nk, k=k).estimate_
 
 
 def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):

@@ -44,18 +44,18 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         return self.entropy_estimator.__class__.__name__
 
     @abstractmethod
-    def fit(self, pk, zk=None, k=None):
+    def fit(self, nk, zk=None, k=None):
         """
         Parameters
         ----------
-        pk : array_like
+        nk : array_like
             n-by-p array. Different rows correspond to counts from different
             distributions with the same discrete sample space.
 
         k : int, optional
-            Number of bins. k >= p if pk is n-by-p.
+            Number of bins. k >= p if nk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to pk.shape[1].
+            Defaults to nk.shape[1].
 
         Returns
         -------
@@ -65,7 +65,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         Raises
         ------
         CountsError
-            If pk is not a 2D array.
+            If nk is not a 2D array.
 
         """
 
@@ -80,18 +80,18 @@ class JSDivergence(DivergenceEstimator):
     """
 
     @check_input
-    def fit(self, pk, zk=None, k=None):
+    def fit(self, nk, zk=None, k=None):
         """
         Parameters
         ----------
-        pk : array_like
+        nk : array_like
             n-by-p array. Different rows correspond to counts from different
             distributions with the same discrete sample space.
 
         k : int, optional
-            Number of bins. k >= p if pk is n-by-p.
+            Number of bins. k >= p if nk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to pk.shape[1].
+            Defaults to nk.shape[1].
 
         Returns
         -------
@@ -101,20 +101,20 @@ class JSDivergence(DivergenceEstimator):
         Raises
         ------
         CountsError
-            If pk is not a 2D array.
+            If nk is not a 2D array.
 
         """
 
-        ws = numpy.float64(pk.sum(axis=1))
+        ws = numpy.float64(nk.sum(axis=1))
         ws /= ws.sum()
         if k is None:
-            k = pk.shape[1]
+            k = nk.shape[1]
         if k == 1:  # single bin
             return PZERO
 
-        self.estimate_ = (self.entropy_estimator(pk.sum(axis=0), k=k) -
+        self.estimate_ = (self.entropy_estimator(nk.sum(axis=0), k=k) -
                           sum(ws[i] * self.entropy_estimator(x, k=k)
-                              for i, x in enumerate(pk)))
+                              for i, x in enumerate(nk)))
         return self
 
 
