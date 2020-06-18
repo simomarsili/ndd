@@ -1,6 +1,6 @@
-INSTALL_PATH=/usr/local
-PYTHON=python3
-VERSION=$(shell python3 -c "import ndd; print(ndd.__version__)")
+INSTALL_PATH = /usr/local
+PYTHON = python3
+VERSION = $(shell python3 -c "import ndd; print(ndd.__version__)")
 .PHONY: default build install dev_install test clean veryclean f2py timings dist ta
 
 default:
@@ -8,9 +8,9 @@ default:
 build:
 	$(PYTHON) setup.py build
 install:
-	make veryclean ; make f2py; pip3 install .
+	make veryclean; make f2py; pip3 install .
 dev_install:
-	make veryclean ; make f2py; pip3 install -e .
+	make veryclean; make f2py; pip3 install -e .
 test:
 	(cd tests; pytest)
 clean:
@@ -29,8 +29,3 @@ dist:
 	@if [ "$(shell git rev-parse --abbrev-ref HEAD)" != "master" ]; then (echo "run `make dist` only in master branch"; exit 1); fi
 	$(RM) -f dist/*
 	$(PYTHON) setup.py sdist
-tag:
-	@if [ "$(shell git rev-parse --abbrev-ref HEAD)" != "master" ]; then (echo "run `make tag` only in master branch"; exit 1); fi
-	@echo "tagging v$(VERSION)..."
-	git tag v$(VERSION)
-	git push origin v$(VERSION)
