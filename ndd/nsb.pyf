@@ -68,8 +68,8 @@ python module fnsb ! in
             end function integrand
         end module dirichlet_mod
         module nsb_mod ! in :fnsb:estimators.f90
-            real(kind=8), parameter,optional :: alpha1=1.d-8
-            real(kind=8), parameter,optional :: alpha2=1.d4
+            real(kind=8) :: alpha1
+            real(kind=8) :: alpha2
             real(kind=8) :: log_alpha1
             real(kind=8) :: log_alpha2
             real(kind=8) :: amax
@@ -89,6 +89,7 @@ python module fnsb ! in
             end subroutine log_weight_d
             subroutine compute_integration_range ! in :fnsb:estimators.f90:nsb_mod
                 use constants
+                use dirichlet_mod, only: alphabet_size
             end subroutine compute_integration_range
             function m_func(x) ! in :fnsb:estimators.f90:nsb_mod
                 use dirichlet_mod, only: integrand
