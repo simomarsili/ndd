@@ -272,8 +272,8 @@ end module dirichlet_mod
 module nsb_mod
   implicit none
 
-  real(8), parameter :: alpha1 = 1.d-8
-  real(8), parameter :: alpha2 = 1.d4
+  real(8) :: alpha1
+  real(8) :: alpha2
   real(8) :: log_alpha1
   real(8) :: log_alpha2
   real(8) :: amax
@@ -326,8 +326,13 @@ contains
 
   subroutine compute_integration_range()
     use constants
+    use dirichlet_mod, only: alphabet_size
     real(8)             :: a1,a2,f,df,x
     integer           :: i, err
+
+    amax = 1/alphabet_size
+    alpha1 = amax * 1.d-8
+    alpha2 = amax * 1.d8
 
     ! initialize amax and integration range
     log_alpha1 = log(alpha1)
