@@ -79,12 +79,12 @@ def dump_on_fail(fail_dir='failed', unexpected=default_unexpected):
                 }
                 code = str(hash(tuple(case)))
                 filename = fail_dir / code
-                if not filename.is_file():  # not exists
-                    os.makedirs(os.path.dirname(filename), exist_ok=True)
-                    with open(filename, 'w') as fp:
-                        print(json.dumps(case, cls=NpEncoder), file=fp)
+                os.makedirs(os.path.dirname(filename), exist_ok=True)
+                with open(filename, 'w') as fp:
+                    print(json.dumps(case, cls=NpEncoder), file=fp)
             return result
 
+        dump_args_to_file.original_func = func
         return dump_args_to_file
 
     return decorate
@@ -101,7 +101,7 @@ def run_case(path):
     func = getattr(ndd, case['f'])
     args = case['args']
     kwargs = case['kwargs']
-    result = func(*args, **kwargs)
+    result = func.original_func(*args, **kwargs)
     return (case, result)
 
 
