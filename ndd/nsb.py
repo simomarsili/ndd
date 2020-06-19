@@ -11,8 +11,9 @@ import numpy
 
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, Plugin, check_estimator
+from ndd.estimators import NSB, AsymptoticNSB, Plugin, check_estimator
 from ndd.exceptions import EstimatorInputError, PmfError
+from ndd.failing import dump_on_fail
 
 __all__ = [
     'entropy',
@@ -29,6 +30,26 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
+def guess_k(nk, zk=None, estimator='NSB'):
+    """Guess a reasonable value for the cardinality."""
+    multiplier = 2
+    dk = numpy.log(multiplier)
+    k1 = numpy.sum(zk) if zk else numpy.sum([1 for n in nk if n > 0])
+    # k1 = k1 // 2
+    if not k1:
+        k1 = 1
+    h0 = entropy(nk, k=k1, estimator=estimator)
+    for _ in range(40):
+        k1 = round(k1 * multiplier)
+        h1 = entropy(nk, k=k1, estimator=estimator, return_std=0)
+        dh = (h1 - h0) / dk
+        if dh < 1 / 10:
+            break
+        h0 = h1
+    return round(k1 * 3 / 4)  # midpoint value
+
+
+@dump_on_fail()
 def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     """
     Entropy estimate from an array of counts.
@@ -69,6 +90,19 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
 
     # flatten the array
     # nk = numpy.asarray(nk).flatten()
+
+    if k == 'guess':
+        nk = numpy.asarray(nk)
+        kn = numpy.sum(nk > 0)  # number of sampled bins
+        n = numpy.sum(nk)  # number of samples
+        # under-sampled regime when ratio < 0.1 (Nemenman2011)
+        delta = n - kn + 1
+        ratio = delta / n
+        if ratio < 0.01:
+            k = None
+            estimator = AsymptoticNSB()
+        else:
+            k = guess_k(nk=nk, zk=zk, estimator=estimator)
 
     if not isinstance(estimator, NSB) and k is None:
         k = numpy.sum(nk > 0)
