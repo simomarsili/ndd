@@ -196,8 +196,7 @@ class EntropyEstimator(BaseEstimator, ABC):
         else:
             # if a scalar check size
             if k <= 0:
-                print('k: ', k)
-                raise CardinalityError('k must be > 0')
+                raise CardinalityError('k must be > 0 (%r)' % k)
             if numpy.log(k) > MAX_LOGK:
                 raise CardinalityError('k is too large (%e).'
                                        'Must be < 2^200 ' % k)
