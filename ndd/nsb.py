@@ -11,8 +11,9 @@ import numpy
 
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, AsymptoticNSB, Plugin, check_estimator
-from ndd.exceptions import EstimatorInputError, PmfError
+from ndd.estimators import (NSB, AsymptoticNSB, Plugin, check_estimator,
+                            sampling_ratio)
+from ndd.exceptions import EstimatorInputError, NddError, PmfError
 from ndd.failing import dump_on_fail
 
 __all__ = [
@@ -30,23 +31,54 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def guess_k(nk, zk=None, estimator='NSB'):
+def guess_k(nk, zk=None, eps=1.e-3):
     """Guess a reasonable value for the cardinality."""
-    multiplier = 2
+    asym = AsymptoticNSB()
+    multiplier = 10
     dk = numpy.log(multiplier)
     k1 = numpy.sum(zk) if zk else numpy.sum([1 for n in nk if n > 0])
     # k1 = k1 // 2
     if not k1:
         k1 = 1
-    h0 = entropy(nk, k=k1, estimator=estimator)
+    h0 = entropy(nk, k=k1)
     for _ in range(40):
         k1 = round(k1 * multiplier)
-        h1 = entropy(nk, k=k1, estimator=estimator, return_std=0)
+        h1 = entropy(nk, k=k1, return_std=0)
         dh = (h1 - h0) / dk
-        if dh < 1 / 10:
+        hasym = asym(nk)
+        if dh < eps:
             break
+        if h1 >= hasym:  # should return hasym
+            raise NddError
         h0 = h1
-    return round(k1 * 3 / 4)  # midpoint value
+
+    return round(k1 / numpy.sqrt(multiplier))  # midpoint value
+
+
+def auto_estimator(nk, zk=None, k=None):
+    """Select the best estimator given arguments.
+
+    Returns
+    -------
+    estimator
+
+    """
+
+    if k is not None:
+        return {'k': k, 'estimator': NSB()}
+
+    ratio = sampling_ratio(nk=nk, zk=zk)
+
+    if ratio < 0.1:
+
+        return {'k': None, 'estimator': AsymptoticNSB()}
+
+    try:
+        k = guess_k(nk=nk, zk=zk)
+    except NddError:
+        return {'k': None, 'estimator': AsymptoticNSB()}
+    else:
+        return {'k': k, 'estimator': NSB()}
 
 
 @dump_on_fail()
@@ -86,23 +118,32 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
 
     """
 
+    nk = numpy.asarray(nk)
+    zk = numpy.asarray(zk) if zk is not None else zk
+
+    _ = sampling_ratio(nk=nk, zk=zk)
+
+    if not sampling_ratio.coincidences:  # pylint: disable=no-member
+        # TODO: implement a new class
+        logging.warning('No coincidences in data! regularize')
+        # regularize
+        if zk is not None:
+            idx = numpy.nonzero(nk == 1)[0][0]
+            zk[idx] -= 1
+            nk = numpy.asarray(list(nk) + [2])
+            zk = numpy.asarray(list(zk) + [1])
+        else:
+            idx = numpy.nonzero(nk == 1)[0][0]
+            nk[idx] += 1
+
+    if estimator == 'auto':
+        kwargs = auto_estimator(nk, zk=zk, k=k)
+        return entropy(nk, zk=zk, return_std=return_std, **kwargs)
+
     estimator, _ = check_estimator(estimator)
 
     # flatten the array
     # nk = numpy.asarray(nk).flatten()
-
-    if k == 'guess':
-        nk = numpy.asarray(nk)
-        kn = numpy.sum(nk > 0)  # number of sampled bins
-        n = numpy.sum(nk)  # number of samples
-        # under-sampled regime when ratio < 0.1 (Nemenman2011)
-        delta = n - kn + 1
-        ratio = delta / n
-        if ratio < 0.01:
-            k = None
-            estimator = AsymptoticNSB()
-        else:
-            k = guess_k(nk=nk, zk=zk, estimator=estimator)
 
     if not isinstance(estimator, NSB) and k is None:
         k = numpy.sum(nk > 0)
