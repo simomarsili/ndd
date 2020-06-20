@@ -26,6 +26,24 @@ __all__ = [
 ]
 
 
+def sampling_ratio(nk, zk=None):
+    """Undersampled regime is defined for sampling ratio < 0.1"""
+    if zk is None:
+        kn = numpy.sum(zk[nk > 0])
+        n = numpy.sum(zk * nk)
+    else:
+        kn = numpy.sum(nk > 0)
+        n = numpy.sum(nk)
+    delta = n - kn
+    ratio = delta / (n + 1)
+    # store info as function attributes
+    sampling_ratio.n = n
+    sampling_ratio.kn = kn
+    sampling_ratio.delta = delta
+    sampling_ratio.undersampled = ratio < 0.1
+    return delta
+
+
 def check_estimator(estimator):
     """Check that estimator is a valid entropy estimator."""
     if isinstance(estimator, str):
@@ -416,11 +434,9 @@ class AsymptoticNSB(EntropyEstimator):
         if zk is not None:
             raise NotImplementedError('%s estimator takes counts as input' %
                                       self.__class__.__name__)
-        kn = numpy.sum(nk > 0)  # number of sampled bins
-        n = numpy.sum(nk)  # number of samples
-        # under-sampled regime when ratio < 0.1 (Nemenman2011)
-        delta = n - kn + 1
-        ratio = delta / n
+        ratio = sampling_ratio(nk=nk, zk=zk)
+        delta = sampling_ratio.delta
+        n = sampling_ratio.n
 
         if ratio > 0.1:
             logger.warning('The AsymptoticNSB estimator should only be used '
