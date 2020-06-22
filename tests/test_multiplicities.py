@@ -6,9 +6,10 @@ from collections import Counter
 import numpy
 import pytest
 
-import ndd.fnsb
+from make_test_ref import SEED, approx
+from ndd import fnsb
 from ndd.counters import MultiCounter
-from ndd.estimators import NSB
+from ndd.estimators import NSB, Grassberger
 
 K = 4
 N = 10000
@@ -17,11 +18,13 @@ P = 3
 
 @pytest.fixture
 def data_1d():
+    numpy.random.seed(SEED)
     return numpy.random.randint(K, size=N)
 
 
 @pytest.fixture
 def data_2d():
+    numpy.random.seed(SEED)
     return numpy.random.randint(K, size=(N, P))
 
 
@@ -61,10 +64,9 @@ def identical_sorted(a, b):
 def test_nsb_from_multiplicities(data_1d):
     frequencies = compute_frequencies(data_1d)
     hn, hz = compute_multiplicities(data_1d)
-    estimate_from_counts = ndd.fnsb.nsb(frequencies, K)[0]
-    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(hn, hz,
-                                                                    K)[0]
-    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+    estimate_from_counts = fnsb.nsb(frequencies, K)[0]
+    estimate_from_multiplicities = fnsb.nsb_from_multiplicities(hn, hz, K)[0]
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
 
 
 def test_counter_1d_counts(data_1d):
@@ -94,25 +96,25 @@ def test_counter_2d_columns(data_2d):
 
 
 def test_nsb(counts_1d, multi_1d):
-    estimate_from_counts = ndd.fnsb.nsb(counts_1d, K)[0]
-    estimate_from_multiplicities = ndd.fnsb.nsb_from_multiplicities(
+    estimate_from_counts = fnsb.nsb(counts_1d, K)[0]
+    estimate_from_multiplicities = fnsb.nsb_from_multiplicities(
         multi_1d[0], multi_1d[1], K)[0]
-    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
 
 
 def test_nsb_estimator(counts_1d, multi_1d):
     estimate_from_counts = NSB()(counts_1d, k=K)
     nk, zk = multi_1d
     estimate_from_multiplicities = NSB()(nk, zk=zk, k=K)
-    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
 
 
 def test_ww(counts_1d, multi_1d):
     alpha = 0.1
-    estimate_from_counts = ndd.fnsb.ww(counts_1d, K, alpha)[0]
-    estimate_from_multiplicities = ndd.fnsb.ww_from_multiplicities(
+    estimate_from_counts = fnsb.ww(counts_1d, K, alpha)[0]
+    estimate_from_multiplicities = fnsb.ww_from_multiplicities(
         multi_1d[0], multi_1d[1], K, alpha)[0]
-    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
 
 
 def test_ww_estimator(counts_1d, multi_1d):
@@ -120,4 +122,12 @@ def test_ww_estimator(counts_1d, multi_1d):
     estimate_from_counts = NSB(alpha=alpha)(counts_1d, k=K)
     nk, zk = multi_1d
     estimate_from_multiplicities = NSB(alpha=alpha)(nk, zk=zk, k=K)
-    assert numpy.isclose(estimate_from_multiplicities, estimate_from_counts)
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
+
+
+def test_grassberger_estimator(counts_1d, multi_1d):
+    est = Grassberger()
+    estimate_from_counts = est(counts_1d, k=K)
+    nk, zk = multi_1d
+    estimate_from_multiplicities = est(nk, zk=zk, k=K)
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
