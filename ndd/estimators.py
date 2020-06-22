@@ -27,28 +27,6 @@ __all__ = [
 ]
 
 
-def sampling_ratio(nk, zk=None):
-    """Undersampled regime is defined for sampling ratio < 0.1"""
-    nk = numpy.asarray(nk)
-    zk = numpy.asarray(zk) if zk is not None else zk
-    if zk is not None:
-        kn = numpy.sum(zk[nk > 0])
-        n = numpy.sum(zk * nk)
-    else:
-        kn = numpy.sum(nk > 0)  # slow
-        n = numpy.sum(nk)
-    delta = n - kn
-    # ratio = delta / (n + 1)
-    ratio = delta / n
-    # store info as function attributes
-    sampling_ratio.n = n
-    sampling_ratio.kn = kn
-    sampling_ratio.delta = delta
-    sampling_ratio.undersampled = ratio < 0.1
-    sampling_ratio.coincidences = delta > 0
-    return ratio
-
-
 def check_estimator(estimator):
     """Check that estimator is a valid entropy estimator."""
     if isinstance(estimator, str):
