@@ -494,17 +494,20 @@ class Grassberger(EntropyEstimator):
             Entropy estimate.
 
         """
-        if zk is not None:
-            raise NotImplementedError('%s estimator takes counts as input' %
-                                      self.__class__.__name__)
-        n = numpy.sum(nk)
-
         gg = g_series()  # init the G series
-        estimate = n * numpy.log(n)
-        for x in nk:
-            if x:
-                estimate -= x * gg(x)
-        estimate /= n
+        estimate = 0
+
+        if zk is not None:
+            n = numpy.sum(nk * zk)
+            for j, x in enumerate(nk):
+                if x:
+                    estimate -= zk[j] * x * gg(x)
+        else:
+            n = numpy.sum(nk)
+            for x in nk:
+                if x:
+                    estimate -= x * gg(x)
+        estimate = numpy.log(n) - estimate / n
 
         self.estimate_ = estimate
         return self
