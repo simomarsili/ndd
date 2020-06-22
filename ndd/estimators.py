@@ -11,7 +11,7 @@ from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
 from ndd.base import BaseEstimator
-from ndd.exceptions import AlphaError, CardinalityError, CountsError, NddError
+from ndd.exceptions import AlphaError, CardinalityError, NddError
 from ndd.package_setup import subclasses
 from ndd.sampling import Counts
 
@@ -72,9 +72,9 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
 
     @wraps(fit_function)
     def wrapper(obj, nk, k=None, zk=None):
-        nk = obj.check_nk(nk)
+        nk = numpy.asarray(nk)
         if zk is not None:
-            zk = obj.check_nk(zk)
+            zk = numpy.asarray(zk)
         k = obj.check_k(k)
         return fit_function(obj, nk, k=k, zk=zk)
 
@@ -165,23 +165,6 @@ class EntropyEstimator(BaseEstimator, ABC):
             raise AlphaError(error_msg)
         if a <= 0:
             raise AlphaError(error_msg)
-        return a
-
-    @staticmethod
-    def check_nk(a):
-        """
-        Convert the array of counts to int32.
-
-        Raises
-        ------
-        CountsError
-            If nk is not a valid array of counts.
-
-        """
-        a = numpy.int32(a)
-        negative = numpy.any([a < 0])
-        if negative:
-            raise CountsError('counts array has negative values')
         return a
 
     @staticmethod
@@ -393,6 +376,7 @@ class NSB(EntropyEstimator):
             If k is None.
 
         """
+
         if k is None:
             raise NddError('NSB estimator needs k')
         if k == 1:
