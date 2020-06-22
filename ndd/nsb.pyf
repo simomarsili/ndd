@@ -234,6 +234,17 @@ python module fnsb ! in
             real(kind=8) intent(in) :: x
             real(kind=8) intent(out) :: y
         end subroutine gamma1
+        module counts ! in :fnsb:estimators.f90
+            integer, allocatable,dimension(:) :: nk
+            integer, allocatable,dimension(:) :: zk
+            integer :: ndata
+            integer :: nbins
+            integer :: k1
+            subroutine fit(n,counts) ! in :fnsb:estimators.f90:counts
+                integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+                integer dimension(n),intent(in) :: counts
+            end subroutine fit
+        end module counts
     end interface
 end python module fnsb
 
