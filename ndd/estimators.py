@@ -13,6 +13,7 @@ import ndd.fnsb
 from ndd.base import BaseEstimator
 from ndd.exceptions import AlphaError, CardinalityError, CountsError, NddError
 from ndd.package_setup import subclasses
+from ndd.sampling import Counts
 
 logger = logging.getLogger(__name__)
 
@@ -451,24 +452,23 @@ class AsymptoticNSB(EntropyEstimator):
         if zk is not None:
             raise NotImplementedError('%s estimator takes counts as input' %
                                       self.__class__.__name__)
-        ratio = sampling_ratio(nk=nk, zk=zk)
-        delta = sampling_ratio.delta
-        n = sampling_ratio.n
-        coincidences = sampling_ratio.n - sampling_ratio.kn
 
-        if not coincidences:
+        counts = Counts(nk=nk, zk=zk)
+
+        if not counts.coincidences:
             raise NddError('AsymptoticNSB estimator: no coincidences '
                            'in the data.')
-        if ratio > 0.1:
+        if counts.sampling_ratio > 0.1:
             logger.info('The AsymptoticNSB estimator should only be used '
                         'in the under-sampled regime.')
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
             return self
 
-        self.estimate_ = (euler_gamma - numpy.log(2) + 2.0 * numpy.log(n) -
-                          ndd.fnsb.gamma0(delta))
-        self.err_ = numpy.sqrt(ndd.fnsb.gamma1(delta))
+        self.estimate_ = (euler_gamma - numpy.log(2) +
+                          2.0 * numpy.log(counts.n) -
+                          ndd.fnsb.gamma0(counts.coincidences))
+        self.err_ = numpy.sqrt(ndd.fnsb.gamma1(counts.coincidences))
         return self
 
 
