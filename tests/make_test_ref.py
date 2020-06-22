@@ -7,11 +7,17 @@ import sys
 
 import numpy
 import numpy.random as random
+import pytest
 
 import ndd
 from ndd.estimators import NSB, Plugin
 
 SEED = 123
+
+
+def approx(a, rel=1.e-5, abs=1.e-3):  # pylint: disable=redefined-builtin
+    """Wrap pytest approx. Parms values from numpy.isclose()"""
+    return pytest.approx(a, rel=rel, abs=abs)
 
 
 def random_counts(n=None, k=None, alpha=None):
