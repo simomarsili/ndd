@@ -34,7 +34,7 @@ def sampling_ratio(nk, zk=None):
         kn = numpy.sum(zk[nk > 0])
         n = numpy.sum(zk * nk)
     else:
-        kn = numpy.sum(nk > 0)
+        kn = numpy.sum(nk > 0)  # slow
         n = numpy.sum(nk)
     delta = n - kn
     # ratio = delta / (n + 1)
@@ -384,12 +384,16 @@ class NSB(EntropyEstimator):
 
         Returns
         -------
-        float
-            Entropy estimate.
+        self : object
+
+        Raises
+        ------
+        NddError
+            If k is None.
 
         """
         if k is None:
-            raise ValueError('NSB estimator needs k')
+            raise NddError('NSB estimator needs k')
         if k == 1:
             self.estimate_, self.err_ = PZERO, PZERO
             return self
@@ -411,15 +415,18 @@ class NSB(EntropyEstimator):
 
 class AsymptoticNSB(EntropyEstimator):
     """
-    Asymptotic NSB estimator for countably infinite distributions.
+    Asymptotic NSB estimator for countably infinite distributions (or with
+    unknown cardinality).
 
-    Specifical for the under-sampled regime (k/N approx. 1, where k is the
-    number of distinct symbols in the samples and N the number of samples)
+    Specifical for the strongly under-sampled regime (k/N approx. 1, where k
+    is the number of distinct symbols in the samples and N the number of
+    samples)
 
     See:
     Nemenman2011:
     "Coincidences and estimation of entropies of random variables
     with largecardinalities.", equations 29, 30
+
     """
 
     @check_input
@@ -434,6 +441,12 @@ class AsymptoticNSB(EntropyEstimator):
         -------
         float
             Entropy estimate.
+
+        Raises
+        ------
+        NddError
+            No coincindences.
+
         """
         if zk is not None:
             raise NotImplementedError('%s estimator takes counts as input' %
@@ -441,12 +454,11 @@ class AsymptoticNSB(EntropyEstimator):
         ratio = sampling_ratio(nk=nk, zk=zk)
         delta = sampling_ratio.delta
         n = sampling_ratio.n
+        coincidences = sampling_ratio.n - sampling_ratio.kn
 
-        if not sampling_ratio.coincidences:
-            logging.warning('Asymptotic NSB: no coincidences, regularize.')
-            n += 1
-            delta = 1
-
+        if not coincidences:
+            raise NddError('AsymptoticNSB estimator: no coincidences '
+                           'in the data.')
         if ratio > 0.1:
             logger.info('The AsymptoticNSB estimator should only be used '
                         'in the under-sampled regime.')
