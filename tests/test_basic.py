@@ -166,6 +166,7 @@ def test_large_cardinality():
 
 estimators = dict(ndd.entropy_estimators)
 estimators.pop('NSB')
+estimators.pop('Grassberger')
 
 
 @pytest.mark.parametrize('estimator', estimators.values())
