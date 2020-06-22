@@ -31,7 +31,7 @@ contains
     integer              :: i_,k_,ni_
     integer              :: err
     integer              :: nmax
-    integer, allocatable :: multi0(:)
+    integer, allocatable :: wrk(:)
     real(8)                :: n_empty_bins
     integer              :: n_multi
 
@@ -41,9 +41,9 @@ contains
     ! nmax is the largest number of samples in a bin
     nbins = size(counts)
     nmax = maxval(counts)
-    allocate(multi0(nmax),stat=err)
-    ! multi0(n) is the number of states with frequency n
-    multi0 = 0
+    allocate(wrk(nmax),stat=err)
+    ! wrk(n) is the number of states with frequency n
+    wrk = 0
     ! take into account the alphabet_size - nbins states with zero frequency
     n_empty_bins = alphabet_size - nbins
     do i_ = 1,nbins
@@ -51,25 +51,25 @@ contains
        if (ni_ == 0) then
           n_empty_bins = n_empty_bins + 1.0d0
        else
-          multi0(ni_) = multi0(ni_) + 1
+          wrk(ni_) = wrk(ni_) + 1
        end if
     end do
 
     ! further compress data into 'sparse' multiplicities
-    n_multi = count(multi0 > 0)
+    n_multi = count(wrk > 0)
     allocate(hn(n_multi+1),stat=err)
     allocate(hz(n_multi+1),stat=err)
     hn(1) = 0
     hz(1) = n_empty_bins
     k_ = 1
     do i_ = 1, nmax
-       if (multi0(i_) > 0) then
+       if (wrk(i_) > 0) then
           k_ = k_ + 1
           hn(k_) = i_
-          hz(k_) = multi0(i_)
+          hz(k_) = wrk(i_)
        end if
     end do
-    deallocate(multi0)
+    deallocate(wrk)
 
     allocate(phi(n_multi+1), stat=err)
 
@@ -509,7 +509,7 @@ subroutine plugin(n,counts,estimate)
   integer :: i
   real(8)   :: ni,n_data
   integer              :: mi,nmax,err
-  integer, allocatable :: multi0(:)
+  integer, allocatable :: wrk(:)
   logical :: multi = .false.
 
   if (multi) then
@@ -521,20 +521,20 @@ subroutine plugin(n,counts,estimate)
      end if
      n_data = sum(counts)*1.0d0
      nmax = maxval(counts)
-     allocate(multi0(nmax),stat=err)
-     multi0 = 0
+     allocate(wrk(nmax),stat=err)
+     wrk = 0
      do i = 1,nbins
         ni = counts(i)
         if (ni == 0) cycle
-        multi0(ni) = multi0(ni) + 1
+        wrk(ni) = wrk(ni) + 1
      end do
      estimate = 0.0d0
      do i = 1,nmax
-        mi = multi0(i)
+        mi = wrk(i)
         if (mi > 0) estimate = estimate - mi*i*log(i*1.0d0)
      end do
      estimate = estimate / n_data + log(n_data)
-     deallocate(multi0)
+     deallocate(wrk)
   else
      ! standard implementation
      nbins = size(counts)
@@ -855,3 +855,59 @@ subroutine gamma1(x, y)
   real(8), intent(out) :: y
   y = trigamma(x)
 end subroutine gamma1
+
+module counts
+  implicit none
+  integer, allocatable :: nk(:)
+  integer, allocatable :: zk(:)
+  integer :: ndata
+  integer :: nbins
+  integer :: k1
+contains
+  subroutine fit(n, counts)
+    implicit none
+    integer, intent(in) :: n
+    integer, intent(in) :: counts(n)
+    integer :: i, j, u
+    integer :: x, err
+    integer :: xmax
+    integer, allocatable :: wrk(:)
+
+    xmax = maxval(counts)
+    allocate(wrk(0:xmax), stat=err)
+    wrk = 0
+    u = 0
+    do i = 1,n
+       x = counts(i)
+       if (wrk(x) == 0) then
+          u = u + 1
+       end if
+       wrk(x) = wrk(x) + 1
+    end do
+
+    if (allocated(nk)) then
+       deallocate(nk)
+    end if
+    if (allocated(zk)) then
+       deallocate(zk)
+    end if
+    allocate(nk(u), zk(u), stat=err)
+
+    u = 0
+    do i = 0, xmax
+       x = wrk(i)
+       if (x > 0) then
+          u = u + 1
+          nk(u) = i
+          zk(u) = x
+       end if
+    end do
+
+    ndata = sum(zk * nk)
+    nbins = sum(zk)
+    k1 = sum(zk, nk>0)
+
+    deallocate(wrk)
+  end subroutine fit
+end module counts
+
