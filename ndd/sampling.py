@@ -2,16 +2,34 @@
 """Counts class."""
 import numpy
 
+import ndd.fnsb
+
+
+def unique(nk):
+    """Return nk, zk"""
+    counter = ndd.fnsb.counter
+    print('nk', nk)
+    counter.fit(nk)
+    nk = counter.nk
+    zk = counter.zk
+    return nk, zk
+
 
 class Counts:
     """Statistics from counts"""
 
     def __init__(self, nk, zk=None):
         if zk is None:  # compute frequency distribution
-            self.nk, self.zk = numpy.unique(nk, return_counts=True)
+            counter = ndd.fnsb.counter
+            print('nk', nk)
+            counter.fit(nk)
+            self.nk = counter.nk
+            self.zk = counter.zk
+            self._n = counter.n_data
+            self._k1 = counter.k1
         else:
             self.nk = numpy.asarray(nk)
-            self.zk = numpy.asarray(nk)
+            self.zk = numpy.asarray(zk)
         self._n = None
         self._k1 = None
 
@@ -38,3 +56,8 @@ class Counts:
     def sampling_ratio(self):
         """The strongly undersampled regime is defined as ratio < 0.1"""
         return self.coincidences / self.n
+
+    @property
+    def multiplicities(self):
+        """Return counts and their frequencies as (counts, frequencies)."""
+        return self.nk, self.zk
