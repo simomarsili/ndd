@@ -151,38 +151,26 @@ module dirichlet_mod
 
 contains
 
-  subroutine initialize_from_counts(counts, nc)
+  subroutine initialize(counts, nc, zk1)
     ! set n_multi, nk, multi
     integer, intent(in) :: counts(:)
     real(float64), intent(in) :: nc
+    integer, intent(in), optional :: zk1(:)
     integer :: err
 
     alphabet_size = nc
 
-    call counts_fit(counts)
+    if (present(zk1)) then
+       call counts_fit(counts, zk1)
+    else
+       call counts_fit(counts)
+    end if
 
     call add_empty_bins(alphabet_size)
 
     allocate(phi(size(nk)), stat=err)
 
-  end subroutine initialize_from_counts
-
-  subroutine initialize_from_multiplicities(nk1, zk1, nc)
-    ! set nk, zk, n_data, alphabet_size
-    integer, intent(in) :: nk1(:)
-    integer, intent(in) :: zk1(:)
-    real(float64), intent(in) :: nc
-    integer :: idx=-1, err, j, nm
-
-    alphabet_size = nc
-
-    call counts_fit(nk1, zk1)
-
-    call add_empty_bins(alphabet_size)
-
-    allocate(phi(size(nk)), stat=err)
-
-  end subroutine initialize_from_multiplicities
+  end subroutine initialize
 
   subroutine finalize()
 
@@ -671,7 +659,7 @@ end subroutine pseudo
 subroutine ww(n, counts, nc, alpha, estimate, err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use constants
-  use dirichlet_mod, only: initialize_from_counts, finalize
+  use dirichlet_mod, only: initialize, finalize
   use dirichlet_mod, only: h_dir, h_var
   implicit none
 
@@ -682,7 +670,7 @@ subroutine ww(n, counts, nc, alpha, estimate, err_estimate)
   real(float64),   intent(out) :: estimate
   real(float64),   intent(out) :: err_estimate
 
-  call initialize_from_counts(counts, nc)
+  call initialize(counts, nc)
 
   estimate = h_dir(alpha)
 
@@ -696,7 +684,7 @@ subroutine ww_from_multiplicities(n, nk1, zk1, nc, alpha, estimate, &
   err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use constants
-  use dirichlet_mod, only: initialize_from_multiplicities, finalize
+  use dirichlet_mod, only: initialize, finalize
   use dirichlet_mod, only: h_dir, h_var
   implicit none
 
@@ -708,7 +696,7 @@ subroutine ww_from_multiplicities(n, nk1, zk1, nc, alpha, estimate, &
   real(float64),   intent(out) :: estimate
   real(float64),   intent(out) :: err_estimate
 
-  call initialize_from_multiplicities(nk1, zk1, nc)
+  call initialize(nk1, nc, zk1)
 
   estimate = h_dir(alpha)
 
@@ -720,7 +708,7 @@ end subroutine ww_from_multiplicities
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
   use constants
-  use dirichlet_mod, only: initialize_from_counts, finalize
+  use dirichlet_mod, only: initialize, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -732,7 +720,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
   real(float64),   intent(out) :: err_estimate
   integer :: err
 
-  call initialize_from_counts(counts, nc)
+  call initialize(counts, nc)
 
   call compute_integration_range()
 
@@ -744,7 +732,7 @@ end subroutine nsb
 
 subroutine nsb_from_multiplicities(n, nk1, zk1, nc, estimate, err_estimate)
   use constants
-  use dirichlet_mod, only: initialize_from_multiplicities, finalize
+  use dirichlet_mod, only: initialize, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -757,7 +745,7 @@ subroutine nsb_from_multiplicities(n, nk1, zk1, nc, estimate, err_estimate)
   real(float64),   intent(out) :: err_estimate
   integer :: err
 
-  call initialize_from_multiplicities(nk1, zk1, nc)
+  call initialize(nk1, nc, zk1)
 
   call compute_integration_range()
 
@@ -769,7 +757,7 @@ end subroutine nsb_from_multiplicities
 
 subroutine phony_1(n,counts,nc,estimate,err_estimate)
   use constants
-  use dirichlet_mod, only: initialize_from_counts, finalize
+  use dirichlet_mod, only: initialize, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -784,7 +772,7 @@ subroutine phony_1(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_from_counts(counts, nc)
+  call initialize(counts, nc)
 
   ! call compute_integration_range()
 
@@ -801,7 +789,7 @@ end subroutine phony_1
 
 subroutine phony_2(n,counts,nc,estimate,err_estimate)
   use constants
-  use dirichlet_mod, only: initialize_from_counts, finalize
+  use dirichlet_mod, only: initialize, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -816,7 +804,7 @@ subroutine phony_2(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_from_counts(counts, nc)
+  call initialize(counts, nc)
 
   ! call compute_integration_range()
 
@@ -833,7 +821,7 @@ end subroutine phony_2
 
 subroutine phony_3(n,counts,nc,estimate,err_estimate)
   use constants
-  use dirichlet_mod, only: initialize_from_counts, finalize
+  use dirichlet_mod, only: initialize, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -848,7 +836,7 @@ subroutine phony_3(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_from_counts(counts, nc)
+  call initialize(counts, nc)
 
   call compute_integration_range()
 
@@ -865,7 +853,7 @@ end subroutine phony_3
 
 subroutine phony_4(n,counts,nc,estimate,err_estimate)
   use constants
-  use dirichlet_mod, only: initialize_from_counts, finalize
+  use dirichlet_mod, only: initialize, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
@@ -880,7 +868,7 @@ subroutine phony_4(n,counts,nc,estimate,err_estimate)
 
   call cpu_time(start)
 
-  call initialize_from_counts(counts, nc)
+  call initialize(counts, nc)
 
   call compute_integration_range()
 
