@@ -148,6 +148,7 @@ python module fnsb ! in
         end module nsb_mod
         subroutine plugin(n,counts,estimate) ! in :fnsb:estimators.f90
             use constants
+            use counter
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts
             real(kind=8) intent(out) :: estimate

@@ -550,54 +550,26 @@ end module nsb_mod
 subroutine plugin(n,counts,estimate)
   ! plugin estimator - no prior, no regularization
   use constants
+  use counter
   implicit none
 
   integer, intent(in) :: n
   integer, intent(in) :: counts(n)
   real(float64),  intent(out) :: estimate
 
-  integer :: nbins
   integer :: i
-  real(float64)   :: ni,n_data
-  integer              :: mi,nmax,err
-  integer, allocatable :: wrk(:)
-  logical :: multi = .false.
+  real(float64)   :: ni
 
-  if (multi) then
-     ! using multiplicities
-     nbins = size(counts)
-     if (nbins == 1) then
-        estimate = 0.0_float64
-        return
-     end if
-     n_data = sum(counts)*1.0_float64
-     nmax = maxval(counts)
-     allocate(wrk(nmax),stat=err)
-     wrk = 0
-     do i = 1,nbins
-        ni = counts(i)
-        if (ni == 0) cycle
-        wrk(ni) = wrk(ni) + 1
-     end do
-     estimate = 0.0_float64
-     do i = 1,nmax
-        mi = wrk(i)
-        if (mi > 0) estimate = estimate - mi*i*log(i*1.0_float64)
-     end do
-     estimate = estimate / n_data + log(n_data)
-     deallocate(wrk)
-  else
-     ! standard implementation
-     nbins = size(counts)
-     if (nbins == 1) then
-        estimate = 0.0_float64
-        return
-     end if
-     n_data = sum(counts)*1.0_float64
-     estimate = - sum(counts * log(counts*1.0_float64), counts>0)
-     estimate = estimate / n_data + log(n_data)
-  end if
+  call counts_fit(counts)
 
+  estimate = 0.0_float64
+  do i = 1,size(nk)
+     ni = nk(i)
+     if (ni > 0) estimate = estimate - zk(i)*ni*log(ni*1.0_float64)
+  end do
+  estimate = estimate / n_data + log(n_data)
+
+  call counts_reset()
 
 end subroutine plugin
 
