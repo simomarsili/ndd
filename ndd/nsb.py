@@ -37,16 +37,19 @@ def guess_k(nk, zk=None, eps=1.e-3):
     asym = AsymptoticNSB()
     multiplier = 10
     dk = numpy.log(multiplier)
-    k1 = numpy.sum(zk) if zk else numpy.sum([1 for n in nk if n > 0])
+    if zk is not None:
+        k1 = numpy.sum(zk)
+    else:
+        k1 = numpy.sum([1 for n in nk if n > 0])
     # k1 = k1 // 2
     if not k1:
         k1 = 1
-    h0 = entropy(nk, k=k1)
+    h0 = entropy(nk=nk, k=k1, zk=zk)
     for _ in range(40):
         k1 = round(k1 * multiplier)
-        h1 = entropy(nk, k=k1, return_std=0)
+        h1 = entropy(nk, k=k1, zk=zk, return_std=0)
         dh = (h1 - h0) / dk
-        hasym = asym(nk)
+        hasym = asym(nk=nk, zk=zk)
         if dh < eps:
             break
         if h1 >= hasym:  # should return hasym
