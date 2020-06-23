@@ -42,15 +42,11 @@ python module fnsb ! in
             use counter
             real(kind=8) :: alphabet_size
             real(kind=8), allocatable,dimension(:) :: phi
-            subroutine initialize_from_counts(counts,nc) ! in :fnsb:estimators.f90:dirichlet_mod
+            subroutine initialize(counts,nc,zk1) ! in :fnsb:estimators.f90:dirichlet_mod
                 integer dimension(:),intent(in) :: counts
                 real(kind=8) intent(in) :: nc
-            end subroutine initialize_from_counts
-            subroutine initialize_from_multiplicities(nk1,zk1,nc) ! in :fnsb:estimators.f90:dirichlet_mod
-                integer dimension(:),intent(in) :: nk1
-                integer dimension(:),intent(in) :: zk1
-                real(kind=8) intent(in) :: nc
-            end subroutine initialize_from_multiplicities
+                integer, optional,dimension(:),intent(in) :: zk1
+            end subroutine initialize
             subroutine finalize ! in :fnsb:estimators.f90:dirichlet_mod
             end subroutine finalize
             function log_pna(alpha) ! in :fnsb:estimators.f90:dirichlet_mod
@@ -187,7 +183,7 @@ python module fnsb ! in
         end subroutine ww_from_multiplicities
         subroutine nsb(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use constants
-            use dirichlet_mod, only: initialize_from_counts,finalize
+            use dirichlet_mod, only: initialize,finalize
             use nsb_mod, only: compute_integration_range
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts
@@ -197,7 +193,7 @@ python module fnsb ! in
         end subroutine nsb
         subroutine nsb_from_multiplicities(n,nk1,zk1,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use constants
-            use dirichlet_mod, only: initialize_from_multiplicities,finalize
+            use dirichlet_mod, only: initialize,finalize
             use nsb_mod, only: compute_integration_range
             integer, optional,intent(in),check(len(nk1)>=n),depend(nk1) :: n=len(nk1)
             integer dimension(n),intent(in) :: nk1
@@ -208,7 +204,7 @@ python module fnsb ! in
         end subroutine nsb_from_multiplicities
         subroutine phony_1(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use constants
-            use dirichlet_mod, only: initialize_from_counts,finalize
+            use dirichlet_mod, only: initialize,finalize
             use nsb_mod, only: compute_integration_range
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts
@@ -218,7 +214,7 @@ python module fnsb ! in
         end subroutine phony_1
         subroutine phony_2(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use constants
-            use dirichlet_mod, only: initialize_from_counts,finalize
+            use dirichlet_mod, only: initialize,finalize
             use nsb_mod, only: compute_integration_range
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts
@@ -228,7 +224,7 @@ python module fnsb ! in
         end subroutine phony_2
         subroutine phony_3(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use constants
-            use dirichlet_mod, only: initialize_from_counts,finalize
+            use dirichlet_mod, only: initialize,finalize
             use nsb_mod, only: compute_integration_range
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts
@@ -238,7 +234,7 @@ python module fnsb ! in
         end subroutine phony_3
         subroutine phony_4(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
             use constants
-            use dirichlet_mod, only: initialize_from_counts,finalize
+            use dirichlet_mod, only: initialize,finalize
             use nsb_mod, only: compute_integration_range
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts

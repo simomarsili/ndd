@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Measure execution average execution times"""
-import cProfile
+# import cProfile
 import time
 
 import numpy as np
@@ -66,5 +66,6 @@ def cprofile(ar):
 if __name__ == '__main__':
     # run cProfile
     a = dimul([ALPHA] * K, N, size=(R))
-    cProfile.run('cprofile(a)')
+    #cProfile.run('cprofile(a)')
+    cprofile(a)
     average_timings(a)
