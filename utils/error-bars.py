@@ -8,8 +8,8 @@ from scipy.stats import entropy
 import ndd
 import ndd.estimators
 
-N = 100
-K = 1000
+N = 1000
+K = 100000
 ALPHA = 0.001
 NITER = 1
 R = 100
@@ -40,7 +40,7 @@ def estimate(counts, pp, k=None, estimator='NSB'):
     result = ref, *ndd.entropy(
         counts, k=k, return_std=True, estimator=estimator)
     result = numpy.asarray(result)
-    result = [x / numpy.log(K) if x is not None else 0.1 for x in result]
+    result = [x / numpy.log(K) if x is not None else 0 for x in result]
     return result
 
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     from time import time
     X = [data(a) for a in numpy.logspace(-3, 0, R) for _ in range(NITER)]
 
-    fig, axs = plt.subplots(1, 2)
+    fig, axs = plt.subplots(1, 3)
 
     t0 = time()
     ar0 = [estimate(*x, k=K) for x in X]
@@ -79,6 +79,12 @@ if __name__ == '__main__':
     print('time0: ', time() - t0)
     ar1 = numpy.array(list(zip(*ar1)))
     plot_errorbar(axs[1], ar1)
+
+    t0 = time()
+    ar2 = [estimate(*x, estimator='Plugin') for x in X]
+    print('time0: ', time() - t0)
+    ar2 = numpy.array(list(zip(*ar2)))
+    plot_errorbar(axs[2], ar2)
 
     plt.show()
 
