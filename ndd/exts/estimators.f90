@@ -13,118 +13,184 @@ module constants
 
 end module constants
 
-module dirichlet_mod
+
+module counter
   use constants
   implicit none
+  real(float64), allocatable :: nk(:)
+  real(float64), allocatable :: zk(:)
+  real(float64) :: n_data
+  real(float64) :: n_bins
+  real(float64) :: k1
+contains
 
-  integer              :: n_data
-  real(float64)                :: alphabet_size
-  real(float64), allocatable :: hn(:)  ! array of observed frequencies
-  real(float64), allocatable :: hz(:)  ! multiplicities of frequency z
+  subroutine counts_reset()
+    implicit none
+    n_data = 0.0_float64
+    n_bins = 0.0_float64
+    k1 = 0.0_float64
+    if (allocated(nk)) then
+       deallocate(nk)
+    end if
+    if (allocated(zk)) then
+       deallocate(zk)
+    end if
+  end subroutine counts_reset
+
+  subroutine counts_fit(ar)
+    implicit none
+    integer, intent(in) :: ar(:)
+    integer :: i, j, u
+    integer :: x, err
+    integer :: xmax
+    integer, allocatable :: wrk(:)
+
+    call counts_reset()
+
+    xmax = maxval(ar)
+    allocate(wrk(0:xmax), stat=err)
+    wrk = 0
+    u = 0
+    do i = 1,ubound(ar, 1)
+       x = ar(i)
+       if (wrk(x) == 0) then
+          u = u + 1
+       end if
+       wrk(x) = wrk(x) + 1
+    end do
+
+    allocate(nk(u), zk(u), stat=err)
+
+    u = 0
+    do i = 0, xmax
+       x = wrk(i)
+       if (x > 0) then
+          u = u + 1
+          nk(u) = i
+          zk(u) = x
+       end if
+    end do
+
+    n_data = sum(zk * nk)
+    n_bins = sum(zk)
+    k1 = sum(zk, nk>0)
+
+    deallocate(wrk)
+  end subroutine counts_fit
+
+  subroutine add_empty_bins(alphabet_size)
+    ! add empty bins to nk, zk
+    implicit none
+    real(float64), intent(in) :: alphabet_size
+    integer :: k, err
+    real(float64) :: unobserved
+    integer, allocatable :: wrk(:)
+
+    if (allocated(nk)) then
+       if (alphabet_size > n_bins) then
+          unobserved = alphabet_size - n_bins*1.0_float64
+          if (minval(nk) < 1.e-3_float64) then
+             k = minloc(nk, 1)
+             zk(k) = zk(k) + unobserved
+          else
+             k = size(nk)
+             allocate(wrk(k), stat=err)
+
+             wrk(:k) = nk
+             deallocate(nk)
+             allocate(nk(k+1), stat=err)
+             nk(:k) = wrk
+             nk(k+1) = 0
+
+             wrk(:k) = zk
+             deallocate(zk)
+             allocate(zk(k+1), stat=err)
+             zk(:k) = wrk
+             zk(k+1) = unobserved
+
+             deallocate(wrk)
+          end if
+       end if
+    end if
+
+  end subroutine add_empty_bins
+end module counter
+
+
+module dirichlet_mod
+  use constants
+  use counter
+  implicit none
+
+  real(float64)              :: alphabet_size
   real(float64), allocatable :: phi(:)  ! wrk array for var
 
 contains
 
   subroutine initialize_from_counts(counts, nc)
-    ! set n_multi, hn, multi
+    ! set n_multi, nk, multi
     integer, intent(in) :: counts(:)
     real(float64), intent(in) :: nc
-    integer              :: nbins
-    integer              :: i_,k_,ni_
-    integer              :: err
-    integer              :: nmax
-    integer, allocatable :: wrk(:)
-    real(float64)                :: n_empty_bins
-    integer              :: n_multi
+    integer :: err
 
     alphabet_size = nc
 
-    ! compute multiplicities
-    ! nmax is the largest number of samples in a bin
-    nbins = size(counts)
-    nmax = maxval(counts)
-    allocate(wrk(nmax),stat=err)
-    ! wrk(n) is the number of states with frequency n
-    wrk = 0
-    ! take into account the alphabet_size - nbins states with zero frequency
-    n_empty_bins = alphabet_size - nbins
-    do i_ = 1,nbins
-       ni_ = counts(i_)
-       if (ni_ == 0) then
-          n_empty_bins = n_empty_bins + 1.0_float64
-       else
-          wrk(ni_) = wrk(ni_) + 1
-       end if
-    end do
+    call counts_reset()
 
-    ! further compress data into 'sparse' multiplicities
-    n_multi = count(wrk > 0)
-    allocate(hn(n_multi+1),stat=err)
-    allocate(hz(n_multi+1),stat=err)
-    hn(1) = 0
-    hz(1) = n_empty_bins
-    k_ = 1
-    do i_ = 1, nmax
-       if (wrk(i_) > 0) then
-          k_ = k_ + 1
-          hn(k_) = i_
-          hz(k_) = wrk(i_)
-       end if
-    end do
-    deallocate(wrk)
+    call counts_fit(counts)
 
-    allocate(phi(n_multi+1), stat=err)
+    call add_empty_bins(nc)
 
-    n_data = sum(hz * hn)
+    allocate(phi(size(nk)), stat=err)
 
   end subroutine initialize_from_counts
 
-  subroutine initialize_from_multiplicities(hn1, hz1, nc)
-    ! set hn, hz, n_data, alphabet_size
-    real(float64), intent(in) :: hn1(:)
-    real(float64), intent(in) :: hz1(:)
+  subroutine initialize_from_multiplicities(nk1, zk1, nc)
+    ! set nk, zk, n_data, alphabet_size
+    real(float64), intent(in) :: nk1(:)
+    real(float64), intent(in) :: zk1(:)
     real(float64), intent(in) :: nc
     integer :: idx=-1, err, j, nm
 
-    nm = size(hn1)
+    nm = size(nk1)
     ! check if zeros are included in mults arrays
-    if (any(int(hn1) == 0)) then  ! we work with floats
-       allocate(hn(nm), stat=err)
-       allocate(hz(nm), stat=err)
+    if (any(int(nk1) == 0)) then  ! we work with floats
+       allocate(nk(nm), stat=err)
+       allocate(zk(nm), stat=err)
        allocate(phi(nm), stat=err)
-       hn = hn1
-       hz = hz1
+       nk = nk1
+       zk = zk1
        idx = -1
        do j = 1, nm
-          if (int(hn1(j)) == 0) then
+          if (int(nk1(j)) == 0) then
              idx = j
              exit
           end if
        end do
-       hz(idx) = hz1(idx) + nc - sum(hz1)
+       zk(idx) = zk1(idx) + nc - sum(zk1)
     else
-       allocate(hn(nm + 1), stat=err)
-       allocate(hz(nm + 1), stat=err)
+       allocate(nk(nm + 1), stat=err)
+       allocate(zk(nm + 1), stat=err)
        allocate(phi(nm + 1), stat=err)
-       hn(1) = 0._float64
-       hz(1) = nc - sum(hz1)
-       hn(2:) = hn1
-       hz(2:) = hz1
+       nk(1) = 0._float64
+       zk(1) = nc - sum(zk1)
+       nk(2:) = nk1
+       zk(2:) = zk1
     end if
 
     alphabet_size = nc
-    n_data = sum(hz * hn)
+    n_data = sum(zk * nk)
 
   end subroutine initialize_from_multiplicities
 
   subroutine finalize()
 
-    if (allocated(hz)) then
-       deallocate(hz)
+    if (allocated(zk)) then
+       deallocate(zk)
     end if
 
-    if (allocated(hn)) then
-       deallocate(hn)
+    if (allocated(nk)) then
+       deallocate(nk)
     end if
 
     if (allocated(phi)) then
@@ -146,7 +212,7 @@ contains
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(hz * (log_gamma(hn + alpha) - log_gamma(hn + one)))
+    wsum = sum(zk * (log_gamma(nk + alpha) - log_gamma(nk + one)))
 
     log_pna = log_pna + wsum
 
@@ -160,7 +226,7 @@ contains
     log_pna_u = log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
          - log_gamma(n_data + alpha * alphabet_size) &
-         + sum(hz * (log_gamma(hn + alpha)))
+         + sum(zk * (log_gamma(nk + alpha)))
 
   end function log_pna_u
 
@@ -193,7 +259,7 @@ contains
     real(float64), intent(in) :: alpha
     integer :: i_
 
-    h_dir = - sum(hz * (hn + alpha) * digamma(hn + alpha + one))
+    h_dir = - sum(zk * (nk + alpha) * digamma(nk + alpha + one))
     h_dir = h_dir / (n_data + alpha * alphabet_size)
     h_dir = h_dir + digamma(n_data + alpha * alphabet_size + one)
 
@@ -209,20 +275,20 @@ contains
     real(float64) :: c, nu, ni, xi, jsum
 
     nu = n_data + alpha * alphabet_size
-    phi = digamma(hn + alpha + one) - &
+    phi = digamma(nk + alpha + one) - &
          digamma(nu + two)
     c = trigamma(nu + two)
 
     h_var = 0.0_float64
-    do i_ = 1, size(hz)
-       ni = hn(i_) + alpha
+    do i_ = 1, size(zk)
+       ni = nk(i_) + alpha
        xi = phi(i_)
-       jsum = sum(hz * ni * (hn + alpha) * &
+       jsum = sum(zk * ni * (nk + alpha) * &
             (xi * phi - c))
-       h_var = h_var + hz(i_) * jsum
-       h_var = h_var - hz(i_) * ni**2 * (xi**2 - c)
+       h_var = h_var + zk(i_) * jsum
+       h_var = h_var - zk(i_) * ni**2 * (xi**2 - c)
        xi = xi + 1 / (ni + one)
-       h_var = h_var + hz(i_) * (ni + one) * ni * &
+       h_var = h_var + zk(i_) * (ni + one) * ni * &
             (xi**2 + trigamma(ni + two) - c)
     end do
 
@@ -291,8 +357,8 @@ contains
   subroutine log_weight_d(alpha, logw, dlogw)
     ! compute value and derivative of log p(a | x)
     use gamma_funcs, only: digamma, trigamma, quadgamma
-    use dirichlet_mod, only: alphabet_size, n_data, hz,&
-         hn
+    use dirichlet_mod, only: alphabet_size, n_data, zk,&
+         nk
     use dirichlet_mod, only: log_pna_u, alpha_prior
 
     real(float64), intent(in) :: alpha
@@ -312,7 +378,7 @@ contains
     - alphabet_size * digamma(alpha) &
          - alphabet_size * digamma(n_data + alpha * alphabet_size)
 
-    wsum = sum(hz * (digamma(hn + alpha)))
+    wsum = sum(zk * (digamma(nk + alpha)))
 
     dlpna = dlpna + wsum
 
@@ -625,7 +691,7 @@ subroutine ww(n, counts, nc, alpha, estimate, err_estimate)
 
 end subroutine ww
 
-subroutine ww_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
+subroutine ww_from_multiplicities(n, nk1, zk1, nc, alpha, estimate, &
   err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
   use constants
@@ -634,14 +700,14 @@ subroutine ww_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
   implicit none
 
   integer, intent(in)  :: n
-  real(float64), intent(in)    :: hn1(n)
-  real(float64), intent(in)    :: hz1(n)
+  real(float64), intent(in)    :: nk1(n)
+  real(float64), intent(in)    :: zk1(n)
   real(float64), intent(in)    :: nc
   real(float64),   intent(in)  :: alpha
   real(float64),   intent(out) :: estimate
   real(float64),   intent(out) :: err_estimate
 
-  call initialize_from_multiplicities(hn1, hz1, nc)
+  call initialize_from_multiplicities(nk1, zk1, nc)
 
   estimate = h_dir(alpha)
 
@@ -675,7 +741,7 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
 end subroutine nsb
 
-subroutine nsb_from_multiplicities(n, hn1, hz1, nc, estimate, err_estimate)
+subroutine nsb_from_multiplicities(n, nk1, zk1, nc, estimate, err_estimate)
   use constants
   use dirichlet_mod, only: initialize_from_multiplicities, finalize
   use nsb_mod, only: hnsb
@@ -683,14 +749,14 @@ subroutine nsb_from_multiplicities(n, hn1, hz1, nc, estimate, err_estimate)
   implicit none
 
   integer, intent(in)  :: n
-  real(float64), intent(in)    :: hn1(n)
-  real(float64), intent(in)    :: hz1(n)
+  real(float64), intent(in)    :: nk1(n)
+  real(float64), intent(in)    :: zk1(n)
   real(float64), intent(in)    :: nc
   real(float64),   intent(out) :: estimate
   real(float64),   intent(out) :: err_estimate
   integer :: err
 
-  call initialize_from_multiplicities(hn1, hz1, nc)
+  call initialize_from_multiplicities(nk1, zk1, nc)
 
   call compute_integration_range()
 
@@ -863,59 +929,3 @@ subroutine gamma1(x, y)
   real(float64), intent(out) :: y
   y = trigamma(x)
 end subroutine gamma1
-
-module counts
-  use constants
-  implicit none
-  integer, allocatable :: nk(:)
-  integer, allocatable :: zk(:)
-  integer :: ndata
-  integer :: nbins
-  integer :: k1
-contains
-  subroutine fit(ar)
-    implicit none
-    integer, intent(in) :: ar(:)
-    integer :: i, j, u
-    integer :: x, err
-    integer :: xmax
-    integer, allocatable :: wrk(:)
-
-    xmax = maxval(ar)
-    allocate(wrk(0:xmax), stat=err)
-    wrk = 0
-    u = 0
-    do i = 1,ubound(ar, 1)
-       x = ar(i)
-       if (wrk(x) == 0) then
-          u = u + 1
-       end if
-       wrk(x) = wrk(x) + 1
-    end do
-
-    if (allocated(nk)) then
-       deallocate(nk)
-    end if
-    if (allocated(zk)) then
-       deallocate(zk)
-    end if
-    allocate(nk(u), zk(u), stat=err)
-
-    u = 0
-    do i = 0, xmax
-       x = wrk(i)
-       if (x > 0) then
-          u = u + 1
-          nk(u) = i
-          zk(u) = x
-       end if
-    end do
-
-    ndata = sum(zk * nk)
-    nbins = sum(zk)
-    k1 = sum(zk, nk>0)
-
-    deallocate(wrk)
-  end subroutine fit
-end module counts
-
