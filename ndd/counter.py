@@ -22,16 +22,45 @@ def unique(nk, sort=False):
 class Counts:
     """Statistics from counts"""
 
-    def __init__(self, nk, zk=None):
-        if zk is None:  # compute frequency distribution
-            self.nk, self.zk = unique(nk)
-            self._n = unique.counter.n_data
-            self._k1 = unique.counter.k1
-        else:
-            self.nk = numpy.asarray(nk)
-            self.zk = numpy.asarray(zk)
+    def __init__(self, nk=None, zk=None):
+        self.nk = None
+        self.zk = None
         self._n = None
         self._k1 = None
+        self.counts = None
+        if nk is not None:
+            self.nk = numpy.asarray(nk)
+            if zk is None:
+                self.counts = self.nk
+                self.fit(self.nk)
+        if zk is not None:
+            self.zk = numpy.asarray(zk)
+
+    def fit(self, counts):
+        """Fit nk, zk (multiplicities) data."""
+        self.nk, self.zk = unique(counts)
+        self._n = unique.counter.n_data
+        self._k1 = unique.counter.k1
+
+    def random(self, k=1000, n=100):
+        """Generate random counts and fit multiplicities."""
+        a = numpy.random.randint(k, size=n)
+        _, self.counts = numpy.unique(a, return_counts=1)
+        self.nk, self.zk = numpy.unique(self.counts, return_counts=1)
+        return self
+
+    @staticmethod
+    def sorted_are_equal(a, b):
+        """True if sorted arrays are equal."""
+
+        def int_sort(x):
+            return sorted(x.astype(numpy.int32))
+
+        return int_sort(a) == int_sort(b)
+
+    def __eq__(self, other):
+        return (self.sorted_are_equal(self.nk, other.nk)
+                and self.sorted_are_equal(self.zk, other.zk))
 
     @property
     def n(self):
