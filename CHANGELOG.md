@@ -1,8 +1,11 @@
 # Change log
 
 ## Unreleased
+### Added
+- the `entropy` function selects the best estimator for the data using
+  `estimator='auto'`
 ### Changed
-- the entropy functions takes frequency counts (multiplicities) as input via
+- the `entropy` function takes frequency counts (multiplicities) as input via
   the `zk` optional argument
 - renamed `pk` to `nk`
 - the signature of the *entropy* function is:
