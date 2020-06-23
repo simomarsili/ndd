@@ -236,17 +236,26 @@ class Plugin(EntropyEstimator):
 
         """
         if zk is not None:
-            raise NotImplementedError('%s estimator takes counts as input' %
-                                      self.__class__.__name__)
-        if k is None:
-            k = numpy.sum(nk > 0)
-        if k == 1:
-            self.estimate_, self.err_ = PZERO, PZERO
-            return self
-        if self.alpha:
-            self.estimate_ = ndd.fnsb.pseudo(nk, k, self.alpha)
+            if k is None:
+                k = numpy.sum(zk[nk > 0])
+            if k == 1:
+                self.estimate_, self.err_ = PZERO, PZERO
+                return self
+            if self.alpha:
+                self.estimate_ = ndd.fnsb.pseudo_from_multiplicities(
+                    nk, zk, k, self.alpha)
+            else:
+                self.estimate_ = ndd.fnsb.plugin_from_multiplicities(nk, zk)
         else:
-            self.estimate_ = ndd.fnsb.plugin(nk)
+            if k is None:
+                k = numpy.sum(nk > 0)
+            if k == 1:
+                self.estimate_, self.err_ = PZERO, PZERO
+                return self
+            if self.alpha:
+                self.estimate_ = ndd.fnsb.pseudo(nk, k, self.alpha)
+            else:
+                self.estimate_ = ndd.fnsb.plugin(nk)
         return self
 
 
@@ -267,14 +276,15 @@ class MillerMadow(EntropyEstimator):
             Entropy estimate.
 
         """
-        if zk is not None:
-            raise NotImplementedError('%s estimator takes counts as input' %
-                                      self.__class__.__name__)
-        k = numpy.sum(nk > 0)
-
         plugin = Plugin()
-        n = numpy.sum(nk)
-        self.estimate_ = plugin(nk) + 0.5 * (k - 1) / n
+        if zk is not None:
+            k = numpy.sum(zk[nk > 0])
+            n = numpy.sum(nk * zk)
+            self.estimate_ = plugin(nk, k=k, zk=zk) + 0.5 * (k - 1) / n
+        else:
+            k = numpy.sum(nk > 0)
+            n = numpy.sum(nk)
+            self.estimate_ = plugin(nk) + 0.5 * (k - 1) / n
         return self
 
 
