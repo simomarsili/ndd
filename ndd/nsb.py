@@ -149,7 +149,7 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     entropy.err = err
 
     if return_std:
-        if numpy.isnan(err):
+        if err is not None and numpy.isnan(err):
             logger.warning('nan value for entropy posterior std deviation')
         return S, err
 

@@ -8,8 +8,8 @@ from scipy.stats import entropy
 import ndd
 import ndd.estimators
 
-N = 1000
-K = 1000000
+N = 100
+K = 1000
 ALPHA = 0.001
 NITER = 1
 R = 100
