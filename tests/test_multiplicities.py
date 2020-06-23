@@ -9,7 +9,7 @@ import pytest
 from make_test_ref import SEED, approx
 from ndd import fnsb
 from ndd.counters import MultiCounter
-from ndd.estimators import NSB, Grassberger
+from ndd.estimators import NSB, Grassberger, MillerMadow, Plugin
 
 K = 4
 N = 10000
@@ -127,6 +127,22 @@ def test_ww_estimator(counts_1d, multi_1d):
 
 def test_grassberger_estimator(counts_1d, multi_1d):
     est = Grassberger()
+    estimate_from_counts = est(counts_1d, k=K)
+    nk, zk = multi_1d
+    estimate_from_multiplicities = est(nk, zk=zk, k=K)
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
+
+
+def test_plugin_estimator(counts_1d, multi_1d):
+    est = Plugin()
+    estimate_from_counts = est(counts_1d, k=K)
+    nk, zk = multi_1d
+    estimate_from_multiplicities = est(nk, zk=zk, k=K)
+    assert estimate_from_multiplicities == approx(estimate_from_counts)
+
+
+def test_millermadow_estimator(counts_1d, multi_1d):
+    est = MillerMadow()
     estimate_from_counts = est(counts_1d, k=K)
     nk, zk = multi_1d
     estimate_from_multiplicities = est(nk, zk=zk, k=K)
