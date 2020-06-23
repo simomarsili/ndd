@@ -393,10 +393,6 @@ class AsymptoticNSB(EntropyEstimator):
             No coincindences.
 
         """
-        if zk is not None:
-            raise NotImplementedError('%s estimator takes counts as input' %
-                                      self.__class__.__name__)
-
         counts = Counts(nk=nk, zk=zk)
 
         if not counts.coincidences:
