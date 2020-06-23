@@ -9,12 +9,14 @@ from itertools import combinations
 
 import numpy
 
+from ndd.counter import Counts
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import (NSB, AsymptoticNSB, Plugin, check_estimator,
-                            sampling_ratio)
+from ndd.estimators import (NSB, AsymptoticNSB, Grassberger, Plugin,
+                            check_estimator)
 from ndd.exceptions import EstimatorInputError, NddError, PmfError
-from ndd.failing import dump_on_fail
+
+# from ndd.failing import dump_on_fail
 
 __all__ = [
     'entropy',
@@ -55,33 +57,35 @@ def guess_k(nk, zk=None, eps=1.e-3):
     return round(k1 / numpy.sqrt(multiplier))  # midpoint value
 
 
-def auto_estimator(nk, zk=None, k=None):
+def guess(nk, zk=None, k=None):
     """Select the best estimator given arguments.
 
     Returns
     -------
-    estimator
+    k, estimator
 
     """
 
-    if k is not None:
-        return {'k': k, 'estimator': NSB()}
+    if k is not None:  # has k?
+        return k, NSB()
 
-    ratio = sampling_ratio(nk=nk, zk=zk)
+    counts = Counts(nk, zk=zk)
 
-    if ratio < 0.1:
+    if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
 
-        return {'k': None, 'estimator': AsymptoticNSB()}
+        if counts.coincidences:  # has coincidences?
+            return None, AsymptoticNSB()
 
-    try:
-        k = guess_k(nk=nk, zk=zk)
-    except NddError:
-        return {'k': None, 'estimator': AsymptoticNSB()}
-    else:
-        return {'k': k, 'estimator': NSB()}
+        logging.warning('Insufficient data: plugin estimate.')
+        return None, Plugin()  # else Plugin estimator
+
+    # else, the distribution is not strongly under-sampled
+
+    k = guess_k(nk=nk, zk=zk)  # guess a reasonable value for k
+    return k, NSB()
 
 
-@dump_on_fail()
+# @dump_on_fail()
 def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     """
     Entropy estimate from an array of counts.
@@ -118,40 +122,29 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
 
     """
 
-    nk = numpy.asarray(nk)
-    zk = numpy.asarray(zk) if zk is not None else zk
-
-    _ = sampling_ratio(nk=nk, zk=zk)
-
-    if not sampling_ratio.coincidences:  # pylint: disable=no-member
-        # TODO: implement a new class
-        logging.warning('No coincidences in data! regularize')
-        # regularize
-        if zk is not None:
-            idx = numpy.nonzero(nk == 1)[0][0]
-            zk[idx] -= 1
-            nk = numpy.asarray(list(nk) + [2])
-            zk = numpy.asarray(list(zk) + [1])
-        else:
-            idx = numpy.nonzero(nk == 1)[0][0]
-            nk[idx] += 1
-
     if estimator == 'auto':
-        kwargs = auto_estimator(nk, zk=zk, k=k)
-        return entropy(nk, zk=zk, return_std=return_std, **kwargs)
+        k, estimator = guess(nk, zk=zk, k=k)
+        entropy.k = k
+        entropy.estimator = estimator
+        return entropy(nk,
+                       zk=zk,
+                       return_std=return_std,
+                       k=k,
+                       estimator=estimator)
 
     estimator, _ = check_estimator(estimator)
+
+    entropy.k = k
+    entropy.estimator = estimator
 
     # flatten the array
     # nk = numpy.asarray(nk).flatten()
 
-    if not isinstance(estimator, NSB) and k is None:
-        k = numpy.sum(nk > 0)
+    if estimator in [Grassberger, AsymptoticNSB, NSB]:
+        counts = Counts(nk=nk, zk=zk)
+        nk, zk = counts.multiplicities
 
-    if zk is not None:
-        estimator = estimator.fit(nk, zk=zk, k=k)
-    else:
-        estimator = estimator.fit(nk, k=k)
+    estimator = estimator.fit(nk=nk, zk=zk, k=k)
 
     S, err = estimator.estimate_, estimator.err_
 
@@ -159,9 +152,13 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
         logger.warning('nan value for entropy estimate')
         S = numpy.nan
 
+    if err is not None and numpy.isnan(err):
+        err = numpy.nan
+
+    entropy.err = err
+
     if return_std:
-        if err is not None and numpy.isnan(err):
-            err = numpy.nan
+        if numpy.isnan(err):
             logger.warning('nan value for entropy posterior std deviation')
         return S, err
 
