@@ -600,58 +600,39 @@ subroutine plugin_from_multiplicities(n, nk1, zk1, estimate)
 
 end subroutine plugin_from_multiplicities
 
-subroutine pseudo(n,counts,nc,alpha,estimate)
-  ! pseudocount estimator(s)
-  ! estimate the bin frequencies using pseudocounts
-  ! and then compute the entropy of the regularized histogram
-  !
-  ! connection to Bayesian modeling with a Dirichlet prior:
-  ! using a Dirichlet prior with parameter alpha,
-  ! the resulting posterior is again Dirichlet with mean corresponding to
-  ! the regularized empirical histogram with alpha as bin pseudocounts
-  !
+subroutine pseudo(n, counts, nc, alpha, estimate)
+  ! pseudo counts
   ! the alpha parameter determines the specifical prior:
   ! 0   : maximum likelihood (ML), or plugin, estimator
   ! 1/2 : Jeffreys' or Krychevsky-Trofimov (KT) estimator
   ! 1   : Laplace (LA) estimator
   ! 1/k : (where k is the number of classes) Schurmann-Grassberger (SG)  estimator
   use constants
+  use counter
   implicit none
 
-  integer, intent(in)  :: n
-  integer, intent(in)  :: counts(n)
-  integer, intent(in)  :: nc
+  integer, intent(in) :: n
+  integer, intent(in) :: counts(n)
+  real(float64), intent(in)  :: nc
   real(float64),   intent(in)  :: alpha
-  real(float64),   intent(out) :: estimate
+  real(float64), intent(out) :: estimate
 
-  integer :: nbins,n_data
   integer :: i
-  real(float64)   :: ni
+  real(float64)   :: ni, na
 
-  if (alpha < 1.0e-10_float64) then
-     ! if alpha == 0.0 (no pseudocounts)
-     call plugin(n, counts, estimate)
-     return
-  end if
+  call counts_fit(counts)
 
-  nbins = size(counts)
-!  if (nbins == 1) then
-!     estimate = 0.0_float64
-!     return
-!  end if
-  n_data = sum(counts)
+  call add_empty_bins(nc)
+
   estimate = 0.0_float64
-  do i = 1,nbins
-     ni = counts(i) + alpha
-     estimate = estimate - ni*log(ni)
+  do i = 1,size(nk)
+     ni = nk(i) + alpha
+     estimate = estimate - zk(i)*ni*log(ni)
   end do
-  ! correct for the (nc - nbins) bins with frequency alpha
-  if (nc < nbins) then
-     write(0,*) "nsb.pseudo: nclasses cant be < than nbins in the histogram"
-     stop
-  end if
-  if (nc > nbins) estimate = estimate - (nc - nbins)*alpha*log(alpha)
-  estimate = estimate / (n_data + nc*alpha) + log(n_data + nc*alpha)
+  na = nc * alpha
+  estimate = estimate / (n_data + na) + log(n_data + na)
+
+  call counts_reset()
 
 end subroutine pseudo
 
