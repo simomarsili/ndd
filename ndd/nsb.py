@@ -12,8 +12,8 @@ import numpy
 from ndd.counter import Counts
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, AsymptoticNSB, Plugin, check_estimator
-from ndd.exceptions import EstimatorInputError, NddError, PmfError
+from ndd.estimators import NSB, AutoEstimator, Plugin, check_estimator
+from ndd.exceptions import EstimatorInputError, PmfError
 
 # from ndd.failing import dump_on_fail
 
@@ -30,61 +30,6 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-
-
-def guess_k(nk, zk=None, eps=1.e-3):
-    """Guess a reasonable value for the cardinality."""
-    asym = AsymptoticNSB()
-    multiplier = 10
-    dk = numpy.log(multiplier)
-    if zk is not None:
-        k1 = numpy.sum(zk)
-    else:
-        k1 = numpy.sum([1 for n in nk if n > 0])
-    # k1 = k1 // 2
-    if not k1:
-        k1 = 1
-    h0 = entropy(nk=nk, k=k1, zk=zk)
-    for _ in range(40):
-        k1 = round(k1 * multiplier)
-        h1 = entropy(nk, k=k1, zk=zk, return_std=0)
-        dh = (h1 - h0) / dk
-        hasym = asym(nk=nk, zk=zk)
-        if dh < eps:
-            break
-        if h1 >= hasym:  # should return hasym
-            raise NddError
-        h0 = h1
-
-    return round(k1 / numpy.sqrt(multiplier))  # midpoint value
-
-
-def guess(nk, zk=None, k=None):  # TODO: merge with check_estimator
-    """Select the best estimator given arguments.
-
-    Returns
-    -------
-    k, estimator
-
-    """
-
-    if k is not None:  # has k?
-        return k, NSB()
-
-    counts = Counts(nk, zk=zk)
-
-    if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
-
-        if counts.coincidences:  # has coincidences?
-            return None, AsymptoticNSB()
-
-        logging.warning('Insufficient data: plugin estimate.')
-        return None, Plugin()  # else Plugin estimator
-
-    # else, the distribution is not strongly under-sampled
-
-    k = guess_k(nk=nk, zk=zk)  # guess a reasonable value for k
-    return k, NSB()
 
 
 # @dump_on_fail()
@@ -128,14 +73,19 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     nk, zk = counts.multiplicities
 
     if estimator == 'auto':
-        k, estimator = guess(nk, zk=zk, k=k)
-    else:
-        estimator, _ = check_estimator(estimator)
+        estimator = 'AutoEstimator'
 
-    entropy.k = k
-    entropy.estimator = estimator
+    estimator, _ = check_estimator(estimator)
 
     estimator = estimator.fit(nk=nk, zk=zk, k=k)
+
+    # annotate entropy function
+    if isinstance(estimator, AutoEstimator):
+        entropy.k = estimator.k
+        entropy.estimator = estimator.estimator
+    else:
+        entropy.k = k
+        entropy.estimator = estimator
 
     S, err = estimator.estimate_, estimator.err_
 

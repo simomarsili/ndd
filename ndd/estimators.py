@@ -481,4 +481,105 @@ class Grassberger(EntropyEstimator):
         return self
 
 
+class AutoEstimator(EntropyEstimator):
+    """Select the best estimator for the input data."""
+
+    def __init__(self):
+        super().__init__()
+        self.estimator = None
+        self.k = None
+
+    @staticmethod
+    def guess_k(nk, zk=None, eps=1.e-3):
+        """Guess a reasonable value for the cardinality."""
+        nsb = NSB()
+        asym = AsymptoticNSB()
+        multiplier = 10
+        dk = numpy.log(multiplier)
+        if zk is not None:
+            k1 = numpy.sum(zk)
+        else:
+            k1 = numpy.sum([1 for n in nk if n > 0])
+            # k1 = k1 // 2
+        if not k1:
+            k1 = 1
+        h0 = nsb(nk=nk, k=k1, zk=zk)
+        for _ in range(40):
+            k1 = round(k1 * multiplier)
+            h1 = nsb(nk, k=k1, zk=zk)
+            dh = (h1 - h0) / dk
+            hasym = asym(nk=nk, zk=zk)
+            if dh < eps:
+                break
+            if h1 >= hasym:  # should return hasym
+                raise NddError
+            h0 = h1
+        return round(k1 / numpy.sqrt(multiplier))  # midpoint value
+
+    def guess(self, nk, k=None, zk=None):
+        """Select the best estimator given arguments.
+
+        Returns
+        -------
+        k, estimator
+
+        """
+
+        if k is not None:  # has k?
+            self.k = k
+            self.estimator = NSB()
+            return
+
+        counts = Counts(nk, zk=zk)
+
+        if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
+
+            if counts.coincidences:  # has coincidences?
+                self.k = None
+                self.estimator = AsymptoticNSB()
+                return
+
+            logging.warning('Insufficient data: plugin estimate.')
+            self.k = None
+            self.estimator = Plugin()  # else Plugin estimator
+            return
+
+        # else, the distribution is not strongly under-sampled
+
+        self.k = self.guess_k(nk=nk, zk=zk)  # guess a reasonable value for k
+        self.estimator = NSB()
+
+    @check_input
+    def fit(self, nk, k=None, zk=None):
+        """
+        Parameters
+        ----------
+        nk : array-like
+            The number of occurrences of a set of bins.
+        k : int or array-like
+            Alphabet size (the number of bins with non-zero probability).
+            Must be >= len(nk). A float is a valid input for whole numbers
+            (e.g. k=1.e3). If an array, set k = numpy.prod(k).
+        zk : array_like, optional
+            Counts distribution or "multiplicities". If passed, nk contains
+            the observed counts values.
+
+        Returns
+        -------
+        self : object
+
+        Raises
+        ------
+        NddError
+            If k is None.
+
+        """
+
+        self.guess(nk=nk, k=k, zk=zk)
+        self.estimator.fit(nk=nk, k=self.k, zk=zk)
+        self.estimate_ = self.estimator.estimate_
+        self.err_ = self.estimator.err_
+        return self
+
+
 estimators = subclasses(EntropyEstimator)
