@@ -873,21 +873,20 @@ module counts
   integer :: nbins
   integer :: k1
 contains
-  subroutine fit(n, counts)
+  subroutine fit(ar)
     implicit none
-    integer, intent(in) :: n
-    integer, intent(in) :: counts(n)
+    integer, intent(in) :: ar(:)
     integer :: i, j, u
     integer :: x, err
     integer :: xmax
     integer, allocatable :: wrk(:)
 
-    xmax = maxval(counts)
+    xmax = maxval(ar)
     allocate(wrk(0:xmax), stat=err)
     wrk = 0
     u = 0
-    do i = 1,n
-       x = counts(i)
+    do i = 1,ubound(ar, 1)
+       x = ar(i)
        if (wrk(x) == 0) then
           u = u + 1
        end if
