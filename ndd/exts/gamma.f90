@@ -1,6 +1,8 @@
 module gamma_funcs
-  use iso_fortran_env
   implicit none
+  integer, parameter :: int32 = kind(1)
+  integer, parameter :: float32 = kind(1.0)
+  integer, parameter :: float64 = kind(1.d0)
 contains
   elemental function digamma (x)
 
@@ -32,59 +34,59 @@ contains
     !
     !  Parameters:
     !
-    !    Input, real(real64) X, the argument of the digamma function.
+    !    Input, real(float64) X, the argument of the digamma function.
     !    0 < X.
     !
     !
-    !    Output, real(real64) DIGAMMA, the value of the digamma function at X.
+    !    Output, real(float64) DIGAMMA, the value of the digamma function at X.
     !
     implicit none
 
-    real(real64)             :: digamma
-    real(real64), intent(in) :: x
-    real(real64), parameter :: c = 8.5_real64
-    real(real64), parameter :: euler_mascheroni = 0.57721566490153286060_real64
-    real(real64) r
-    real(real64) x2
+    real(float64)             :: digamma
+    real(float64), intent(in) :: x
+    real(float64), parameter :: c = 8.5_float64
+    real(float64), parameter :: euler_mascheroni = 0.57721566490153286060_float64
+    real(float64) r
+    real(float64) x2
     !
     !  Check the input.
     !
-    if ( x <= 0.0_real64 ) then
-       digamma = 0.0_real64
+    if ( x <= 0.0_float64 ) then
+       digamma = 0.0_float64
        return
     end if
     !
     !  Approximation for small argument.
     !
-    if ( x <= 0.000001_real64 ) then
-       digamma = - euler_mascheroni - 1.0_real64 / x + 1.6449340668482264365_real64 * x
+    if ( x <= 0.000001_float64 ) then
+       digamma = - euler_mascheroni - 1.0_float64 / x + 1.6449340668482264365_float64 * x
        return
     end if
     !
     !  Reduce to DIGAMA(X + N).
     !
-    digamma = 0.0_real64
+    digamma = 0.0_float64
     x2 = x
 
     do while ( x2 < c )
-       digamma = digamma - 1.0_real64 / x2
-       x2 = x2 + 1.0_real64
+       digamma = digamma - 1.0_float64 / x2
+       x2 = x2 + 1.0_float64
     end do
     !
     !  Use Stirling's (actually de Moivre's) expansion.
     !
-    r = 1.0_real64 / x2
+    r = 1.0_float64 / x2
 
-    digamma = digamma + log ( x2 ) - 0.5_real64 * r
+    digamma = digamma + log ( x2 ) - 0.5_float64 * r
 
     r = r * r
 
     digamma = digamma &
-         - r * ( 1.0_real64 / 12.0_real64 &
-         - r * ( 1.0_real64 / 120.0_real64 &
-         - r * ( 1.0_real64 / 252.0_real64 &
-         - r * ( 1.0_real64 / 240.0_real64 &
-         - r * ( 1.0_real64 / 132.0_real64 ) ) ) ) )
+         - r * ( 1.0_float64 / 12.0_float64 &
+         - r * ( 1.0_float64 / 120.0_float64 &
+         - r * ( 1.0_float64 / 252.0_float64 &
+         - r * ( 1.0_float64 / 240.0_float64 &
+         - r * ( 1.0_float64 / 132.0_float64 ) ) ) ) )
 
   end function digamma
 
@@ -114,31 +116,31 @@ contains
     !
     !  Parameters:
     !
-    !    Input, real(real64) X, the argument of the trigamma function.
+    !    Input, real(float64) X, the argument of the trigamma function.
     !    0 < X.
     !
     !
-    !    Output, real(real64) TRIGAMMA, the value of the trigamma function.
+    !    Output, real(float64) TRIGAMMA, the value of the trigamma function.
     !
     implicit none
 
-    real(real64)              :: trigamma
-    real(real64), intent(in)  :: x
+    real(float64)              :: trigamma
+    real(float64), intent(in)  :: x
 
-    real(real64), parameter :: a = 0.0001_real64
-    real(real64), parameter :: b = 5.0_real64
-    real(real64), parameter :: b2 =  0.1666666667_real64
-    real(real64), parameter :: b4 = -0.03333333333_real64
-    real(real64), parameter :: b6 =  0.02380952381_real64
-    real(real64), parameter :: b8 = -0.03333333333_real64
+    real(float64), parameter :: a = 0.0001_float64
+    real(float64), parameter :: b = 5.0_float64
+    real(float64), parameter :: b2 =  0.1666666667_float64
+    real(float64), parameter :: b4 = -0.03333333333_float64
+    real(float64), parameter :: b6 =  0.02380952381_float64
+    real(float64), parameter :: b8 = -0.03333333333_float64
 
-    real(real64) y
-    real(real64) z
+    real(float64) y
+    real(float64) z
     !
     !  Check the input.
     !
-    if ( x <= 0.0_real64 ) then
-       trigamma = 0.0_real64
+    if ( x <= 0.0_float64 ) then
+       trigamma = 0.0_float64
        return
     end if
 
@@ -147,25 +149,25 @@ contains
     !  Use small value approximation if X <= A.
     !
     if ( x <= a ) then
-       trigamma = 1.0_real64 / x / x
+       trigamma = 1.0_float64 / x / x
        return
     end if
     !
     !  Increase argument to ( X + I ) >= B.
     !
-    trigamma = 0.0_real64
+    trigamma = 0.0_float64
 
     do while ( z < b )
-       trigamma = trigamma + 1.0_real64 / z / z
-       z = z + 1.0_real64
+       trigamma = trigamma + 1.0_float64 / z / z
+       z = z + 1.0_float64
     end do
     !
     !  Apply asymptotic formula if argument is B or greater.
     !
-    y = 1.0_real64 / z / z
+    y = 1.0_float64 / z / z
 
-    trigamma = trigamma + 0.5_real64 * &
-         y + ( 1.0_real64 &
+    trigamma = trigamma + 0.5_float64 * &
+         y + ( 1.0_float64 &
          + y * ( b2  &
          + y * ( b4  &
          + y * ( b6  &
@@ -178,30 +180,30 @@ contains
     ! Simone Marsili
     implicit none
 
-    real(real64)              :: quadgamma
-    real(real64), intent(in)  :: x
+    real(float64)              :: quadgamma
+    real(float64), intent(in)  :: x
 
-    real(real64), parameter :: a = 0.0001_real64
-    real(real64), parameter :: b = 5.0_real64
-    real(real64) z
+    real(float64), parameter :: a = 0.0001_float64
+    real(float64), parameter :: b = 5.0_float64
+    real(float64) z
     !  Check the input.
-    if ( x <= 0.0_real64 ) then
-       quadgamma = 0.0_real64
+    if ( x <= 0.0_float64 ) then
+       quadgamma = 0.0_float64
        return
     end if
 
     !  Use small value approximation if X <= A.
     if ( x <= a ) then
-       quadgamma = - gamma(3.0_real64) / x**3
+       quadgamma = - gamma(3.0_float64) / x**3
        return
     end if
 
     !  Increase argument to ( X + I ) >= B.
-    quadgamma = 0.0_real64
+    quadgamma = 0.0_float64
     z = x
     do while ( z < b )
-       quadgamma = quadgamma - 2.0_real64 / z**3
-       z = z + 1.0_real64
+       quadgamma = quadgamma - 2.0_float64 / z**3
+       z = z + 1.0_float64
     end do
 
     !  Apply asymptotic formula if argument is B or greater.

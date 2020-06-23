@@ -4,35 +4,37 @@
 
 module constants
   implicit none
-
-  real(8), parameter :: zero = 0.0d0
-  real(8), parameter :: one = 1.0d0
-  real(8), parameter :: two = 2.0d0
+  integer, parameter :: int32 = kind(1)
+  integer, parameter :: float32 = kind(1.0)
+  integer, parameter :: float64 = kind(1.d0)
+  real(float64), parameter :: zero = 0.0_float64
+  real(float64), parameter :: one = 1.0_float64
+  real(float64), parameter :: two = 2.0_float64
 
 end module constants
 
 module dirichlet_mod
+  use constants
   implicit none
 
   integer              :: n_data
-  real(8)                :: alphabet_size
-  real(8), allocatable :: hn(:)  ! array of observed frequencies
-  real(8), allocatable :: hz(:)  ! multiplicities of frequency z
-  real(8), allocatable :: phi(:)  ! wrk array for var
+  real(float64)                :: alphabet_size
+  real(float64), allocatable :: hn(:)  ! array of observed frequencies
+  real(float64), allocatable :: hz(:)  ! multiplicities of frequency z
+  real(float64), allocatable :: phi(:)  ! wrk array for var
 
 contains
 
   subroutine initialize_from_counts(counts, nc)
     ! set n_multi, hn, multi
-    use constants
     integer, intent(in) :: counts(:)
-    real(8), intent(in) :: nc
+    real(float64), intent(in) :: nc
     integer              :: nbins
     integer              :: i_,k_,ni_
     integer              :: err
     integer              :: nmax
     integer, allocatable :: wrk(:)
-    real(8)                :: n_empty_bins
+    real(float64)                :: n_empty_bins
     integer              :: n_multi
 
     alphabet_size = nc
@@ -49,7 +51,7 @@ contains
     do i_ = 1,nbins
        ni_ = counts(i_)
        if (ni_ == 0) then
-          n_empty_bins = n_empty_bins + 1.0d0
+          n_empty_bins = n_empty_bins + 1.0_float64
        else
           wrk(ni_) = wrk(ni_) + 1
        end if
@@ -79,10 +81,10 @@ contains
 
   subroutine initialize_from_multiplicities(hn1, hz1, nc)
     ! set hn, hz, n_data, alphabet_size
-    real(8), intent(in) :: hn1(:)
-    real(8), intent(in) :: hz1(:)
-    real(8), intent(in)    :: nc
-    integer           :: idx=-1, err, j, nm
+    real(float64), intent(in) :: hn1(:)
+    real(float64), intent(in) :: hz1(:)
+    real(float64), intent(in) :: nc
+    integer :: idx=-1, err, j, nm
 
     nm = size(hn1)
     ! check if zeros are included in mults arrays
@@ -104,7 +106,7 @@ contains
        allocate(hn(nm + 1), stat=err)
        allocate(hz(nm + 1), stat=err)
        allocate(phi(nm + 1), stat=err)
-       hn(1) = 0.d0
+       hn(1) = 0._float64
        hz(1) = nc - sum(hz1)
        hn(2:) = hn1
        hz(2:) = hz1
@@ -131,14 +133,13 @@ contains
 
   end subroutine finalize
 
-  pure real(8) function log_pna(alpha)
+  pure real(float64) function log_pna(alpha)
     ! log(p(n|a)) (log of) marginal probability of data given alpha
     ! computed from histogram multiplicities. Dirichlet-multinomial.
-    use constants
 
-    real(8), intent(in) :: alpha
+    real(float64), intent(in) :: alpha
     integer :: i_
-    real(8)   :: wsum
+    real(float64)   :: wsum
 
     log_pna = log_gamma(n_data + one) &
          + log_gamma(alpha * alphabet_size) &
@@ -151,11 +152,10 @@ contains
 
   end function log_pna
 
-  pure real(8) function log_pna_u(alpha)
+  pure real(float64) function log_pna_u(alpha)
     ! log of "unnormalized" pna. keep only alpha-dependent terms
-    use constants
 
-    real(8), intent(in) :: alpha
+    real(float64), intent(in) :: alpha
 
     log_pna_u = log_gamma(alpha * alphabet_size) &
          - alphabet_size * log_gamma(alpha) &
@@ -165,12 +165,11 @@ contains
   end function log_pna_u
 
 
-  elemental real(8) function alpha_prior(alpha)
+  elemental real(float64) function alpha_prior(alpha)
     ! prop. to p(alpha) - the prior for alpha in NSB estimator
-    use constants
     use gamma_funcs, only: trigamma
 
-    real(8), intent(in) :: alpha
+    real(float64), intent(in) :: alpha
 
     alpha_prior = alphabet_size * trigamma(alphabet_size * alpha + one) - &
          trigamma(alpha + one)
@@ -178,21 +177,20 @@ contains
   end function alpha_prior
 
 
-  elemental real(8) function log_weight(alpha)
+  elemental real(float64) function log_weight(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
-    real(8), intent(in) :: alpha
+    real(float64), intent(in) :: alpha
 
     log_weight = log(alpha_prior(alpha)) + log_pna_u(alpha)
 
   end function log_weight
 
-  elemental real(8) function h_dir(alpha)
+  elemental real(float64) function h_dir(alpha)
     ! posterior average of the entropy given data and a specific alpha value
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
-    use constants
 
-    real(8), intent(in) :: alpha
+    real(float64), intent(in) :: alpha
     integer :: i_
 
     h_dir = - sum(hz * (hn + alpha) * digamma(hn + alpha + one))
@@ -201,22 +199,21 @@ contains
 
   end function h_dir
 
-  real(8) function h_var(alpha)
+  real(float64) function h_var(alpha)
     ! posterior average of the entropy given data and a specific alpha value
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma, trigamma
-    use constants
 
-    real(8), intent(in) :: alpha
+    real(float64), intent(in) :: alpha
     integer :: i_
-    real(8) :: c, nu, ni, xi, jsum
+    real(float64) :: c, nu, ni, xi, jsum
 
     nu = n_data + alpha * alphabet_size
     phi = digamma(hn + alpha + one) - &
          digamma(nu + two)
     c = trigamma(nu + two)
 
-    h_var = 0.0
+    h_var = 0.0_float64
     do i_ = 1, size(hz)
        ni = hn(i_) + alpha
        xi = phi(i_)
@@ -234,20 +231,19 @@ contains
   end function h_var
 
 
-  real(8) function integrand(alpha, amax, order)
+  real(float64) function integrand(alpha, amax, order)
     ! posterior average of the entropy given the data and alpha
     ! computed from histogram multiplicities
     use gamma_funcs, only: digamma
-    use constants
 
-    real(8), intent(in) :: alpha
-    real(8), intent(in) :: amax
+    real(float64), intent(in) :: alpha
+    real(float64), intent(in) :: amax
     integer, intent(in) :: order
-    real(8) :: hb, lw, lw_max
-    real(8) :: lpna
+    real(float64) :: hb, lw, lw_max
+    real(float64) :: lpna
     integer :: mi, mzi
     integer :: i_
-    real(8) :: asum, bsum
+    real(float64) :: asum, bsum
 
     if (order == 0) then
        lw_max = log_weight(amax)
@@ -270,22 +266,23 @@ contains
 end module dirichlet_mod
 
 module nsb_mod
+  use constants
   implicit none
 
-  real(8) :: alpha1
-  real(8) :: alpha2
-  real(8) :: log_alpha1
-  real(8) :: log_alpha2
-  real(8) :: amax
-  real(8) :: ascale
+  real(float64) :: alpha1
+  real(float64) :: alpha2
+  real(float64) :: log_alpha1
+  real(float64) :: log_alpha2
+  real(float64) :: amax
+  real(float64) :: ascale
 
 contains
 
-  elemental real(8) function log_weight(alpha)
+  elemental real(float64) function log_weight(alpha)
     ! un-normalized weight for alpha in the integrals; prop. to p(alpha|x)
     use dirichlet_mod, only: log_pna_u, alpha_prior
 
-    real(8), intent(in) :: alpha
+    real(float64), intent(in) :: alpha
 
     log_weight = log(alpha_prior(alpha)) + log_pna_u(alpha)
 
@@ -293,23 +290,22 @@ contains
 
   subroutine log_weight_d(alpha, logw, dlogw)
     ! compute value and derivative of log p(a | x)
-    use constants
     use gamma_funcs, only: digamma, trigamma, quadgamma
     use dirichlet_mod, only: alphabet_size, n_data, hz,&
          hn
     use dirichlet_mod, only: log_pna_u, alpha_prior
 
-    real(8), intent(in) :: alpha
-    real(8), intent(out) :: logw, dlogw
+    real(float64), intent(in) :: alpha
+    real(float64), intent(out) :: logw, dlogw
 
-    real(8) :: prior, dprior, lpna, dlpna, wsum
+    real(float64) :: prior, float64rior, lpna, dlpna, wsum
 
     ! log weight
     prior = alpha_prior(alpha)
     logw = log(prior) + log_pna_u(alpha)
 
     ! log weight derivative
-    dprior = alphabet_size**2 * quadgamma(alphabet_size * alpha + one) - &
+    float64rior = alphabet_size**2 * quadgamma(alphabet_size * alpha + one) - &
          quadgamma(alpha + one)
 
     dlpna = alphabet_size * digamma(alpha * alphabet_size) &
@@ -320,14 +316,13 @@ contains
 
     dlpna = dlpna + wsum
 
-    dlogw = dprior / prior + dlpna
+    dlogw = float64rior / prior + dlpna
 
   end subroutine log_weight_d
 
   subroutine compute_integration_range()
-    use constants
     use dirichlet_mod, only: alphabet_size
-    real(8)             :: a1,a2,f,df,x
+    real(float64)             :: a1,a2,f,df,x
     integer           :: i, err
 
     amax = 1/alphabet_size
@@ -344,7 +339,7 @@ contains
     amax = -one
     do i = 1,100
        x = (a1 + a2) / two
-       if (abs(a2-a1)/x < 0.001) then
+       if (abs(a2-a1)/x < 0.001_float64) then
           amax = x
           exit
        end if
@@ -362,7 +357,7 @@ contains
     end if
 
     call weight_std(ascale, err)
-    if (err > 0) ascale = 0.0 ! integration error
+    if (err > 0) ascale = 0.0_float64 ! integration error
     if (ascale > huge(x)) then
        ascale = 0
     end if
@@ -376,47 +371,47 @@ contains
 
   end subroutine compute_integration_range
 
-  real(8) function m_func(x)
+  real(float64) function m_func(x)
     ! integrate over x = log(alpha)
     use dirichlet_mod, only: integrand
 
-    real(8), intent(in) :: x
-    real(8) :: alpha
+    real(float64), intent(in) :: x
+    real(float64) :: alpha
 
     alpha = exp(x)
     m_func = integrand(alpha, amax, 1)
 
   end function m_func
 
-  real(8) function m2_func(x)
+  real(float64) function m2_func(x)
     ! integrate over x = log(alpha)
     use dirichlet_mod, only: integrand
 
-    real(8), intent(in) :: x
-    real(8) :: alpha
+    real(float64), intent(in) :: x
+    real(float64) :: alpha
 
     alpha = exp(x)
     m2_func = integrand(alpha, amax, 2)
 
   end function m2_func
 
-  real(8) function nrm_func(x)
+  real(float64) function nrm_func(x)
     ! integrate over x = log(alpha)
     use dirichlet_mod, only: integrand
-    real(8), intent(in) :: x
-    real(8) :: alpha
+    real(float64), intent(in) :: x
+    real(float64) :: alpha
 
     alpha = exp(x)
     nrm_func = integrand(alpha, amax, 0)
 
   end function nrm_func
 
-  real(8) function var_func(x)
+  real(float64) function var_func(x)
     ! compute the integrand of std of p(la | data)
     ! integrate over x = log(alpha)
     use dirichlet_mod, only: log_weight
-    real(8), intent(in) :: x
-    real(8) :: alpha
+    real(float64), intent(in) :: x
+    real(float64) :: alpha
 
     alpha = exp(x)
     var_func = (x - log(amax))**2 &
@@ -425,9 +420,9 @@ contains
   end function var_func
 
   subroutine weight_std(std, err)
-    real(8), intent(out) :: std
+    real(float64), intent(out) :: std
     integer, intent(out) :: err
-    real(8) :: var, nrm
+    real(float64) :: var, nrm
 
     call quad(var_func,log_alpha1,log_alpha2, var, err)
     call quad(nrm_func,log_alpha1,log_alpha2, nrm, err)
@@ -441,15 +436,15 @@ contains
 
   subroutine hnsb(estimate,err_estimate, err)
     use dirichlet_mod, only: h_dir, h_var
-    real(8), intent(out) :: estimate,err_estimate
+    real(float64), intent(out) :: estimate,err_estimate
     integer, intent(out) :: err
-    real(8)              :: rslt,nrm
+    real(float64)              :: rslt,nrm
     integer            :: ierr
 
     err = 0
-    if (ascale < 1.e-20) then
+    if (ascale < 1.e-20_float64) then
        estimate = h_dir(amax)
-       err_estimate = 0.0
+       err_estimate = 0.0_float64
     else
        call quad(nrm_func,log_alpha1,log_alpha2, nrm, ierr)
        err = err + ierr
@@ -464,7 +459,7 @@ contains
        err_estimate = err_estimate / nrm
        err_estimate = sqrt(err_estimate - estimate**2)
        if (isnan(err_estimate)) then
-          err_estimate = 0.0d0
+          err_estimate = 0.0_float64
        end if
     end if
 
@@ -474,21 +469,21 @@ contains
     ! wrapper to dqag routine
     use quadrature, only: dqag
 
-    real(8),    external :: func
-    real(8),  intent(in) :: a1,a2
-    real(8),  intent(out) :: integral
+    real(float64),    external :: func
+    real(float64),  intent(in) :: a1,a2
+    real(float64),  intent(out) :: integral
     integer, intent(out) :: ier
     integer, parameter :: limit = 500
     integer, parameter :: lenw = 4 * limit
-    real(8)              :: abserr
-    real(8),   parameter :: epsabs = 0.0d0
-    real(8),   parameter :: epsrel = 0.001d0
+    real(float64)              :: abserr
+    real(float64),   parameter :: epsabs = 0.0_float64
+    real(float64),   parameter :: epsrel = 0.001_float64
     integer            :: iwork(limit)
     integer, parameter :: key = 6
     integer            :: last
     integer            :: neval
-    real(8),   parameter :: r8_pi = 3.141592653589793d0
-    real(8)              :: work(lenw)
+    real(float64),   parameter :: r8_pi = 3.141592653589793_float64
+    real(float64)              :: work(lenw)
 
     call dqag ( func, a1, a2, epsabs, epsrel, key, integral, abserr, neval, ier, &
          limit, lenw, last, iwork, work )
@@ -499,15 +494,16 @@ end module nsb_mod
 
 subroutine plugin(n,counts,estimate)
   ! plugin estimator - no prior, no regularization
+  use constants
   implicit none
 
   integer, intent(in) :: n
   integer, intent(in) :: counts(n)
-  real(8),  intent(out) :: estimate
+  real(float64),  intent(out) :: estimate
 
   integer :: nbins
   integer :: i
-  real(8)   :: ni,n_data
+  real(float64)   :: ni,n_data
   integer              :: mi,nmax,err
   integer, allocatable :: wrk(:)
   logical :: multi = .false.
@@ -516,10 +512,10 @@ subroutine plugin(n,counts,estimate)
      ! using multiplicities
      nbins = size(counts)
      if (nbins == 1) then
-        estimate = 0.0d0
+        estimate = 0.0_float64
         return
      end if
-     n_data = sum(counts)*1.0d0
+     n_data = sum(counts)*1.0_float64
      nmax = maxval(counts)
      allocate(wrk(nmax),stat=err)
      wrk = 0
@@ -528,10 +524,10 @@ subroutine plugin(n,counts,estimate)
         if (ni == 0) cycle
         wrk(ni) = wrk(ni) + 1
      end do
-     estimate = 0.0d0
+     estimate = 0.0_float64
      do i = 1,nmax
         mi = wrk(i)
-        if (mi > 0) estimate = estimate - mi*i*log(i*1.0d0)
+        if (mi > 0) estimate = estimate - mi*i*log(i*1.0_float64)
      end do
      estimate = estimate / n_data + log(n_data)
      deallocate(wrk)
@@ -539,11 +535,11 @@ subroutine plugin(n,counts,estimate)
      ! standard implementation
      nbins = size(counts)
      if (nbins == 1) then
-        estimate = 0.0d0
+        estimate = 0.0_float64
         return
      end if
-     n_data = sum(counts)*1.0d0
-     estimate = - sum(counts * log(counts*1.0d0), counts>0)
+     n_data = sum(counts)*1.0_float64
+     estimate = - sum(counts * log(counts*1.0_float64), counts>0)
      estimate = estimate / n_data + log(n_data)
   end if
 
@@ -565,19 +561,20 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
   ! 1/2 : Jeffreys' or Krychevsky-Trofimov (KT) estimator
   ! 1   : Laplace (LA) estimator
   ! 1/k : (where k is the number of classes) Schurmann-Grassberger (SG)  estimator
+  use constants
   implicit none
 
   integer, intent(in)  :: n
   integer, intent(in)  :: counts(n)
   integer, intent(in)  :: nc
-  real(8),   intent(in)  :: alpha
-  real(8),   intent(out) :: estimate
+  real(float64),   intent(in)  :: alpha
+  real(float64),   intent(out) :: estimate
 
   integer :: nbins,n_data
   integer :: i
-  real(8)   :: ni
+  real(float64)   :: ni
 
-  if (alpha < 1.0d-10) then
+  if (alpha < 1.0e-10_float64) then
      ! if alpha == 0.0 (no pseudocounts)
      call plugin(n, counts, estimate)
      return
@@ -585,11 +582,11 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
 
   nbins = size(counts)
 !  if (nbins == 1) then
-!     estimate = 0.0d0
+!     estimate = 0.0_float64
 !     return
 !  end if
   n_data = sum(counts)
-  estimate = 0.0d0
+  estimate = 0.0_float64
   do i = 1,nbins
      ni = counts(i) + alpha
      estimate = estimate - ni*log(ni)
@@ -606,16 +603,17 @@ end subroutine pseudo
 
 subroutine ww(n, counts, nc, alpha, estimate, err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
+  use constants
   use dirichlet_mod, only: initialize_from_counts, finalize
   use dirichlet_mod, only: h_dir, h_var
   implicit none
 
   integer, intent(in)  :: n
   integer, intent(in)  :: counts(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(in)  :: alpha
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(in)  :: alpha
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
 
   call initialize_from_counts(counts, nc)
 
@@ -630,17 +628,18 @@ end subroutine ww
 subroutine ww_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
   err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
+  use constants
   use dirichlet_mod, only: initialize_from_multiplicities, finalize
   use dirichlet_mod, only: h_dir, h_var
   implicit none
 
   integer, intent(in)  :: n
-  real(8), intent(in)    :: hn1(n)
-  real(8), intent(in)    :: hz1(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(in)  :: alpha
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: hn1(n)
+  real(float64), intent(in)    :: hz1(n)
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(in)  :: alpha
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
 
   call initialize_from_multiplicities(hn1, hz1, nc)
 
@@ -653,6 +652,7 @@ subroutine ww_from_multiplicities(n, hn1, hz1, nc, alpha, estimate, &
 end subroutine ww_from_multiplicities
 
 subroutine nsb(n,counts,nc,estimate,err_estimate)
+  use constants
   use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
@@ -660,9 +660,9 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 
   integer, intent(in)  :: n
   integer, intent(in)  :: counts(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
   integer :: err
 
   call initialize_from_counts(counts, nc)
@@ -676,17 +676,18 @@ subroutine nsb(n,counts,nc,estimate,err_estimate)
 end subroutine nsb
 
 subroutine nsb_from_multiplicities(n, hn1, hz1, nc, estimate, err_estimate)
+  use constants
   use dirichlet_mod, only: initialize_from_multiplicities, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
   implicit none
 
   integer, intent(in)  :: n
-  real(8), intent(in)    :: hn1(n)
-  real(8), intent(in)    :: hz1(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: hn1(n)
+  real(float64), intent(in)    :: hz1(n)
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
   integer :: err
 
   call initialize_from_multiplicities(hn1, hz1, nc)
@@ -700,6 +701,7 @@ subroutine nsb_from_multiplicities(n, hn1, hz1, nc, estimate, err_estimate)
 end subroutine nsb_from_multiplicities
 
 subroutine phony_1(n,counts,nc,estimate,err_estimate)
+  use constants
   use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
@@ -707,11 +709,11 @@ subroutine phony_1(n,counts,nc,estimate,err_estimate)
 
   integer, intent(in)  :: n
   integer, intent(in)  :: counts(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
   integer :: err
-  real :: start, finish
+  real(float32) :: start, finish
 
   call cpu_time(start)
 
@@ -731,6 +733,7 @@ end subroutine phony_1
 
 
 subroutine phony_2(n,counts,nc,estimate,err_estimate)
+  use constants
   use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
@@ -738,11 +741,11 @@ subroutine phony_2(n,counts,nc,estimate,err_estimate)
 
   integer, intent(in)  :: n
   integer, intent(in)  :: counts(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
   integer :: err
-  real :: start, finish
+  real(float32) :: start, finish
 
   call cpu_time(start)
 
@@ -762,6 +765,7 @@ end subroutine phony_2
 
 
 subroutine phony_3(n,counts,nc,estimate,err_estimate)
+  use constants
   use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
@@ -769,11 +773,11 @@ subroutine phony_3(n,counts,nc,estimate,err_estimate)
 
   integer, intent(in)  :: n
   integer, intent(in)  :: counts(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
   integer :: err
-  real :: start, finish
+  real(float32) :: start, finish
 
   call cpu_time(start)
 
@@ -793,6 +797,7 @@ end subroutine phony_3
 
 
 subroutine phony_4(n,counts,nc,estimate,err_estimate)
+  use constants
   use dirichlet_mod, only: initialize_from_counts, finalize
   use nsb_mod, only: hnsb
   use nsb_mod, only: compute_integration_range
@@ -800,11 +805,11 @@ subroutine phony_4(n,counts,nc,estimate,err_estimate)
 
   integer, intent(in)  :: n
   integer, intent(in)  :: counts(n)
-  real(8), intent(in)    :: nc
-  real(8),   intent(out) :: estimate
-  real(8),   intent(out) :: err_estimate
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(out) :: estimate
+  real(float64),   intent(out) :: err_estimate
   integer :: err
-  real :: start, finish
+  real(float32) :: start, finish
 
   call cpu_time(start)
 
@@ -824,14 +829,15 @@ end subroutine phony_4
 
 
 subroutine nsb2d(n,m,counts,nc,estimate,err_estimate)
+  use constants
   implicit none
 
   integer, intent(in)  :: n
   integer, intent(in)  :: m
   integer, intent(in)  :: counts(n,m)
-  real(8), intent(in)    :: nc
-  real(8),   intent(out) :: estimate(m)
-  real(8),   intent(out) :: err_estimate(m)
+  real(float64), intent(in)    :: nc
+  real(float64),   intent(out) :: estimate(m)
+  real(float64),   intent(out) :: err_estimate(m)
   integer :: k
 
   do k = 1,m
@@ -841,22 +847,25 @@ subroutine nsb2d(n,m,counts,nc,estimate,err_estimate)
 end subroutine nsb2d
 
 subroutine gamma0(x, y)
+  use constants
   use gamma_funcs, only: digamma
   implicit none
-  real(8), intent(in) :: x
-  real(8), intent(out) :: y
+  real(float64), intent(in) :: x
+  real(float64), intent(out) :: y
   y = digamma(x)
 end subroutine gamma0
 
 subroutine gamma1(x, y)
+  use constants
   use gamma_funcs, only: trigamma
   implicit none
-  real(8), intent(in) :: x
-  real(8), intent(out) :: y
+  real(float64), intent(in) :: x
+  real(float64), intent(out) :: y
   y = trigamma(x)
 end subroutine gamma1
 
 module counts
+  use constants
   implicit none
   integer, allocatable :: nk(:)
   integer, allocatable :: zk(:)
