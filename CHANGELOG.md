@@ -1,6 +1,8 @@
 # Change log
 
 ## Unreleased
+
+## [1.8.4] - 2020-06-24
 ### Added
 - the `entropy` function selects the best estimator for the data using
   `estimator='auto'`
