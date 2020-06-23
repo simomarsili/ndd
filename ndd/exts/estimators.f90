@@ -547,7 +547,7 @@ contains
 
 end module nsb_mod
 
-subroutine plugin(n,counts,estimate)
+subroutine plugin(n, counts, estimate)
   ! plugin estimator - no prior, no regularization
   use constants
   use counter
@@ -572,6 +572,33 @@ subroutine plugin(n,counts,estimate)
   call counts_reset()
 
 end subroutine plugin
+
+subroutine plugin_from_multiplicities(n, nk1, zk1, estimate)
+  ! plugin estimator - no prior, no regularization
+  use constants
+  use counter
+  implicit none
+
+  integer, intent(in) :: n
+  integer, intent(in) :: nk1(n)
+  integer, intent(in) :: zk1(n)
+  real(float64),  intent(out) :: estimate
+
+  integer :: i
+  real(float64)   :: ni
+
+  call counts_fit(nk1, zk1)
+
+  estimate = 0.0_float64
+  do i = 1,size(nk)
+     ni = nk(i)
+     if (ni > 0) estimate = estimate - zk(i)*ni*log(ni*1.0_float64)
+  end do
+  estimate = estimate / n_data + log(n_data)
+
+  call counts_reset()
+
+end subroutine plugin_from_multiplicities
 
 subroutine pseudo(n,counts,nc,alpha,estimate)
   ! pseudocount estimator(s)
@@ -627,6 +654,38 @@ subroutine pseudo(n,counts,nc,alpha,estimate)
   estimate = estimate / (n_data + nc*alpha) + log(n_data + nc*alpha)
 
 end subroutine pseudo
+
+subroutine pseudo_from_multiplicities(n, nk1, zk1, nc, alpha, estimate)
+  ! pseudo counts
+  use constants
+  use counter
+  implicit none
+
+  integer, intent(in) :: n
+  integer, intent(in) :: nk1(n)
+  integer, intent(in) :: zk1(n)
+  real(float64), intent(in)  :: nc
+  real(float64),   intent(in)  :: alpha
+  real(float64), intent(out) :: estimate
+
+  integer :: i
+  real(float64)   :: ni, na
+
+  call counts_fit(nk1, zk1)
+
+  call add_empty_bins(nc)
+
+  estimate = 0.0_float64
+  do i = 1,size(nk)
+     ni = nk(i) + alpha
+     estimate = estimate - zk(i)*ni*log(ni)
+  end do
+  na = nc * alpha
+  estimate = estimate / (n_data + na) + log(n_data + na)
+
+  call counts_reset()
+
+end subroutine pseudo_from_multiplicities
 
 subroutine ww(n, counts, nc, alpha, estimate, err_estimate)
   ! posterior mean entropy (averaged over Dirichlet distribution) given alpha
