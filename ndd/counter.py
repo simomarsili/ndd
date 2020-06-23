@@ -8,7 +8,6 @@ import ndd.fnsb
 def unique(nk):
     """Return nk, zk"""
     counter = ndd.fnsb.counter
-    print('nk', nk)
     counter.fit(nk)
     nk = counter.nk
     zk = counter.zk
@@ -21,7 +20,6 @@ class Counts:
     def __init__(self, nk, zk=None):
         if zk is None:  # compute frequency distribution
             counter = ndd.fnsb.counter
-            print('nk', nk)
             counter.fit(nk)
             self.nk = counter.nk
             self.zk = counter.zk

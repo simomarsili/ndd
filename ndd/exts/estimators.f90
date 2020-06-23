@@ -22,6 +22,7 @@ module counter
   real(float64) :: n_data
   real(float64) :: n_bins
   real(float64) :: k1
+
 contains
 
   subroutine counts_reset()
@@ -36,6 +37,21 @@ contains
        deallocate(zk)
     end if
   end subroutine counts_reset
+
+  subroutine fit(n, ar)
+    ! Exposed to Python
+    integer, intent(in) :: n
+    integer, intent(in) :: ar(n)
+    call counts_fit(ar)
+  end subroutine fit
+
+  subroutine fit_zk(n, ar, br)
+    ! Exposed to Python
+    integer, intent(in) :: n
+    integer, intent(in) :: ar(n)
+    integer, intent(in) :: br(n)
+    call counts_fit(ar, br)
+  end subroutine fit_zk
 
   subroutine counts_fit(ar, br)
     implicit none
@@ -77,14 +93,13 @@ contains
              zk(u) = x
           end if
        end do
-
+       deallocate(wrk)
     end if
 
     n_data = sum(zk * nk)
     n_bins = sum(zk)
     k1 = sum(zk, nk>0)
 
-    deallocate(wrk)
   end subroutine counts_fit
 
   subroutine add_empty_bins(alphabet_size)
