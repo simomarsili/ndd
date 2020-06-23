@@ -5,10 +5,11 @@ import numpy
 import ndd.fnsb
 
 
-def unique(nk, sort=False):
+def unique(nk, sort=True):
     """Return nk, zk"""
     counter = ndd.fnsb.counter
     counter.fit(nk)
+    # return a copy
     nk = counter.nk
     zk = counter.zk
     unique.counter = counter
@@ -16,6 +17,9 @@ def unique(nk, sort=False):
         ids = numpy.argsort(nk)
         nk = nk[ids]
         zk = zk[ids]
+    else:
+        nk = numpy.array(nk)
+        zk = numpy.array(zk)
     return nk, zk
 
 
