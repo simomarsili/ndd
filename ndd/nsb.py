@@ -12,8 +12,7 @@ import numpy
 from ndd.counter import Counts
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import (NSB, AsymptoticNSB, Grassberger, Plugin,
-                            check_estimator)
+from ndd.estimators import NSB, AsymptoticNSB, Plugin, check_estimator
 from ndd.exceptions import EstimatorInputError, NddError, PmfError
 
 # from ndd.failing import dump_on_fail
@@ -57,7 +56,7 @@ def guess_k(nk, zk=None, eps=1.e-3):
     return round(k1 / numpy.sqrt(multiplier))  # midpoint value
 
 
-def guess(nk, zk=None, k=None):
+def guess(nk, zk=None, k=None):  # TODO: merge with check_estimator
     """Select the best estimator given arguments.
 
     Returns
@@ -122,27 +121,16 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
 
     """
 
+    counts = Counts(nk=nk, zk=zk)
+    nk, zk = counts.multiplicities
+
     if estimator == 'auto':
         k, estimator = guess(nk, zk=zk, k=k)
-        entropy.k = k
-        entropy.estimator = estimator
-        return entropy(nk,
-                       zk=zk,
-                       return_std=return_std,
-                       k=k,
-                       estimator=estimator)
-
-    estimator, _ = check_estimator(estimator)
+    else:
+        estimator, _ = check_estimator(estimator)
 
     entropy.k = k
     entropy.estimator = estimator
-
-    # flatten the array
-    # nk = numpy.asarray(nk).flatten()
-
-    if estimator in [Grassberger, AsymptoticNSB, NSB]:
-        counts = Counts(nk=nk, zk=zk)
-        nk, zk = counts.multiplicities
 
     estimator = estimator.fit(nk=nk, zk=zk, k=k)
 

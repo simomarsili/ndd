@@ -162,14 +162,3 @@ def test_large_cardinality():
     counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
     result = ndd.entropy(counts, k=1.e50)
     assert result == approx(9.581788552407984)
-
-
-estimators = dict(ndd.entropy_estimators)
-estimators.pop('NSB')
-estimators.pop('Grassberger')
-
-
-@pytest.mark.parametrize('estimator', estimators.values())
-def test_multiplicities_not_implemented(estimator):
-    with pytest.raises(NotImplementedError):
-        estimator().fit([0, 1, 2], zk=[2, 2, 1], k=2)
