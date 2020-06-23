@@ -153,14 +153,33 @@ python module fnsb ! in
             integer dimension(n),intent(in) :: counts
             real(kind=8) intent(out) :: estimate
         end subroutine plugin
+        subroutine plugin_from_multiplicities(n,nk1,zk1,estimate) ! in :fnsb:estimators.f90
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(nk1)>=n),depend(nk1) :: n=len(nk1)
+            integer dimension(n),intent(in) :: nk1
+            integer dimension(n),intent(in),depend(n) :: zk1
+            real(kind=8) intent(out) :: estimate
+        end subroutine plugin_from_multiplicities
         subroutine pseudo(n,counts,nc,alpha,estimate) ! in :fnsb:estimators.f90
             use constants
+            use counter
             integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
             integer dimension(n),intent(in) :: counts
-            integer intent(in) :: nc
+            real(kind=8) intent(in) :: nc
             real(kind=8) intent(in) :: alpha
             real(kind=8) intent(out) :: estimate
         end subroutine pseudo
+        subroutine pseudo_from_multiplicities(n,nk1,zk1,nc,alpha,estimate) ! in :fnsb:estimators.f90
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(nk1)>=n),depend(nk1) :: n=len(nk1)
+            integer dimension(n),intent(in) :: nk1
+            integer dimension(n),intent(in),depend(n) :: zk1
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(in) :: alpha
+            real(kind=8) intent(out) :: estimate
+        end subroutine pseudo_from_multiplicities
         subroutine ww(n,counts,nc,alpha,estimate,err_estimate) ! in :fnsb:estimators.f90
             use constants
             use dirichlet_mod, only: h_dir,h_var
