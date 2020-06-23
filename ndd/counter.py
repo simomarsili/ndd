@@ -5,12 +5,17 @@ import numpy
 import ndd.fnsb
 
 
-def unique(nk):
+def unique(nk, sort=False):
     """Return nk, zk"""
     counter = ndd.fnsb.counter
     counter.fit(nk)
     nk = counter.nk
     zk = counter.zk
+    unique.counter = counter
+    if sort:
+        ids = numpy.argsort(nk)
+        nk = nk[ids]
+        zk = zk[ids]
     return nk, zk
 
 
@@ -19,12 +24,9 @@ class Counts:
 
     def __init__(self, nk, zk=None):
         if zk is None:  # compute frequency distribution
-            counter = ndd.fnsb.counter
-            counter.fit(nk)
-            self.nk = counter.nk
-            self.zk = counter.zk
-            self._n = counter.n_data
-            self._k1 = counter.k1
+            self.nk, self.zk = unique(nk)
+            self._n = unique.counter.n_data
+            self._k1 = unique.counter.k1
         else:
             self.nk = numpy.asarray(nk)
             self.zk = numpy.asarray(zk)
