@@ -59,34 +59,6 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
     return wrapper
 
 
-def g_series():
-    """Higher-order function storing terms of the series."""
-    GG = {}
-    gamma0 = ndd.fnsb.gamma0
-    log_two = numpy.log(2.0)
-
-    def gterm(n):
-        """Sequence of reals for the Grassberger estimator."""
-        if n in GG:
-            return GG[n]
-        if n <= 2:
-            if n < 1:
-                value = 0.0
-            elif n == 1:
-                value = -euler_gamma - log_two
-            elif n == 2:
-                value = 2.0 + gterm(1)
-        else:
-            if n % 2 == 0:
-                value = gamma0((n + 1) / 2) + log_two
-            else:
-                value = gterm(n - 1)
-        GG[n] = value
-        return value
-
-    return gterm
-
-
 class EntropyEstimator(BaseEstimator, ABC):
     """
     Base class for entropy estimators.
@@ -442,6 +414,34 @@ class Grassberger(EntropyEstimator):
 
     """
 
+    @staticmethod
+    def g_series():
+        """Higher-order function storing terms of the series."""
+        GG = {}
+        gamma0 = ndd.fnsb.gamma0
+        log_two = numpy.log(2.0)
+
+        def gterm(n):
+            """Sequence of reals for the Grassberger estimator."""
+            if n in GG:
+                return GG[n]
+            if n <= 2:
+                if n < 1:
+                    value = 0.0
+                elif n == 1:
+                    value = -euler_gamma - log_two
+                elif n == 2:
+                    value = 2.0 + gterm(1)
+            else:
+                if n % 2 == 0:
+                    value = gamma0((n + 1) / 2) + log_two
+                else:
+                    value = gterm(n - 1)
+            GG[n] = value
+            return value
+
+        return gterm
+
     @check_input
     def fit(self, nk, k=None, zk=None):  # pylint: disable=unused-argument
         """
@@ -456,7 +456,7 @@ class Grassberger(EntropyEstimator):
             Entropy estimate.
 
         """
-        gg = g_series()  # init the G series
+        gg = self.g_series()  # init the G series
         estimate = 0
 
         if zk is not None:
