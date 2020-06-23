@@ -17,7 +17,7 @@ end module constants
 module counter
   use constants
   implicit none
-  real(float64), allocatable :: nk(:)
+  integer, allocatable :: nk(:)
   real(float64), allocatable :: zk(:)
   real(float64) :: n_data
   real(float64) :: n_bins
@@ -37,9 +37,10 @@ contains
     end if
   end subroutine counts_reset
 
-  subroutine counts_fit(ar)
+  subroutine counts_fit(ar, br)
     implicit none
     integer, intent(in) :: ar(:)
+    integer, intent(in), optional :: br(:)
     integer :: i, j, u
     integer :: x, err
     integer :: xmax
@@ -47,29 +48,37 @@ contains
 
     call counts_reset()
 
-    xmax = maxval(ar)
-    allocate(wrk(0:xmax), stat=err)
-    wrk = 0
-    u = 0
-    do i = 1,ubound(ar, 1)
-       x = ar(i)
-       if (wrk(x) == 0) then
-          u = u + 1
-       end if
-       wrk(x) = wrk(x) + 1
-    end do
+    if (present(br)) then  ! multiplicities
+       allocate(nk(size(ar)), stat=err)
+       allocate(zk(size(br)), stat=err)
+       nk = ar
+       zk = br
+    else
+       xmax = maxval(ar)
+       allocate(wrk(0:xmax), stat=err)
+       wrk = 0
+       u = 0
+       do i = 1,ubound(ar, 1)
+          x = ar(i)
+          if (wrk(x) == 0) then
+             u = u + 1
+          end if
+          wrk(x) = wrk(x) + 1
+       end do
 
-    allocate(nk(u), zk(u), stat=err)
+       allocate(nk(u), zk(u), stat=err)
 
-    u = 0
-    do i = 0, xmax
-       x = wrk(i)
-       if (x > 0) then
-          u = u + 1
-          nk(u) = i
-          zk(u) = x
-       end if
-    end do
+       u = 0
+       do i = 0, xmax
+          x = wrk(i)
+          if (x > 0) then
+             u = u + 1
+             nk(u) = i
+             zk(u) = x
+          end if
+       end do
+
+    end if
 
     n_data = sum(zk * nk)
     n_bins = sum(zk)
@@ -89,7 +98,7 @@ contains
     if (allocated(nk)) then
        if (alphabet_size > n_bins) then
           unobserved = alphabet_size - n_bins*1.0_float64
-          if (minval(nk) < 1.e-3_float64) then
+          if (minval(nk) ==  0) then
              k = minloc(nk, 1)
              zk(k) = zk(k) + unobserved
           else
@@ -145,22 +154,14 @@ contains
 
   subroutine initialize_from_multiplicities(nk1, zk1, nc)
     ! set nk, zk, n_data, alphabet_size
-    real(float64), intent(in) :: nk1(:)
-    real(float64), intent(in) :: zk1(:)
+    integer, intent(in) :: nk1(:)
+    integer, intent(in) :: zk1(:)
     real(float64), intent(in) :: nc
     integer :: idx=-1, err, j, nm
 
     alphabet_size = nc
 
-    call counts_reset()
-    allocate(nk(size(nk1)), stat=err)
-    allocate(zk(size(zk1)), stat=err)
-    nk = nk1
-    zk = zk1
-
-    n_data = sum(zk * nk)
-    n_bins = sum(zk)
-    k1 = sum(zk, nk>0)
+    call counts_fit(nk1, zk1)
 
     call add_empty_bins(alphabet_size)
 
@@ -685,8 +686,8 @@ subroutine ww_from_multiplicities(n, nk1, zk1, nc, alpha, estimate, &
   implicit none
 
   integer, intent(in)  :: n
-  real(float64), intent(in)    :: nk1(n)
-  real(float64), intent(in)    :: zk1(n)
+  integer, intent(in)    :: nk1(n)
+  integer, intent(in)    :: zk1(n)
   real(float64), intent(in)    :: nc
   real(float64),   intent(in)  :: alpha
   real(float64),   intent(out) :: estimate
@@ -734,8 +735,8 @@ subroutine nsb_from_multiplicities(n, nk1, zk1, nc, estimate, err_estimate)
   implicit none
 
   integer, intent(in)  :: n
-  real(float64), intent(in)    :: nk1(n)
-  real(float64), intent(in)    :: zk1(n)
+  integer, intent(in)    :: nk1(n)
+  integer, intent(in)    :: zk1(n)
   real(float64), intent(in)    :: nc
   real(float64),   intent(out) :: estimate
   real(float64),   intent(out) :: err_estimate
