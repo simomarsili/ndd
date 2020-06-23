@@ -100,7 +100,7 @@ contains
              deallocate(nk)
              allocate(nk(k+1), stat=err)
              nk(:k) = wrk
-             nk(k+1) = 0
+             nk(k+1) = 0.0_float64
 
              wrk(:k) = zk
              deallocate(zk)
@@ -135,11 +135,9 @@ contains
 
     alphabet_size = nc
 
-    call counts_reset()
-
     call counts_fit(counts)
 
-    call add_empty_bins(nc)
+    call add_empty_bins(alphabet_size)
 
     allocate(phi(size(nk)), stat=err)
 
@@ -152,34 +150,21 @@ contains
     real(float64), intent(in) :: nc
     integer :: idx=-1, err, j, nm
 
-    nm = size(nk1)
-    ! check if zeros are included in mults arrays
-    if (any(int(nk1) == 0)) then  ! we work with floats
-       allocate(nk(nm), stat=err)
-       allocate(zk(nm), stat=err)
-       allocate(phi(nm), stat=err)
-       nk = nk1
-       zk = zk1
-       idx = -1
-       do j = 1, nm
-          if (int(nk1(j)) == 0) then
-             idx = j
-             exit
-          end if
-       end do
-       zk(idx) = zk1(idx) + nc - sum(zk1)
-    else
-       allocate(nk(nm + 1), stat=err)
-       allocate(zk(nm + 1), stat=err)
-       allocate(phi(nm + 1), stat=err)
-       nk(1) = 0._float64
-       zk(1) = nc - sum(zk1)
-       nk(2:) = nk1
-       zk(2:) = zk1
-    end if
-
     alphabet_size = nc
+
+    call counts_reset()
+    allocate(nk(size(nk1)), stat=err)
+    allocate(zk(size(zk1)), stat=err)
+    nk = nk1
+    zk = zk1
+
     n_data = sum(zk * nk)
+    n_bins = sum(zk)
+    k1 = sum(zk, nk>0)
+
+    call add_empty_bins(alphabet_size)
+
+    allocate(phi(size(nk)), stat=err)
 
   end subroutine initialize_from_multiplicities
 
