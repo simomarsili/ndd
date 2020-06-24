@@ -59,6 +59,33 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
     return wrapper
 
 
+def guess_alphabet_size(nk, zk=None, eps=1.e-3):
+    """Guess a reasonable value for the cardinality."""
+    nsb = NSB()
+    asym = AsymptoticNSB()
+    multiplier = 10
+    dk = numpy.log(multiplier)
+    if zk is not None:
+        k1 = numpy.sum(zk)
+    else:
+        k1 = numpy.sum([1 for n in nk if n > 0])
+        # k1 = k1 // 2
+    if not k1:
+        k1 = 1
+    h0 = nsb(nk=nk, k=k1, zk=zk)
+    for _ in range(40):
+        k1 = round(k1 * multiplier)
+        h1 = nsb(nk, k=k1, zk=zk)
+        dh = (h1 - h0) / dk
+        hasym = asym(nk=nk, zk=zk)
+        if dh < eps:
+            break
+        if hasym and h1 >= hasym:  # should return hasym
+            raise NddError
+        h0 = h1
+    return round(k1 / numpy.sqrt(multiplier))  # midpoint value
+
+
 class EntropyEstimator(BaseEstimator, ABC):
     """
     Base class for entropy estimators.
@@ -617,33 +644,6 @@ class AutoEstimator(EntropyEstimator):
         self.estimator = None
         self.k = None
 
-    @staticmethod
-    def guess_k(nk, zk=None, eps=1.e-3):
-        """Guess a reasonable value for the cardinality."""
-        nsb = NSB()
-        asym = AsymptoticNSB()
-        multiplier = 10
-        dk = numpy.log(multiplier)
-        if zk is not None:
-            k1 = numpy.sum(zk)
-        else:
-            k1 = numpy.sum([1 for n in nk if n > 0])
-            # k1 = k1 // 2
-        if not k1:
-            k1 = 1
-        h0 = nsb(nk=nk, k=k1, zk=zk)
-        for _ in range(40):
-            k1 = round(k1 * multiplier)
-            h1 = nsb(nk, k=k1, zk=zk)
-            dh = (h1 - h0) / dk
-            hasym = asym(nk=nk, zk=zk)
-            if dh < eps:
-                break
-            if hasym and h1 >= hasym:  # should return hasym
-                raise NddError
-            h0 = h1
-        return round(k1 / numpy.sqrt(multiplier))  # midpoint value
-
     def guess(self, nk, k=None, zk=None):
         """Select the best estimator given arguments.
 
@@ -671,7 +671,8 @@ class AutoEstimator(EntropyEstimator):
             self.estimator = AsymptoticNSB()
             return
 
-        self.k = self.guess_k(nk=nk, zk=zk)  # guess a reasonable value for k
+        self.k = guess_alphabet_size(nk=nk,
+                                     zk=zk)  # guess a reasonable value for k
         self.estimator = NSB()
 
     @check_input
