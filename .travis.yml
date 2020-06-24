@@ -14,7 +14,7 @@ matrix:
       python: 3.5
       env: TOXENV=py35
     - os: osx
-      python: 3.8
+      language: generic
       env: TOXENV=py38
     - os: osx
       language: generic
