@@ -561,19 +561,16 @@ class AutoEstimator(EntropyEstimator):
 
         counts = Counts(nk, zk=zk)
 
-        if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
-
-            if counts.coincidences:  # has coincidences?
-                self.k = None
-                self.estimator = AsymptoticNSB()
-                return
-
+        if not counts.coincidences:  # has coincidences?
             logging.warning('Insufficient data: plugin estimate.')
             self.k = None
             self.estimator = Plugin()  # else Plugin estimator
             return
 
-        # else, the distribution is not strongly under-sampled
+        if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
+            self.k = None
+            self.estimator = AsymptoticNSB()
+            return
 
         self.k = self.guess_k(nk=nk, zk=zk)  # guess a reasonable value for k
         self.estimator = NSB()
