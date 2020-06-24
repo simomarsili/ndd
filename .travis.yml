@@ -9,7 +9,7 @@ matrix:
       env: TOXENV=py36
     - python: 3.5
       env: TOXENV=py35
-    - osx
+    - os: osx
       language: generic
       env: TOXENV=py35
 addons:
