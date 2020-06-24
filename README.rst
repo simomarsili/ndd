@@ -26,7 +26,7 @@ and returns an entropy estimate (in nats)::
   >>> counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
   >>> entropy_estimate = ndd.entropy(counts, k=100)
   >>> entropy_estimate
-  2.8400090835681375
+  2.8400090633157338
 
 The uncertainty in the entropy estimate can be quantified using the
 posterior variance (see Eq. 13 in `Archer 2013
@@ -35,7 +35,7 @@ that is computed efficiently using a multiplicities-based implementation::
 
   >>> entropy_estimate = ndd.entropy(counts, k=100, return_std=True)
   >>> entropy_estimate
-  (2.8400090835681375, 0.10884840411906187)
+  (2.8400090633157338, 0.10884841403552914)
 
 Where to get it
 ===============

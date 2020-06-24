@@ -9,9 +9,13 @@ matrix:
       env: TOXENV=py36
     - python: 3.5
       env: TOXENV=py35
+addons:
+  apt:
+    packages: gfortran
+  homebrew:
+    packages: gcc
 before_install:
   - pip install -U numpy
-  - sudo apt-get install gfortran
 install:
   - pip install tox
 script:
