@@ -396,9 +396,8 @@ class AsymptoticNSB(EntropyEstimator):
         counts = Counts(nk=nk, zk=zk)
 
         if not counts.coincidences:
-            logger.warning('AsymptoticNSB estimator: no coincidences '
+            raise NddError('AsymptoticNSB estimator: no coincidences '
                            'in the data.')
-            return self
         if counts.sampling_ratio > 0.1:
             logger.info('The AsymptoticNSB estimator should only be used '
                         'in the under-sampled regime.')
