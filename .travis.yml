@@ -17,13 +17,13 @@ matrix:
       python: 3.8
       env: TOXENV=py38
     - os: osx
-      python: 3.7
+      language: generic
       env: TOXENV=py37
     - os: osx
-      python: 3.6
+      language: generic
       env: TOXENV=py36
     - os: osx
-      python: 3.5
+      language: generic
       env: TOXENV=py35
 before_install:
   - pip install -U numpy
