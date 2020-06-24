@@ -570,7 +570,7 @@ class AutoEstimator(EntropyEstimator):
 
             logging.warning('Insufficient data: plugin estimate.')
             self.k = None
-            self.estimator = NullEstimator()  # else Plugin estimator
+            self.estimator = Plugin()  # else Plugin estimator
             return
 
         # else, the distribution is not strongly under-sampled
