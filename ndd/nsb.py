@@ -33,29 +33,52 @@ logger = logging.getLogger(__name__)
 
 
 # @dump_on_fail()
-def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
+def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     """
     Entropy estimate from an array of counts.
 
     Return a Bayesian estimate for the entropy of an unknown discrete
-    distribution from an input array of counts nk.
+    distribution from an input array of counts `nk`.
+
+    The entropy function takes as input a vector of frequency counts
+    (the observed frequencies for a set of classes or states) and an alphabet
+    size (the number of classes with non-zero probability, including
+    unobserved classes) and returns an entropy estimate (in nats):
+
+    >>> import ndd
+    >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+    >>> entropy_estimate = ndd.entropy(counts, k=100)
+    2.8060922529931225
+
+    The posterior standard deviation is stored as a function attribute
+    >>> entropy.std
+    0.32429359488122139
+
+    When the alphabet size is unknown, the entropy function will select the
+    most appropriate algorithm for the sampling regime and guess a reasonable
+    size for `k` if needed
+    >>> counts = [1]*100 + [2]*10
+    >>> entropy(counts)
+    7.2072993808389789
+    >>> entropy.estimator
+    AsymptoticNSB()
 
     Parameters
     ----------
     nk : array-like
         The number of occurrences of a set of bins.
-    k : int or array-like (optional if estimator != NSB)
+    k : int or array-like (optional if estimator != `NSB`)
         Alphabet size (the number of bins with non-zero probability).
-        Must be >= len(nk). A float is a valid input for whole numbers
-        (e.g. k=1.e3). If an array, set k = numpy.prod(k).
-        If estimator != NSB estimator, defaults to sum(nk > 0)
+        Must be >= len(nk). A float is a valid input for whole numbers.
+        If an array, set k = numpy.prod(k). If estimator != NSB estimator,
+        defaults to sum(nk > 0)
     zk : array_like, optional
         Counts distribution or "multiplicities". If passed, nk contains
-        the observed counts values.
-    estimator : str or entropy estimator instance, optional
+        the observed counts values and len(zk) == len(nk).
+    estimator : str or entropy estimator obj, optional
         If a string, use the estimator class with the same name and default
-        parameters. Check ndd.entropy_estimators for the available estimators.
-        Default: Nemenman-Shafee-Bialek (NSB) estimator.
+        parameters. Check `ndd.entropy_estimators` for the available
+        estimators. Default: select the most appropriate entropy estimator.
     return_std : boolean, optional
         If True, also return an approximation for the standard deviation
         over the entropy posterior.
@@ -72,7 +95,7 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     counts = Counts(nk=nk, zk=zk)
     nk, zk = counts.multiplicities
 
-    if estimator == 'auto':
+    if estimator is None:
         estimator = 'AutoEstimator'
 
     estimator, _ = check_estimator(estimator)
@@ -96,7 +119,7 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     if err is not None and numpy.isnan(err):
         err = numpy.nan
 
-    entropy.err = err
+    entropy.std = err
 
     if return_std:
         if err is not None and numpy.isnan(err):
