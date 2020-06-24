@@ -9,8 +9,6 @@ matrix:
       env: TOXENV=py36
     - python: 3.5
       env: TOXENV=py35
-    - os: osx
-      language: generic
 addons:
   apt:
     packages: gfortran
