@@ -25,9 +25,13 @@ matrix:
     - os: osx
       language: generic
       env: TOXENV=py35
+addons:
+  apt:
+    packages: gfortran
+  homebrew:
+    packages: gcc
 before_install:
   - pip install -U numpy
-  - sudo apt-get install gfortran
 install:
   - pip install tox
 script:
