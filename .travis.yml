@@ -11,7 +11,7 @@ matrix:
       env: TOXENV=py35
 addons:
   apt:
-    packages: gcc
+    packages: gfortran
   homebrew:
     packages: gcc
 before_install:
