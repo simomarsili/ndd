@@ -47,7 +47,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
 
     >>> import ndd
     >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
-    >>> entropy_estimate = ndd.entropy(counts, k=100)
+    >>> ndd.entropy(counts, k=100)
     2.8060922529931225
 
     The posterior standard deviation is stored as a function attribute
