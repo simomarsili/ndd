@@ -54,14 +54,32 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     >>> entropy.std
     0.32429359488122139
 
-    When the alphabet size is unknown, the entropy function will select the
-    most appropriate algorithm for the sampling regime and guess a reasonable
-    size for `k` if needed
+    If the alphabet size is unavailable, the entropy function will guess a
+    reasonable value for `k` and use the NSB estimator, or switch to the
+    asymptotic NSB estimator in the strongly undersampled regime.
+
     >>> counts = [1]*100 + [2]*10
     >>> entropy(counts)
     7.2072993808389789
     >>> entropy.estimator
     AsymptoticNSB()
+    >>> entropy.std
+    0.3242935948812214
+
+    Given some coincidences in the data (bins with counts > 1), the results
+    are comparable to those obtained using the true alphabet size as input.
+    When the alphabet size is unknown and no coincidences can be found in the
+    `counts` array, no entropy estimator can give a reasonable estimate.
+    In this case, the `entropy` function will use the "plugin" estimate, and
+    set entropy.std = inf.
+
+    >>> counts = [1]*100
+    >>> entropy(counts)
+    4.605170185988092
+    >>> entropy.estimator
+    Plugin(alpha=None)
+    >>> entropy.std
+    inf
 
     Parameters
     ----------
@@ -86,7 +104,8 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     Returns
     -------
     entropy : float
-        Entropy estimate.
+        Entropy estimate. If alphabet size is unknown and no coincidences can
+        be found in the data, return None.
     std : float, optional
         Uncertainty in the entropy estimate. Only if `return_std` is True.
 
@@ -112,7 +131,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
 
     S, err = estimator.estimate_, estimator.err_
 
-    if numpy.isnan(S):
+    if S is not None and numpy.isnan(S):
         logger.warning('nan value for entropy estimate')
         S = numpy.nan
 
