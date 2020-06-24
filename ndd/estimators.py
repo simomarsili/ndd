@@ -396,8 +396,9 @@ class AsymptoticNSB(EntropyEstimator):
         counts = Counts(nk=nk, zk=zk)
 
         if not counts.coincidences:
-            raise NddError('AsymptoticNSB estimator: no coincidences '
+            logger.warning('AsymptoticNSB estimator: no coincidences '
                            'in the data.')
+            return self
         if counts.sampling_ratio > 0.1:
             logger.info('The AsymptoticNSB estimator should only be used '
                         'in the under-sampled regime.')
@@ -481,6 +482,35 @@ class Grassberger(EntropyEstimator):
         return self
 
 
+class NullEstimator(EntropyEstimator):
+    """Set fitted parameters to None"""
+
+    @check_input
+    def fit(self, nk, k=None, zk=None):
+        """
+        Parameters
+        ----------
+        nk : array-like
+            The number of occurrences of a set of bins.
+        k : int or array-like
+            Alphabet size (the number of bins with non-zero probability).
+            Must be >= len(nk). A float is a valid input for whole numbers
+            (e.g. k=1.e3). If an array, set k = numpy.prod(k).
+        zk : array_like, optional
+            Counts distribution or "multiplicities". If passed, nk contains
+            the observed counts values.
+
+        Returns
+        -------
+        self : object
+
+        """
+
+        self.estimate_ = None
+        self.err_ = None
+        return self
+
+
 class AutoEstimator(EntropyEstimator):
     """Select the best estimator for the input data."""
 
@@ -511,7 +541,7 @@ class AutoEstimator(EntropyEstimator):
             hasym = asym(nk=nk, zk=zk)
             if dh < eps:
                 break
-            if h1 >= hasym:  # should return hasym
+            if hasym and h1 >= hasym:  # should return hasym
                 raise NddError
             h0 = h1
         return round(k1 / numpy.sqrt(multiplier))  # midpoint value
@@ -541,7 +571,7 @@ class AutoEstimator(EntropyEstimator):
 
             logging.warning('Insufficient data: plugin estimate.')
             self.k = None
-            self.estimator = Plugin()  # else Plugin estimator
+            self.estimator = NullEstimator()  # else Plugin estimator
             return
 
         # else, the distribution is not strongly under-sampled
@@ -567,11 +597,6 @@ class AutoEstimator(EntropyEstimator):
         Returns
         -------
         self : object
-
-        Raises
-        ------
-        NddError
-            If k is None.
 
         """
 
