@@ -74,7 +74,7 @@ class EntropyEstimator(BaseEstimator, ABC):
 
     def __init__(self):
         self.estimate_ = None
-        self.err_ = None
+        self.err_ = numpy.float('inf')
         self.input_data_ndim = 1
 
     def __call__(self, nk, k=None, zk=None):
