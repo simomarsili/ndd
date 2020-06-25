@@ -666,7 +666,9 @@ class AutoEstimator(EntropyEstimator):
         counts = Counts(nk, zk=zk)
 
         if not counts.coincidences:  # has coincidences?
-            logging.warning('Insufficient data: plugin estimate.')
+            logging.warning(
+                'Insufficient data (no coincidences found in counts). '
+                'Return plugin estimate.')
             self.k = None
             self.estimator = Plugin()  # else Plugin estimator
             return
