@@ -34,9 +34,9 @@ posterior standard deviation (see Eq. 13 in `Archer 2013
   >>> ndd.entropy(counts, k=100, return_std=True)
   (2.8060922529931225, 0.11945501149743358)
 
-If the alphabet size is unknown or infinite and the `k` argument is omitted,
-the `entropy` function will use an upper bound estimate for `k`, or switch to
-the asymptotic NSB estimator
+If the alphabet size is unknown or infinite, the `k` argument can be omitted
+and the `entropy` function will use an upper bound estimate for `k`, or switch
+to the asymptotic NSB estimator
 (Eqs. 29, 20 in
 `Nemenman 2011 <https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf>`_
 )
