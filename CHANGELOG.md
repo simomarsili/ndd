@@ -1,6 +1,8 @@
 # Change log
 
 ## Unreleased
+
+## [1.9] - 2020-06-25
 ### Changed
 - if argument `k` is omitted, the `entropy` function will guess a reasonable
   alphabet size and select the best estimator for the sampling regime.
