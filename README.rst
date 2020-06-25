@@ -78,8 +78,8 @@ Changes
 **v.1.9**
    Changed:
 
-the ``entropy`` function takes frequency counts (multiplicities) as input via
-   the ``zk`` optional argument
+   the ``entropy`` function takes frequency counts (multiplicities) as input
+   via the ``zk`` optional argument.
 
    if argument ``k`` is omitted, the ``entropy`` function will guess a
    reasonable alphabet size and select the best estimator for the sampling
