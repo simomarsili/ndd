@@ -21,9 +21,11 @@ __all__ = [
     'EntropyEstimator',
     'Plugin',
     'MillerMadow',
-    'Grassberger',
+    'WolpertWolf',
     'NSB',
+    'Grassberger',
     'AsymptoticNSB',
+    'AutoEstimator',
 ]
 
 
@@ -73,11 +75,14 @@ def guess_alphabet_size(nk, zk=None, eps=1.e-3):
     if not k1:
         k1 = 1
     h0 = nsb(nk=nk, k=k1, zk=zk)
+    try:
+        hasym = asym(nk=nk, zk=zk)
+    except NddError:
+        hasym = None  # no coincidences
     for _ in range(40):
         k1 = round(k1 * multiplier)
         h1 = nsb(nk, k=k1, zk=zk)
         dh = (h1 - h0) / dk
-        hasym = asym(nk=nk, zk=zk)
         if dh < eps:
             break
         if hasym and h1 >= hasym:  # should return hasym
