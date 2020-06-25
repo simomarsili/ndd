@@ -17,7 +17,7 @@ smaller than the number of classes with non-zero probability.
 Basic usage
 ===========
 
-The **entropy** function takes as input a vector of **frequency counts**
+The ``entropy`` function takes as input a vector of **frequency counts**
 (the observed frequencies for a set of classes or states) and an **alphabet size**
 (the number of classes with non-zero probability, including unobserved classes)
 and returns an entropy estimate (in nats)::
@@ -34,9 +34,9 @@ posterior standard deviation (see Eq. 13 in `Archer 2013
   >>> ndd.entropy(counts, k=100, return_std=True)
   (2.8060922529931225, 0.11945501149743358)
 
-If the alphabet size is unknown or infinite, the `k` argument can be omitted
-and the `entropy` function will use an upper bound estimate for `k`, or switch
-to the asymptotic NSB estimator
+If the alphabet size is unknown or infinite, the ``k`` argument can be omitted
+and the ``entropy`` function will use an upper bound estimate for ``k``, or
+switch to the asymptotic NSB estimator
 (Eqs. 29, 20 in
 `Nemenman 2011 <https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf>`_
 )
@@ -105,7 +105,8 @@ the ``entropy`` function takes frequency counts (multiplicities) as input via
 
    estimation is much faster (removed unnecessary checks on input counts)
 
-   `entropy()` function needs cardinality `k` for the default (NSB) estimator
+   ``entropy()`` function needs cardinality ``k`` for the default (NSB)
+   estimator
 
 **v1.6.1**
    Changed:
@@ -114,7 +115,7 @@ the ``entropy`` function takes frequency counts (multiplicities) as input via
 **v1.6**
    Changed:
 
-   The signature of the *entropy* function has been changed to allow
+   The signature of the ``entropy`` function has been changed to allow
    arbitrary entropy estimators. The new signature is::
 
      entropy(pk, k=None, estimator='NSB', return_std=False)
