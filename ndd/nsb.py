@@ -49,8 +49,9 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     >>> ndd.entropy(counts, k=100)
     2.8060922529931225
 
-    After the call, a Bayesian error bar on the estimate (obtained from the a
-    posteriori standard deviation) is available as a function attribute:
+    The uncertainty in the entropy estimate can be quantified using the
+    posterior standad deviation, that is stored as an attribute of the
+    `entropy()` function:
     >>> entropy.err
     0.32429359488122139
 
