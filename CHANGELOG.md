@@ -1,11 +1,11 @@
 # Change log
 
 ## Unreleased
+### Changed
+- if argument `k` is omitted, the `entropy` function will guess a reasonable
+  alphabet size and select the best estimator for the sampling regime.
 
 ## [1.8.4] - 2020-06-24
-### Added
-- the `entropy` function selects the best estimator for the data using
-  `estimator='auto'`
 ### Changed
 - the `entropy` function takes frequency counts (multiplicities) as input via
   the `zk` optional argument

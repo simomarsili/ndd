@@ -21,9 +21,11 @@ __all__ = [
     'EntropyEstimator',
     'Plugin',
     'MillerMadow',
-    'Grassberger',
+    'WolpertWolf',
     'NSB',
+    'Grassberger',
     'AsymptoticNSB',
+    'AutoEstimator',
 ]
 
 
@@ -59,6 +61,36 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
     return wrapper
 
 
+def guess_alphabet_size(nk, zk=None, eps=1.e-3):
+    """Guess a reasonable value for the cardinality."""
+    nsb = NSB()
+    asym = AsymptoticNSB()
+    multiplier = 10
+    dk = numpy.log(multiplier)
+    if zk is not None:
+        k1 = numpy.sum(zk)
+    else:
+        k1 = numpy.sum([1 for n in nk if n > 0])
+        # k1 = k1 // 2
+    if not k1:
+        k1 = 1
+    h0 = nsb(nk=nk, k=k1, zk=zk)
+    try:
+        hasym = asym(nk=nk, zk=zk)
+    except NddError:
+        hasym = None  # no coincidences
+    for _ in range(40):
+        k1 = round(k1 * multiplier)
+        h1 = nsb(nk, k=k1, zk=zk)
+        dh = (h1 - h0) / dk
+        if dh < eps:
+            break
+        if hasym and h1 >= hasym:  # should return hasym
+            raise NddError
+        h0 = h1
+    return round(k1 / numpy.sqrt(multiplier))  # midpoint value
+
+
 class EntropyEstimator(BaseEstimator, ABC):
     """
     Base class for entropy estimators.
@@ -74,7 +106,7 @@ class EntropyEstimator(BaseEstimator, ABC):
 
     def __init__(self):
         self.estimate_ = None
-        self.err_ = None
+        self.err_ = numpy.float('inf')
         self.input_data_ndim = 1
 
     def __call__(self, nk, k=None, zk=None):
@@ -275,6 +307,16 @@ class MillerMadow(EntropyEstimator):
         float
             Entropy estimate.
 
+        Notes
+        -----
+        @article{miller1955note,
+          title={Note on the bias of information estimates},
+          author={Miller, George},
+          journal={Information theory in psychology: Problems and methods},
+          year={1955},
+          publisher={Free Press}
+        }
+
         """
         plugin = Plugin()
         if zk is not None:
@@ -285,6 +327,77 @@ class MillerMadow(EntropyEstimator):
             k = numpy.sum(nk > 0)
             n = numpy.sum(nk)
             self.estimate_ = plugin(nk) + 0.5 * (k - 1) / n
+        return self
+
+
+class WolpertWolf(EntropyEstimator):
+    """
+    Wolpert-Wolf entropy estimator.
+
+    Single Dirichlet prior with concentration parameter `alpha`.
+
+    Parameters
+    ----------
+    alpha : float
+        Concentration parameter. alpha > 0.0.
+        If alpha is passed, use a single Dirichlet prior
+
+    Notes
+    -----
+    @article{wolpert1995estimating,
+      title={Estimating functions of probability distributions from a finite set of samples},
+      author={Wolpert, David H and Wolf, David R},
+      journal={Physical Review E},
+      volume={52},
+      number={6},
+      pages={6841},
+      year={1995},
+      publisher={APS}
+    }
+
+    """
+
+    def __init__(self, alpha):
+        super().__init__()
+        self.alpha = self.check_alpha(alpha)
+
+    @check_input
+    def fit(self, nk, k=None, zk=None):
+        """
+        Parameters
+        ----------
+        nk : array-like
+            The number of occurrences of a set of bins.
+        k : int or array-like
+            Alphabet size (the number of bins with non-zero probability).
+            Must be >= len(nk). A float is a valid input for whole numbers
+            (e.g. k=1.e3). If an array, set k = numpy.prod(k).
+        zk : array_like, optional
+            Counts distribution or "multiplicities". If passed, nk contains
+            the observed counts values.
+
+        Returns
+        -------
+        self : object
+
+        Raises
+        ------
+        NddError
+            If k is None.
+
+        """
+
+        if k is None:
+            raise NddError('Wolper-Wolf estimator needs k')
+        if k == 1:
+            self.estimate_, self.err_ = PZERO, PZERO
+            return self
+
+        if zk is not None:
+            self.estimate_, self.err_ = ndd.fnsb.ww_from_multiplicities(
+                nk, zk, k, self.alpha)
+        else:
+            self.estimate_, self.err_ = ndd.fnsb.ww(nk, k, self.alpha)
         return self
 
 
@@ -301,6 +414,27 @@ class NSB(EntropyEstimator):
         If alpha is passed, use a single Dirichlet prior
         (Wolpert-Wolf estimator).
         Default: use a mixture-of-Dirichlets prior (NSB estimator).
+
+    Notes
+    -----
+    @inproceedings{nemenman2002entropy,
+      title={Entropy and inference, revisited},
+      author={Nemenman, Ilya and Shafee, Fariel and Bialek, William},
+      booktitle={Advances in neural information processing systems},
+      pages={471--478},
+      year={2002}
+    }
+
+    @article{nemenman2004entropy,
+      title={Entropy and information in neural spike trains: Progress on the sampling problem},
+      author={Nemenman, Ilya and Bialek, William and Van Steveninck, Rob De Ruyter},
+      journal={Physical Review E},
+      volume={69},
+      number={5},
+      pages={056111},
+      year={2004},
+      publisher={APS}
+    }
 
     """
 
@@ -350,11 +484,9 @@ class NSB(EntropyEstimator):
             else:
                 self.estimate_, self.err_ = ndd.fnsb.nsb(nk, k)
         else:  # wolpert-wolf estimator
-            if zk is not None:
-                self.estimate_, self.err_ = ndd.fnsb.ww_from_multiplicities(
-                    nk, zk, k, self.alpha)
-            else:
-                self.estimate_, self.err_ = ndd.fnsb.ww(nk, k, self.alpha)
+            estimator = WolpertWolf(self.alpha).fit(nk=nk, k=k, zk=zk)
+            self.estimate_ = estimator.estimate_
+            self.err_ = estimator.err_
         return self
 
 
@@ -367,10 +499,29 @@ class AsymptoticNSB(EntropyEstimator):
     is the number of distinct symbols in the samples and N the number of
     samples)
 
-    See:
-    Nemenman2011:
-    "Coincidences and estimation of entropies of random variables
-    with largecardinalities.", equations 29, 30
+    Notes
+    -----
+    @article{nemenman2004entropy,
+      title={Entropy and information in neural spike trains: Progress on the sampling problem},
+      author={Nemenman, Ilya and Bialek, William and Van Steveninck, Rob De Ruyter},
+      journal={Physical Review E},
+      volume={69},
+      number={5},
+      pages={056111},
+      year={2004},
+      publisher={APS}
+    }
+
+    @article{nemenman2011coincidences,
+      title={Coincidences and estimation of entropies of random variables with large cardinalities},
+      author={Nemenman, Ilya},
+      journal={Entropy},
+      volume={13},
+      number={12},
+      pages={2013--2023},
+      year={2011},
+      publisher={Molecular Diversity Preservation International}
+    }
 
     """
 
@@ -413,10 +564,19 @@ class AsymptoticNSB(EntropyEstimator):
 
 
 class Grassberger(EntropyEstimator):
-    """Grassberger 2003 estimator.
+    """Grassberger's aymptotic bias coorection estimator.
 
     see equation 35 in:
     https://arxiv.org/pdf/physics/0307138.pdf
+
+    Notes
+    -----
+    @article{grassberger2003entropy,
+      title={Entropy estimates from insufficient samplings},
+      author={Grassberger, Peter},
+      journal={arXiv preprint physics/0307138},
+      year={2003}
+    }
 
     """
 
@@ -489,33 +649,6 @@ class AutoEstimator(EntropyEstimator):
         self.estimator = None
         self.k = None
 
-    @staticmethod
-    def guess_k(nk, zk=None, eps=1.e-3):
-        """Guess a reasonable value for the cardinality."""
-        nsb = NSB()
-        asym = AsymptoticNSB()
-        multiplier = 10
-        dk = numpy.log(multiplier)
-        if zk is not None:
-            k1 = numpy.sum(zk)
-        else:
-            k1 = numpy.sum([1 for n in nk if n > 0])
-            # k1 = k1 // 2
-        if not k1:
-            k1 = 1
-        h0 = nsb(nk=nk, k=k1, zk=zk)
-        for _ in range(40):
-            k1 = round(k1 * multiplier)
-            h1 = nsb(nk, k=k1, zk=zk)
-            dh = (h1 - h0) / dk
-            hasym = asym(nk=nk, zk=zk)
-            if dh < eps:
-                break
-            if h1 >= hasym:  # should return hasym
-                raise NddError
-            h0 = h1
-        return round(k1 / numpy.sqrt(multiplier))  # midpoint value
-
     def guess(self, nk, k=None, zk=None):
         """Select the best estimator given arguments.
 
@@ -532,21 +665,21 @@ class AutoEstimator(EntropyEstimator):
 
         counts = Counts(nk, zk=zk)
 
-        if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
-
-            if counts.coincidences:  # has coincidences?
-                self.k = None
-                self.estimator = AsymptoticNSB()
-                return
-
-            logging.warning('Insufficient data: plugin estimate.')
+        if not counts.coincidences:  # has coincidences?
+            logging.warning(
+                'Insufficient data (no coincidences found in counts). '
+                'Return plugin estimate.')
             self.k = None
             self.estimator = Plugin()  # else Plugin estimator
             return
 
-        # else, the distribution is not strongly under-sampled
+        if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
+            self.k = None
+            self.estimator = AsymptoticNSB()
+            return
 
-        self.k = self.guess_k(nk=nk, zk=zk)  # guess a reasonable value for k
+        self.k = guess_alphabet_size(nk=nk,
+                                     zk=zk)  # guess a reasonable value for k
         self.estimator = NSB()
 
     @check_input
@@ -567,11 +700,6 @@ class AutoEstimator(EntropyEstimator):
         Returns
         -------
         self : object
-
-        Raises
-        ------
-        NddError
-            If k is None.
 
         """
 
