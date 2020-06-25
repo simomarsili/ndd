@@ -28,12 +28,23 @@ and returns an entropy estimate (in nats)::
   2.8060922529931225
 
 The uncertainty in the entropy estimate can be quantified using the
-posterior variance (see Eq. 13 in `Archer 2013
-<https://pillowlab.princeton.edu/pubs/Archer13_MIestim_Entropy.pdf>`_)
-that is computed efficiently using a multiplicities-based implementation::
+posterior standard deviation (see Eq. 13 in `Archer 2013
+<https://pillowlab.princeton.edu/pubs/Archer13_MIestim_Entropy.pdf>`_) ::
 
   >>> ndd.entropy(counts, k=100, return_std=True)
   (2.8060922529931225, 0.11945501149743358)
+
+If the alphabet size is unknown or infinite and the `k` argument is omitted,
+the `entropy` function will use an upper bound estimate for `k`, or switch to
+the asymptotic SNB estimator (Eqs. 29, 20 in
+`Nemenman 2011 <https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf>`_
+) in the strongly undersampled regime::
+
+  >>> ndd.entropy(counts)  # k is omitted
+  2.8130746489179046
+  >>> counts = [1]*100 + [2]*10  # undersampled distribution
+  >>> entropy(counts)
+  7.2072993808389789
 
 Where to get it
 ===============

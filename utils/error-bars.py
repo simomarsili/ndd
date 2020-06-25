@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 """Plot estimates with error bars for random datasets."""
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy
 from numpy.random import dirichlet, multinomial
 from scipy.stats import entropy
 
+import figs
 import ndd
 import ndd.estimators
+from ndd.exceptions import NddError
 
-N = 10000
-K = 1000000
+N = 100
+K = 10000
 ALPHA = 0.001
-NITER = 1
+NITER = 10
 R = 100
 
 numpy.random.seed(1234)
@@ -28,7 +31,7 @@ def data(a=ALPHA):
     return counts, pp
 
 
-def estimate(counts, pp, k=None, estimator='NSB'):
+def estimate(counts, pp, k=None, estimator=None):
     """
     Return:
     * the true entropy of p
@@ -40,53 +43,108 @@ def estimate(counts, pp, k=None, estimator='NSB'):
     result = ref, *ndd.entropy(
         counts, k=k, return_std=True, estimator=estimator)
     result = numpy.asarray(result)
-    result = [x / numpy.log(K) if x is not None else 0 for x in result]
+    if None in result:
+        return None
+    result = [x / numpy.log(K) for x in result]
     return result
 
 
-def plot_errorbar(ax, a):
+def plot_errorbar(axes, a, label=None):
     """Plotter"""
     kwargs = {
+        #'markersize': 4,
         'marker': 'o',
-        'yerr': a[2],
         'alpha': 0.5,
         'elinewidth': 1,
         'capsize': 3,
         'errorevery': 1,
-        'ls': '',
+        'ls': ''
     }
-    if len(a) == 2:
-        kwargs.pop('yerr')
-    ax.errorbar(a[0], a[1], **kwargs, zorder=1)
-    ax.plot(a[0], a[0], '-', lw=2, zorder=2)
-    return ax
+    if len(a) == 3:
+        kwargs['yerr'] = a[2]
+    axes.errorbar(a[0], a[1], **kwargs, zorder=1, label=label)
+    axes.plot(a[0], a[0], '--', lw=1, zorder=2, color='black', alpha=0.5)
+    return axes
 
 
 if __name__ == '__main__':
     from time import time
-    X = [data(a) for a in numpy.logspace(-3, 0, R) for _ in range(NITER)]
+    ylim = (-0.1, 1.1)
+    X = [
+        data(a) for a in numpy.logspace(-round(numpy.log10(K)), 0, R)
+        for _ in range(NITER)
+    ]
+    refs = [entropy(p1) for _, p1 in X]
 
-    fig, axs = plt.subplots(1, 3)
+    fonts = figs.TalkFonts
+    fonts['axes.titlesize'] = 'small'
+    with mpl.style.context([figs.Custom, figs.FigSizeL, fonts],
+                           after_reset=True):
+        fig, axs = plt.subplots(1, 4, figsize=figs.fig_size(5, 3))
 
-    t0 = time()
-    ar0 = [estimate(*x, k=K) for x in X]
-    print('time0: ', time() - t0)
-    ar0 = numpy.array(list(zip(*ar0)))
-    plot_errorbar(axs[0], ar0)
+        t0 = time()
+        ar2 = [(entropy(p1), entropy(x)) for x, p1 in X]
+        print('time0: ', time() - t0)
+        ar2 = numpy.array(list(zip(*ar2))) / numpy.log(K)
+        with figs.axes(ax=axs[0],
+                       title='scipy.stats.entropy(counts)',
+                       xlim=ylim,
+                       ylim=ylim,
+                       ylabel='entropy estimate') as ax:
+            plot_errorbar(ax, ar2)
 
-    t0 = time()
-    ar1 = [estimate(*x, estimator='auto') for x in X]
-    print('time0: ', time() - t0)
-    ar1 = numpy.array(list(zip(*ar1)))
-    plot_errorbar(axs[1], ar1)
+        t0 = time()
+        ar0 = [(entropy(p1), *ndd.entropy(x, k=K, return_std=1))
+               for x, p1 in X]
+        ar0 = [x for x in ar0 if None not in x]
+        print('time0: ', time() - t0)
+        ar0 = numpy.array(list(zip(*ar0))) / numpy.log(K)
+        with figs.axes(ax=axs[1],
+                       title='ndd.entropy(counts, k=k)',
+                       xlim=ylim,
+                       ylim=ylim,
+                       xlabel='true entropy',
+                       y_invisible=True) as ax:
+            plot_errorbar(ax, ar0, label='ndd.entropy')
 
-    t0 = time()
-    ar2 = [estimate(*x, estimator='Plugin') for x in X]
-    print('time0: ', time() - t0)
-    ar2 = numpy.array(list(zip(*ar2)))
-    plot_errorbar(axs[2], ar2)
+        t0 = time()
+        ar1 = [(entropy(p1), *ndd.entropy(x, return_std=1)) for x, p1 in X]
+        ar1 = [x for x in ar1 if None not in x]
+        print('time0: ', time() - t0)
+        ar1 = numpy.array(list(zip(*ar1))) / numpy.log(K)
+        with figs.axes(ax=axs[2],
+                       title='ndd.entropy(counts)',
+                       xlim=ylim,
+                       ylim=ylim,
+                       y_invisible=True) as ax:
+            plot_errorbar(ax, ar1, label='ndd.entropy')
 
-    plt.show()
+        t0 = time()
+
+        ar3 = []
+        for x, p1 in X:
+            try:
+                S, err = ndd.entropy(x,
+                                     estimator='AsymptoticNSB',
+                                     return_std=1)
+            except NddError:
+                pass
+            else:
+                if not numpy.isinf(err):
+                    ar3.append((entropy(p1), S, err))
+        ar3 = [x for x in ar3 if None not in x]
+        print('time0: ', time() - t0)
+        ar3 = numpy.array(list(zip(*ar3))) / numpy.log(K)
+        with figs.axes(ax=axs[3],
+                       title='ndd.entropy(counts)',
+                       xlim=ylim,
+                       ylim=ylim,
+                       y_invisible=True) as ax:
+            plot_errorbar(ax, ar3, label='ndd.entropy')
+
+        # plt.tight_layout()
+        plt.show()
+        fig.savefig('fig1.pdf', format='pdf')
 
     # compute bias and std for k-guess
     ar0[1] = ar0[1] - ar0[0]
