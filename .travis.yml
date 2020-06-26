@@ -11,8 +11,9 @@ arch:
   - arm64
 
 python:
-  - 3.8
-  - 3.7
+  - "3.8"
+  - "3.7"
+  - "3.6"
 
 addons:
   apt:
@@ -25,10 +26,10 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc; fi
 
 install:
-  - pip install tox
+  - pip install pytest
 
 script:
-  - tox
+  - pytest
 
 # safelist
 branches:
