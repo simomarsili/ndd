@@ -19,7 +19,7 @@ before_install:
 install:
   - pip install tox
 script:
-  - tox
+  - pytest
 
 # safelist
 branches:
