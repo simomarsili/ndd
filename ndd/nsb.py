@@ -118,7 +118,7 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     entropy.err : float
         Error bound on the entropy value.
     entropy.estimator : estimator object
-        The entropy estimator object (a sklearn-like Estimator).
+        The entropy estimator object (sklearn-like Estimator object).
     entropy.k : int or float or None
         The alphabet size used for the fit.
     entropy.bounded : bool
