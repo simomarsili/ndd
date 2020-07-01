@@ -46,13 +46,13 @@ in the strongly undersampled regime (Equations. 29, 30 in
   7.2072993808389789
 
 
-.. image:: ./figs/bars.svg
+.. image:: ./docs/figs/bars.svg
    :height: 300px
    :width: 800 px
    :scale: 100 %
-   :alt: https://raw.githubusercontent.com/simomarsili/ndd/restructuredtext/docs/figs/bars.svg
+   :alt: https://github.com/simomarsili/ndd/blob/restructuredtext/docs/figs/bars.svg
    :align: center
-   :target: ./figs/bars.svg
+   :target: ./docs/figs/bars.svg
 
 Where to get it
 ===============
