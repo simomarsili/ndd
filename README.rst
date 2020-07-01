@@ -13,11 +13,6 @@ a parameter-free, Bayesian entropy estimator for discrete data.
 The NSB algorithm allows entropy estimation when the number of samples is much
 smaller than the number of classes with non-zero probability.
 
-
-.. math::
-
-   \hat{y} = \sin(x)
-
 Basic usage
 ===========
 
@@ -50,7 +45,7 @@ in the strongly undersampled regime (Equations. 29, 30 in
   >>> entropy(counts)
   7.2072993808389789
 
-.. image:: https://github.com/simomarsili/ndd/blob/restructuredtext/docs/bars.png
+.. image:: https://github.com/simomarsili/ndd/blob/restructuredtext/docs/bars.png?raw=true
   :width: 400
   :alt: Alternative text
 
