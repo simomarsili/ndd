@@ -10,20 +10,8 @@ import numpy.random as random
 import pytest
 
 import ndd
-import ndd.estimators
-from make_test_ref import SEED, cases
-
-
-def tests_dir():
-    """Return None if no tests dir."""
-    cwd = os.getcwd()
-    basename = os.path.basename(cwd)
-    if basename == 'tests':
-        return cwd
-    tdir = os.path.join(cwd, 'tests')
-    if os.path.exists(tdir):
-        return tdir
-    return None
+from make_test_ref import SEED, approx, cases
+from utils import tests_dir
 
 
 def random_ndarray(n, p, seed):
@@ -69,33 +57,31 @@ def test_entropy(case, ref_result, capsys):
     out, err = capsys.readouterr()
     sys.stdout.write(out)
     sys.stderr.write(err)
-    assert numpy.isclose(test_result, ref_result)
+    assert test_result == approx(ref_result)
 
 
 def test_histogram_ndarray():
     N, P = 100, 3
     data = ndd.data.DataArray(random_ndarray(N, P, SEED))
-    ref_result = 9.107550241712808
+    ref_result = 9.10694087896497
     counts, k = data.iter_counts()
     estimate = ndd.entropy(counts, k=k)
-    assert numpy.isclose(estimate, ref_result)  # pylint: disable=protected-access
+    assert estimate == approx(ref_result)  # pylint: disable=protected-access
 
 
 def test_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
-    ref_result = 9.107550241712808
-    assert numpy.isclose(
-        ndd.nsb.from_data(data),  # pylint: disable=protected-access
-        ref_result)
+    ref_result = 9.10694087896497
+    assert ndd.nsb.from_data(data) == approx(ref_result)  # pylint: disable=protected-access
 
 
 def test_combinations_from_data():
     N, P = 100, 3
     data = random_ndarray(N, P, SEED)
     hs_pairs = ndd.nsb.from_data(data, r=2)  # pylint: disable=protected-access
-    ref_result = 18.847999689904068
-    assert numpy.isclose(sum(hs_pairs), ref_result)
+    ref_result = 18.845851695565234
+    assert sum(hs_pairs) == approx(ref_result)
 
 
 def test_KLD():
@@ -104,8 +90,8 @@ def test_KLD():
     qk = random.dirichlet([ALPHA] * P)
     pk = random.multinomial(N, qk)
     estimator = ndd.kullback_leibler_divergence
-    ref_result = -0.04070168209104397
-    assert numpy.isclose(estimator(pk, qk), ref_result)
+    ref_result = -0.04293719438189214
+    assert estimator(pk, qk) == approx(ref_result)
 
 
 def test_JSD():
@@ -114,8 +100,8 @@ def test_JSD():
     pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
     estimator = ndd.divergence.JSDivergence()
-    ref_result = -0.017281201076104313
-    assert numpy.isclose(estimator(counts), ref_result)
+    ref_result = -0.0179963577515192
+    assert estimator(counts) == approx(ref_result)
 
 
 def test_mi(data_with_redundancy):
@@ -126,7 +112,7 @@ def test_mi(data_with_redundancy):
     h12 = ndd.from_data(data_with_redundancy[[1, 2]])
     mi = h1 + h2 - h12
     estimate = mutual_information(data_with_redundancy[[1, 2]])
-    assert numpy.isclose(estimate, mi)
+    assert estimate == approx(mi)
 
 
 def test_mmi(data_with_redundancy):
@@ -141,7 +127,7 @@ def test_mmi(data_with_redundancy):
     h012 = ndd.from_data(data_with_redundancy, ks=[3] * 3)
     mmi = -(h0 + h1 + h2 - h01 - h02 - h12 + h012)
     estimate = interaction_information(data_with_redundancy, ks=[3] * 3)
-    assert numpy.isclose(estimate, mmi, atol=0.01)
+    assert estimate == approx(mmi, abs=1.e-2)
 
 
 def test_conditional_entropy(data_with_redundancy):
@@ -150,7 +136,7 @@ def test_conditional_entropy(data_with_redundancy):
     data = data_with_redundancy[[1, 2]]
     estimate = (ndd.from_data(data) - ndd.conditional_entropy(data, c=0) -
                 ndd.conditional_entropy(data, c=1))
-    assert numpy.isclose(estimate, mutual_information(data), atol=0.01)
+    assert estimate == approx(mutual_information(data), abs=0.01)
 
 
 def test_xor():
@@ -163,4 +149,16 @@ def test_xor():
 
     data = numpy.array([xor() for k in range(500)])
     estimate = ndd.conditional_entropy(data, c=[0, 1])
-    assert numpy.isclose(estimate, 0, atol=0.01)
+    assert estimate == approx(0, abs=0.01)
+
+
+def test_error_estimate():
+    counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+    result = ndd.entropy(counts, k=100, return_std=True)
+    assert result[1] == approx(0.10884840411906187)
+
+
+def test_large_cardinality():
+    counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+    result = ndd.entropy(counts, k=1.e50)
+    assert result == approx(9.581788552407984)

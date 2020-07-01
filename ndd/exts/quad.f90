@@ -1,12 +1,12 @@
 module quadrature
-  use iso_fortran_env
-  implicit none
   ! 15 June 2016
   ! quadrature module
   ! routines from QUADPACK, fortran90 version:
   ! https://people.sc.fsu.edu/~jburkardt/f_src/quadpack/quadpack.f90
-  ! kind types parameters from the iso_fortran_env intrinsic module
-  ! Author: Simone Marsili
+  implicit none
+  integer, parameter :: int32 = kind(1)
+  integer, parameter :: float32 = kind(1.0)
+  integer, parameter :: float64 = kind(1.d0)
 
 contains
 
@@ -210,7 +210,7 @@ contains
     !
     implicit none
 
-    real (real64) abseps,abserr,alist,area,area1,area12,area2,a1, &
+    real (float64) abseps,abserr,alist,area,area1,area12,area2,a1, &
          a2,blist,boun,bound,b1,b2,correc,defabs,defab1,defab2, &
          dres,elist,epmach,epsabs,epsrel,erlarg,erlast, &
          errbnd,errmax,error1,error2,erro12,errsum,ertest,f,oflow,resabs, &
@@ -231,15 +231,15 @@ contains
     ier = 0
     neval = 0
     last = 0
-    result = 0.0_real64
-    abserr = 0.0_real64
-    alist(1) = 0.0_real64
-    blist(1) = 0.1e1_real64
-    rlist(1) = 0.0_real64
-    elist(1) = 0.0_real64
+    result = 0.0_float64
+    abserr = 0.0_float64
+    alist(1) = 0.0_float64
+    blist(1) = 0.1e1_float64
+    rlist(1) = 0.0_float64
+    elist(1) = 0.0_float64
     iord(1) = 0
 
-    if(epsabs.le.0.0_real64.and.epsrel.lt. max ( 0.5e2_real64*epmach,0.5D-28)) then
+    if(epsabs.le.0.0_float64.and.epsrel.lt. max ( 0.5e2_float64*epmach,0.5D-28)) then
        ier = 6
     end if
 
@@ -255,8 +255,8 @@ contains
     !  i2 = integral of f over (0,+infinity).
     !
     boun = bound
-    if(inf.eq.2) boun = 0.0_real64
-    call dqk15i(f,boun,inf,0.0_real64,0.1e1_real64,result,abserr, &
+    if(inf.eq.2) boun = 0.0_float64
+    call dqk15i(f,boun,inf,0.0_float64,0.1e1_float64,result,abserr, &
          defabs,resabs)
     !
     !  test on accuracy
@@ -267,10 +267,10 @@ contains
     iord(1) = 1
     dres =  abs ( result)
     errbnd =  max ( epsabs,epsrel*dres)
-    if(abserr.le.1.0e2_real64*epmach*defabs.and.abserr.gt.errbnd) ier = 2
+    if(abserr.le.1.0e2_float64*epmach*defabs.and.abserr.gt.errbnd) ier = 2
     if(limit.eq.1) ier = 1
     if(ier.ne.0.or.(abserr.le.errbnd.and.abserr.ne.resabs).or. &
-         abserr.eq.0.0_real64) go to 130
+         abserr.eq.0.0_float64) go to 130
     !
     !  initialization
     !
@@ -293,7 +293,7 @@ contains
     iroff2 = 0
     iroff3 = 0
     ksgn = -1
-    if(dres.ge.(0.1e1_real64-0.5e2_real64*epmach)*defabs) ksgn = 1
+    if(dres.ge.(0.1e1_float64-0.5e2_float64*epmach)*defabs) ksgn = 1
     !
     !  main do-loop
     !
@@ -302,7 +302,7 @@ contains
        !  bisect the subinterval with nrmax-th largest error estimate.
        !
        a1 = alist(maxerr)
-       b1 = 0.5_real64*(alist(maxerr)+blist(maxerr))
+       b1 = 0.5_float64*(alist(maxerr)+blist(maxerr))
        a2 = b1
        b2 = blist(maxerr)
        erlast = errmax
@@ -317,8 +317,8 @@ contains
        errsum = errsum+erro12-errmax
        area = area+area12-rlist(maxerr)
        if(defab1.eq.error1.or.defab2.eq.error2)go to 15
-       if( abs ( rlist(maxerr)-area12).gt.0.1e-4_real64* abs ( area12) &
-            .or.erro12.lt.0.99_real64*errmax) go to 10
+       if( abs ( rlist(maxerr)-area12).gt.0.1e-4_float64* abs ( area12) &
+            .or.erro12.lt.0.99_float64*errmax) go to 10
        if(extrap) iroff2 = iroff2+1
        if(.not.extrap) iroff1 = iroff1+1
 10     if(last.gt.10.and.erro12.gt.errmax) iroff3 = iroff3+1
@@ -339,8 +339,8 @@ contains
        !  set error flag in the case of bad integrand behaviour
        !  at some points of the integration range.
        !
-       if( max (  abs ( a1), abs ( b2)).le.(0.1e1_real64+0.1e3_real64*epmach)* &
-            ( abs ( a2)+0.1e4_real64*uflow)) then
+       if( max (  abs ( a1), abs ( b2)).le.(0.1e1_float64+0.1e3_float64*epmach)* &
+            ( abs ( a2)+0.1e4_float64*uflow)) then
           ier = 4
        end if
        !
@@ -405,7 +405,7 @@ contains
        rlist2(numrl2) = area
        call dqelg(numrl2,rlist2,reseps,abseps,res3la,nres)
        ktmin = ktmin+1
-       if(ktmin.gt.5.and.abserr.lt.0.1e-2_real64*errsum) ier = 5
+       if(ktmin.gt.5.and.abserr.lt.0.1e-2_float64*errsum) ier = 5
        if(abseps.ge.abserr) go to 70
        ktmin = 0
        abserr = abseps
@@ -422,10 +422,10 @@ contains
        errmax = elist(maxerr)
        nrmax = 1
        extrap = .false.
-       small = small*0.5_real64
+       small = small*0.5_float64
        erlarg = errsum
        go to 90
-80     small = 0.375_real64
+80     small = 0.375_float64
        erlarg = errsum
        ertest = errbnd
        rlist2(2) = area
@@ -437,9 +437,9 @@ contains
        if((ier+ierro).eq.0) go to 110
        if(ierro.eq.3) abserr = abserr+correc
        if(ier.eq.0) ier = 3
-       if(result.ne.0.0_real64.and.area.ne.0.0_real64)go to 105
+       if(result.ne.0.0_float64.and.area.ne.0.0_float64)go to 105
        if(abserr.gt.errsum)go to 115
-       if(area.eq.0.0_real64) go to 130
+       if(area.eq.0.0_float64) go to 130
        go to 110
 105    if(abserr/ abs ( result).gt.errsum/ abs ( area))go to 115
        !
@@ -448,12 +448,12 @@ contains
 110    continue
 
        if ( ksgn .eq. (-1) .and. &
-            max ( abs ( result), abs ( area)) .le. defabs*0.1e-1_real64 ) then
+            max ( abs ( result), abs ( area)) .le. defabs*0.1e-1_float64 ) then
           go to 130
        end if
 
-       if ( 0.1e-1_real64 .gt. (result/area) .or. &
-            (result/area) .gt. 0.1e3_real64 .or. &
+       if ( 0.1e-1_float64 .gt. (result/area) .or. &
+            (result/area) .gt. 0.1e3_float64 .or. &
             errsum .gt. abs ( area) ) then
           ier = 6
        end if
@@ -462,7 +462,7 @@ contains
        !
        !  compute global integral sum.
        !
-115    result = 0.0_real64
+115    result = 0.0_float64
        do k = 1,last
           result = result+rlist(k)
        end do
@@ -645,8 +645,8 @@ contains
        ier = 6
        neval = 0
        last = 0
-       result = 0.0_real64
-       abserr = 0.0_real64
+       result = 0.0_float64
+       abserr = 0.0_float64
        if(limit.lt.1.or.lenw.lt.limit*4) go to 10
        !
        !  prepare call for dqagie.
@@ -693,20 +693,20 @@ contains
        !  Parameters:
        !
        !   on entry
-       !      f      - real(real64)
+       !      f      - real(float64)
        !               function subprogram defining the integrand
        !               function f(x). the actual name for f needs to be
        !               declared e x t e r n a l in the driver program.
        !
-       !      a      - real(real64)
+       !      a      - real(float64)
        !               lower limit of integration
        !
-       !      b      - real(real64)
+       !      b      - real(float64)
        !               upper limit of integration
        !
-       !      epsabs - real(real64)
+       !      epsabs - real(float64)
        !               absolute accuracy requested
-       !      epsrel - real(real64)
+       !      epsrel - real(float64)
        !               relative accuracy requested
        !               if  epsabs.le.0
        !               and epsrel.lt.max(50*rel.mach.acc.,0.5d-28),
@@ -727,10 +727,10 @@ contains
        !               in the partition of (a,b), limit.ge.1.
        !
        !   on return
-       !      result - real(real64)
+       !      result - real(float64)
        !               approximation to the integral
        !
-       !      abserr - real(real64)
+       !      abserr - real(float64)
        !               estimate of the modulus of the absolute error,
        !               which should equal or exceed abs(i-result)
        !
@@ -777,24 +777,24 @@ contains
        !                       alist(1) and blist(1) are set to a and b
        !                       respectively.
        !
-       !      alist   - real(real64)
+       !      alist   - real(float64)
        !                vector of dimension at least limit, the first
        !                 last  elements of which are the left
        !                end points of the subintervals in the partition
        !                of the given integration range (a,b)
        !
-       !      blist   - real(real64)
+       !      blist   - real(float64)
        !                vector of dimension at least limit, the first
        !                 last  elements of which are the right
        !                end points of the subintervals in the partition
        !                of the given integration range (a,b)
        !
-       !      rlist   - real(real64)
+       !      rlist   - real(float64)
        !                vector of dimension at least limit, the first
        !                 last  elements of which are the
        !                integral approximations on the subintervals
        !
-       !      elist   - real(real64)
+       !      elist   - real(float64)
        !                vector of dimension at least limit, the first
        !                 last  elements of which are the moduli of the
        !                absolute error estimates on the subintervals
@@ -840,19 +840,19 @@ contains
        !
        implicit none
 
-       real(real64) a,abserr,alist,area,area1,area12,area2,a1,a2,b, &
+       real(float64) a,abserr,alist,area,area1,area12,area2,a1,a2,b, &
             blist,b1,b2,defabs,defab1,defab2,elist,epmach, &
             epsabs,epsrel,errbnd,errmax,error1,error2,erro12,errsum, &
             resabs,result,rlist,uflow
        integer(int32) ier,iord,iroff1,iroff2,k,key,keyf,last,limit, &
             maxerr, nrmax, neval
-       real(real64), external :: f
+       real(float64), external :: f
 
        !    interface
        !       function f(x)
        !         use iso_fortran_env
-       !         real(real64), intent(in) :: x
-       !         real(real64) :: f
+       !         real(float64), intent(in) :: x
+       !         real(float64) :: f
        !       end function f
        !    end interface
 
@@ -867,16 +867,16 @@ contains
        ier = 0
        neval = 0
        last = 0
-       result = 0.0_real64
-       abserr = 0.0_real64
+       result = 0.0_float64
+       abserr = 0.0_float64
        alist(1) = a
        blist(1) = b
-       rlist(1) = 0.0_real64
-       elist(1) = 0.0_real64
+       rlist(1) = 0.0_float64
+       elist(1) = 0.0_float64
        iord(1) = 0
 
-       if(epsabs.le.0.0_real64.and. &
-            epsrel.lt. max ( 0.5e2_real64*epmach,0.5e-28_real64)) then
+       if(epsabs.le.0.0_float64.and. &
+            epsrel.lt. max ( 0.5e2_float64*epmach,0.5e-28_float64)) then
           ier = 6
           return
        end if
@@ -902,7 +902,7 @@ contains
        !
        errbnd =  max ( epsabs, epsrel* abs ( result ) )
 
-       if(abserr.le.0.5e2_real64 * epmach * defabs .and. &
+       if(abserr.le.0.5e2_float64 * epmach * defabs .and. &
             abserr.gt.errbnd) then
           ier = 2
        end if
@@ -913,7 +913,7 @@ contains
 
        if ( ier .ne. 0 .or. &
             (abserr .le. errbnd .and. abserr .ne. resabs ) .or. &
-            abserr .eq. 0.0_real64 ) then
+            abserr .eq. 0.0_float64 ) then
 
           if(keyf.ne.1) then
              neval = (10*keyf+1)*(2*neval+1)
@@ -942,7 +942,7 @@ contains
           !  bisect the subinterval with the largest error estimate.
           !
           a1 = alist(maxerr)
-          b1 = 0.5_real64*(alist(maxerr)+blist(maxerr))
+          b1 = 0.5_float64*(alist(maxerr)+blist(maxerr))
           a2 = b1
           b2 = blist(maxerr)
 
@@ -971,8 +971,8 @@ contains
 
           if ( defab1 .ne. error1 .and. defab2 .ne. error2 ) then
 
-             if( abs ( rlist(maxerr)-area12).le.0.1e-4_real64* abs ( area12) &
-                  .and. erro12.ge.0.99_real64*errmax) then
+             if( abs ( rlist(maxerr)-area12).le.0.1e-4_float64* abs ( area12) &
+                  .and. erro12.ge.0.99_float64*errmax) then
                 iroff1 = iroff1+1
              end if
 
@@ -1004,8 +1004,8 @@ contains
              !  set error flag in the case of bad integrand behaviour
              !  at a point of the integration range.
              !
-             if( max (  abs ( a1), abs ( b2)).le.(0.1e1_real64+0.1e3_real64* &
-                  epmach)*( abs ( a2)+0.1e4_real64*uflow)) then
+             if( max (  abs ( a1), abs ( b2)).le.(0.1e1_float64+0.1e3_float64* &
+                  epmach)*( abs ( a2)+0.1e4_float64*uflow)) then
                 ier = 3
              end if
 
@@ -1043,7 +1043,7 @@ contains
        !
        !  compute final result.
        !
-       result = 0.0_real64
+       result = 0.0_float64
        do k=1,last
           result = result+rlist(k)
        end do
@@ -1079,20 +1079,20 @@ contains
        !
        !  Parameters:
        !
-       !      f      - real(real64)
+       !      f      - real(float64)
        !               function subprogam defining the integrand
        !               function f(x). the actual name for f needs to be
        !               declared e x t e r n a l in the driver program.
        !
-       !      a      - real(real64)
+       !      a      - real(float64)
        !               lower limit of integration
        !
-       !      b      - real(real64)
+       !      b      - real(float64)
        !               upper limit of integration
        !
-       !      epsabs - real(real64)
+       !      epsabs - real(float64)
        !               absolute accoracy requested
-       !      epsrel - real(real64)
+       !      epsrel - real(float64)
        !               relative accuracy requested
        !               if  epsabs.le.0
        !               and epsrel.lt.max(50*rel.mach.acc.,0.5d-28),
@@ -1109,10 +1109,10 @@ contains
        !                30 - 61 points if key.gt.5.
        !
        !   on return
-       !      result - real(real64)
+       !      result - real(float64)
        !               approximation to the integral
        !
-       !      abserr - real(real64)
+       !      abserr - real(float64)
        !               estimate of the modulus of the absolute error,
        !               which should equal or exceed abs(i-result)
        !
@@ -1191,7 +1191,7 @@ contains
        !              form a decreasing sequence with k = last if
        !              last.le.(limit/2+2), and k = limit+1-last otherwise
        !
-       !      work  - real(real64)
+       !      work  - real(float64)
        !              vector of dimension at least lenw
        !              on return
        !              work(1), ..., work(last) contain the left end
@@ -1209,11 +1209,11 @@ contains
        integer(int32) lenw
        integer(int32) limit
 
-       real(real64) a
-       real(real64) abserr
-       real(real64) b
-       real(real64) epsabs
-       real(real64) epsrel
+       real(float64) a
+       real(float64) abserr
+       real(float64) b
+       real(float64) epsabs
+       real(float64) epsrel
        integer(int32) ier
        integer(int32) iwork(limit)
        integer(int32) key
@@ -1223,15 +1223,15 @@ contains
        integer(int32) l2
        integer(int32) l3
        integer(int32) neval
-       real(real64) result
-       real(real64) work(lenw)
-       real(real64), external :: f
+       real(float64) result
+       real(float64) work(lenw)
+       real(float64), external :: f
 
        !    interface
        !       function f(x)
        !         use iso_fortran_env
-       !         real(real64), intent(in) :: x
-       !         real(real64) :: f
+       !         real(float64), intent(in) :: x
+       !         real(float64) :: f
        !       end function f
        !    end interface
 
@@ -1241,8 +1241,8 @@ contains
        ier = 6
        neval = 0
        last = 0
-       result = 0.0_real64
-       abserr = 0.0_real64
+       result = 0.0_float64
+       abserr = 0.0_float64
        if(limit.lt.1.or.lenw.lt.limit*4) go to 10
        !
        !  prepare call for dqage.
@@ -1337,7 +1337,7 @@ contains
        !
        implicit none
 
-       real (real64) abserr,delta1,delta2,delta3, &
+       real (float64) abserr,delta1,delta2,delta3, &
             epmach,epsinf,epstab,error,err1,err2,err3,e0,e1,e1abs,e2,e3, &
             oflow,res,result,res3la,ss,tol1,tol2,tol3
        integer (int32) i,ib,ib2,ie,indx,k1,k2,k3,limexp,n,newelm
@@ -1390,21 +1390,21 @@ contains
           !  a part of the table by adjusting the value of n
           !
           if(err1.le.tol1.or.err2.le.tol2.or.err3.le.tol3) go to 20
-          ss = 0.1e1_real64/delta1+0.1e1_real64/delta2-0.1e1_real64/delta3
+          ss = 0.1e1_float64/delta1+0.1e1_float64/delta2-0.1e1_float64/delta3
           epsinf =  abs ( ss*e1)
           !
           !  test to detect irregular behaviour in the table, and
           !  eventually omit a part of the table adjusting the value
           !  of n.
           !
-          if(epsinf.gt.0.1e-3_real64) go to 30
+          if(epsinf.gt.0.1e-3_float64) go to 30
 20        n = i+i-1
           go to 50
           !
           !  compute a new element and eventually adjust
           !  the value of result.
           !
-30        res = e1+0.1e1_real64/ss
+30        res = e1+0.1e1_float64/ss
           epstab(k1) = res
           k1 = k1-2
           error = err2 + abs ( res-e2 ) + err3
@@ -1447,7 +1447,7 @@ contains
           res3la(3) = result
 100       continue
 
-          abserr =  max ( abserr, 0.5e1_real64*epmach* abs ( result))
+          abserr =  max ( abserr, 0.5e1_float64*epmach* abs ( result))
 
           return
         end subroutine dqelg
@@ -1490,32 +1490,32 @@ contains
           !  Parameters:
           !
           !      on entry
-          !        f      - real(real64)
+          !        f      - real(float64)
           !                 function subprogram defining the integrand
           !                 function f(x). the actual name for f needs to be
           !                 declared e x t e r n a l in the calling program.
           !
-          !        a      - real(real64)
+          !        a      - real(float64)
           !                 lower limit of integration
           !
-          !        b      - real(real64)
+          !        b      - real(float64)
           !                 upper limit of integration
           !
           !      on return
-          !        result - real(real64)
+          !        result - real(float64)
           !                 approximation to the integral i
           !                 result is computed by applying the 15-point
           !                 kronrod rule (resk) obtained by optimal addition
           !                 of abscissae to the7-point gauss rule(resg).
           !
-          !        abserr - real(real64)
+          !        abserr - real(float64)
           !                 estimate of the modulus of the absolute error,
           !                 which should not exceed abs(i-result)
           !
-          !        resabs - real(real64)
+          !        resabs - real(float64)
           !                 approximation to the integral j
           !
-          !        resasc - real(real64)
+          !        resasc - real(float64)
           !                 approximation to the integral of abs(f-i/(b-a))
           !                 over (a,b)
           !
@@ -1537,40 +1537,40 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,abserr,b,centr,dhlgth, &
+          real(float64) a,absc,abserr,b,centr,dhlgth, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc, &
                resg,resk,reskh,result,uflow,wg,wgk,xgk
           integer(int32) j,jtw,jtwm1
           external f
           dimension fv1(7),fv2(7),wg(4),wgk(8),xgk(8)
 
-          data wg  (  1) / 0.129484966168869693270611432679082_real64 /
-          data wg  (  2) / 0.279705391489276667901467771423780_real64 /
-          data wg  (  3) / 0.381830050505118944950369775488975_real64 /
-          data wg  (  4) / 0.417959183673469387755102040816327_real64 /
+          data wg  (  1) / 0.129484966168869693270611432679082_float64 /
+          data wg  (  2) / 0.279705391489276667901467771423780_float64 /
+          data wg  (  3) / 0.381830050505118944950369775488975_float64 /
+          data wg  (  4) / 0.417959183673469387755102040816327_float64 /
 
-          data xgk (  1) / 0.991455371120812639206854697526329_real64 /
-          data xgk (  2) / 0.949107912342758524526189684047851_real64 /
-          data xgk (  3) / 0.864864423359769072789712788640926_real64 /
-          data xgk (  4) / 0.741531185599394439863864773280788_real64 /
-          data xgk (  5) / 0.586087235467691130294144838258730_real64 /
-          data xgk (  6) / 0.405845151377397166906606412076961_real64 /
-          data xgk (  7) / 0.207784955007898467600689403773245_real64 /
-          data xgk (  8) / 0.000000000000000000000000000000000_real64 /
+          data xgk (  1) / 0.991455371120812639206854697526329_float64 /
+          data xgk (  2) / 0.949107912342758524526189684047851_float64 /
+          data xgk (  3) / 0.864864423359769072789712788640926_float64 /
+          data xgk (  4) / 0.741531185599394439863864773280788_float64 /
+          data xgk (  5) / 0.586087235467691130294144838258730_float64 /
+          data xgk (  6) / 0.405845151377397166906606412076961_float64 /
+          data xgk (  7) / 0.207784955007898467600689403773245_float64 /
+          data xgk (  8) / 0.000000000000000000000000000000000_float64 /
 
-          data wgk (  1) / 0.022935322010529224963732008058970_real64 /
-          data wgk (  2) / 0.063092092629978553290700663189204_real64 /
-          data wgk (  3) / 0.104790010322250183839876322541518_real64 /
-          data wgk (  4) / 0.140653259715525918745189590510238_real64 /
-          data wgk (  5) / 0.169004726639267902826583426598550_real64 /
-          data wgk (  6) / 0.190350578064785409913256402421014_real64 /
-          data wgk (  7) / 0.204432940075298892414161999234649_real64 /
-          data wgk (  8) / 0.209482141084727828012999174891714_real64 /
+          data wgk (  1) / 0.022935322010529224963732008058970_float64 /
+          data wgk (  2) / 0.063092092629978553290700663189204_float64 /
+          data wgk (  3) / 0.104790010322250183839876322541518_float64 /
+          data wgk (  4) / 0.140653259715525918745189590510238_float64 /
+          data wgk (  5) / 0.169004726639267902826583426598550_float64 /
+          data wgk (  6) / 0.190350578064785409913256402421014_float64 /
+          data wgk (  7) / 0.204432940075298892414161999234649_float64 /
+          data wgk (  8) / 0.209482141084727828012999174891714_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
-          centr = 0.5_real64*(a+b)
-          hlgth = 0.5_real64*(b-a)
+          centr = 0.5_float64*(a+b)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
           !
           !  compute the 15-point kronrod approximation to
@@ -1606,7 +1606,7 @@ contains
              resabs = resabs+wgk(jtwm1)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(8)* abs ( fc-reskh)
           do j=1,7
              resasc = resasc+wgk(j)*( abs ( fv1(j)-reskh)+ abs ( fv2(j)-reskh))
@@ -1616,10 +1616,10 @@ contains
           resabs = resabs*dhlgth
           resasc = resasc*dhlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) &
-               abserr = resasc* min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr = max &
-               ((epmach*0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) &
+               abserr = resasc* min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr = max &
+               ((epmach*0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk15
@@ -1663,12 +1663,12 @@ contains
           !  Parameters:
           !
           !      on entry
-          !        f      - real(real64)
+          !        f      - real(float64)
           !                 fuction subprogram defining the integrand
           !                 function f(x). the actual name for f needs to be
           !                 declared e x t e r n a l in the calling program.
           !
-          !        boun   - real(real64)
+          !        boun   - real(float64)
           !                 finite bound of original integration
           !                 range (set to zero if inf = +2)
           !
@@ -1683,29 +1683,29 @@ contains
           !                 integrals, one over (-infinity,0) and one over
           !                 (0,+infinity).
           !
-          !        a      - real(real64)
+          !        a      - real(float64)
           !                 lower limit for integration over subrange
           !                 of (0,1)
           !
-          !        b      - real(real64)
+          !        b      - real(float64)
           !                 upper limit for integration over subrange
           !                 of (0,1)
           !
           !      on return
-          !        result - real(real64)
+          !        result - real(float64)
           !                 approximation to the integral i
           !                 result is computed by applying the 15-point
           !                 kronrod rule(resk) obtained by optimal addition
           !                 of abscissae to the 7-point gauss rule(resg).
           !
-          !        abserr - real(real64)
+          !        abserr - real(float64)
           !                 estimate of the modulus of the absolute error,
           !                 which should equal or exceed abs(i-result)
           !
-          !        resabs - real(real64)
+          !        resabs - real(float64)
           !                 approximation to the integral j
           !
-          !        resasc - real(real64)
+          !        resasc - real(float64)
           !                 approximation to the integral of
           !                 abs((transformed integrand)-i/(b-a)) over (a,b)
           !
@@ -1728,7 +1728,7 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,absc1,absc2,abserr,b,boun,centr,dinf, &
+          real(float64) a,absc,absc1,absc2,abserr,b,boun,centr,dinf, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth, &
                resabs,resasc,resg,resk,reskh,result,tabsc1,tabsc2,uflow,wg,wgk, &
                xgk
@@ -1736,39 +1736,39 @@ contains
           external f
           dimension fv1(7),fv2(7),xgk(8),wgk(8),wg(8)
 
-          data wg(1) / 0.0_real64 /
-          data wg(2) / 0.129484966168869693270611432679082_real64 /
-          data wg(3) / 0.0_real64 /
-          data wg(4) / 0.279705391489276667901467771423780_real64 /
-          data wg(5) / 0.0_real64 /
-          data wg(6) / 0.381830050505118944950369775488975_real64 /
-          data wg(7) / 0.0_real64 /
-          data wg(8) / 0.417959183673469387755102040816327_real64 /
+          data wg(1) / 0.0_float64 /
+          data wg(2) / 0.129484966168869693270611432679082_float64 /
+          data wg(3) / 0.0_float64 /
+          data wg(4) / 0.279705391489276667901467771423780_float64 /
+          data wg(5) / 0.0_float64 /
+          data wg(6) / 0.381830050505118944950369775488975_float64 /
+          data wg(7) / 0.0_float64 /
+          data wg(8) / 0.417959183673469387755102040816327_float64 /
 
-          data xgk(1) / 0.991455371120812639206854697526329_real64 /
-          data xgk(2) / 0.949107912342758524526189684047851_real64 /
-          data xgk(3) / 0.864864423359769072789712788640926_real64 /
-          data xgk(4) / 0.741531185599394439863864773280788_real64 /
-          data xgk(5) / 0.586087235467691130294144838258730_real64 /
-          data xgk(6) / 0.405845151377397166906606412076961_real64 /
-          data xgk(7) / 0.207784955007898467600689403773245_real64 /
-          data xgk(8) / 0.000000000000000000000000000000000_real64 /
+          data xgk(1) / 0.991455371120812639206854697526329_float64 /
+          data xgk(2) / 0.949107912342758524526189684047851_float64 /
+          data xgk(3) / 0.864864423359769072789712788640926_float64 /
+          data xgk(4) / 0.741531185599394439863864773280788_float64 /
+          data xgk(5) / 0.586087235467691130294144838258730_float64 /
+          data xgk(6) / 0.405845151377397166906606412076961_float64 /
+          data xgk(7) / 0.207784955007898467600689403773245_float64 /
+          data xgk(8) / 0.000000000000000000000000000000000_float64 /
 
-          data wgk(1) / 0.022935322010529224963732008058970_real64 /
-          data wgk(2) / 0.063092092629978553290700663189204_real64 /
-          data wgk(3) / 0.104790010322250183839876322541518_real64 /
-          data wgk(4) / 0.140653259715525918745189590510238_real64 /
-          data wgk(5) / 0.169004726639267902826583426598550_real64 /
-          data wgk(6) / 0.190350578064785409913256402421014_real64 /
-          data wgk(7) / 0.204432940075298892414161999234649_real64 /
-          data wgk(8) / 0.209482141084727828012999174891714_real64 /
+          data wgk(1) / 0.022935322010529224963732008058970_float64 /
+          data wgk(2) / 0.063092092629978553290700663189204_float64 /
+          data wgk(3) / 0.104790010322250183839876322541518_float64 /
+          data wgk(4) / 0.140653259715525918745189590510238_float64 /
+          data wgk(5) / 0.169004726639267902826583426598550_float64 /
+          data wgk(6) / 0.190350578064785409913256402421014_float64 /
+          data wgk(7) / 0.204432940075298892414161999234649_float64 /
+          data wgk(8) / 0.209482141084727828012999174891714_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
           dinf = min ( 1, inf )
-          centr = 0.5_real64*(a+b)
-          hlgth = 0.5_real64*(b-a)
-          tabsc1 = boun+dinf*(0.1e1_real64-centr)/centr
+          centr = 0.5_float64*(a+b)
+          hlgth = 0.5_float64*(b-a)
+          tabsc1 = boun+dinf*(0.1e1_float64-centr)/centr
           fval1 = f(tabsc1)
           if(inf.eq.2) fval1 = fval1+f(-tabsc1)
           fc = (fval1/centr)/centr
@@ -1784,8 +1784,8 @@ contains
              absc = hlgth*xgk(j)
              absc1 = centr-absc
              absc2 = centr+absc
-             tabsc1 = boun+dinf*(0.1e1_real64-absc1)/absc1
-             tabsc2 = boun+dinf*(0.1e1_real64-absc2)/absc2
+             tabsc1 = boun+dinf*(0.1e1_float64-absc1)/absc1
+             tabsc2 = boun+dinf*(0.1e1_float64-absc2)/absc2
              fval1 = f(tabsc1)
              fval2 = f(tabsc2)
              if(inf.eq.2) fval1 = fval1+f(-tabsc1)
@@ -1800,7 +1800,7 @@ contains
              resabs = resabs+wgk(j)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(8)* abs ( fc-reskh)
 
           do j=1,7
@@ -1811,10 +1811,10 @@ contains
           resasc = resasc*hlgth
           resabs = resabs*hlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) abserr = resasc* &
-               min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr = max &
-               ((epmach*0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) abserr = resasc* &
+               min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr = max &
+               ((epmach*0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk15i
@@ -1839,44 +1839,44 @@ contains
           !  Parameters:
           !
           !       on entry
-          !        f      - real(real64)
+          !        f      - real(float64)
           !                 function subprogram defining the integrand
           !                 function f(x). the actual name for f needs to be
           !                 declared e x t e r n a l in the driver program.
           !
-          !        w      - real(real64)
+          !        w      - real(float64)
           !                 function subprogram defining the integrand
           !                 weight function w(x). the actual name for w
           !                 needs to be declared e x t e r n a l in the
           !                 calling program.
           !
-          !        p1, p2, p3, p4 - real(real64)
+          !        p1, p2, p3, p4 - real(float64)
           !                 parameters in the weight function
           !
           !        kp     - integer(int32)
           !                 key for indicating the type of weight function
           !
-          !        a      - real(real64)
+          !        a      - real(float64)
           !                 lower limit of integration
           !
-          !        b      - real(real64)
+          !        b      - real(float64)
           !                 upper limit of integration
           !
           !      on return
-          !        result - real(real64)
+          !        result - real(float64)
           !                 approximation to the integral i
           !                 result is computed by applying the 15-point
           !                 kronrod rule (resk) obtained by optimal addition
           !                 of abscissae to the 7-point gauss rule (resg).
           !
-          !        abserr - real(real64)
+          !        abserr - real(float64)
           !                 estimate of the modulus of the absolute error,
           !                 which should equal or exceed abs(i-result)
           !
-          !        resabs - real(real64)
+          !        resabs - real(float64)
           !                 approximation to the integral of abs(f)
           !
-          !        resasc - real(real64)
+          !        resasc - real(float64)
           !                 approximation to the integral of abs(f-i/(b-a))
           !
           !  Local Parameters:
@@ -1911,7 +1911,7 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,absc1,absc2,abserr,b,centr,dhlgth, &
+          real(float64) a,absc,absc1,absc2,abserr,b,centr,dhlgth, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth, &
                p1,p2,p3,p4,resabs,resasc,resg,resk,reskh,result,uflow,w,wg,wgk, &
                xgk
@@ -1921,25 +1921,25 @@ contains
           dimension fv1(7),fv2(7),xgk(8),wgk(8),wg(4)
 
           data xgk(1),xgk(2),xgk(3),xgk(4),xgk(5),xgk(6),xgk(7),xgk(8)/ &
-               0.9914553711208126_real64,     0.9491079123427585_real64, &
-               0.8648644233597691_real64,     0.7415311855993944_real64, &
-               0.5860872354676911_real64,     0.4058451513773972_real64, &
-               0.2077849550078985_real64,     0.0000000000000000_real64/
+               0.9914553711208126_float64,     0.9491079123427585_float64, &
+               0.8648644233597691_float64,     0.7415311855993944_float64, &
+               0.5860872354676911_float64,     0.4058451513773972_float64, &
+               0.2077849550078985_float64,     0.0000000000000000_float64/
 
           data wgk(1),wgk(2),wgk(3),wgk(4),wgk(5),wgk(6),wgk(7),wgk(8)/ &
-               0.2293532201052922e-1_real64,     0.6309209262997855e-1_real64, &
-               0.1047900103222502_real64,     0.1406532597155259_real64, &
-               0.1690047266392679_real64,     0.1903505780647854_real64, &
-               0.2044329400752989_real64,     0.2094821410847278_real64/
+               0.2293532201052922e-1_float64,     0.6309209262997855e-1_float64, &
+               0.1047900103222502_float64,     0.1406532597155259_float64, &
+               0.1690047266392679_float64,     0.1903505780647854_float64, &
+               0.2044329400752989_float64,     0.2094821410847278_float64/
 
           data wg(1),wg(2),wg(3),wg(4)/ &
-               0.1294849661688697_real64,    0.2797053914892767_real64, &
-               0.3818300505051889_real64,    0.4179591836734694_real64/
+               0.1294849661688697_float64,    0.2797053914892767_float64, &
+               0.3818300505051889_float64,    0.4179591836734694_float64/
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
-          centr = 0.5_real64*(a+b)
-          hlgth = 0.5_real64*(b-a)
+          centr = 0.5_float64*(a+b)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
           !
           !  compute the 15-point kronrod approximation to the
@@ -1979,7 +1979,7 @@ contains
              resabs = resabs+wgk(jtwm1)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(8)* abs ( fc-reskh)
 
           do j=1,7
@@ -1990,10 +1990,10 @@ contains
           resabs = resabs*dhlgth
           resasc = resasc*dhlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) &
-               abserr = resasc* min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr =  max ( (epmach* &
-               0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) &
+               abserr = resasc* min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr =  max ( (epmach* &
+               0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk15w
@@ -2018,32 +2018,32 @@ contains
           !  Parameters:
           !
           !      on entry
-          !        f      - real(real64)
+          !        f      - real(float64)
           !                 function subprogram defining the integrand
           !                 function f(x). the actual name for f needs to be
           !                 declared e x t e r n a l in the driver program.
           !
-          !        a      - real(real64)
+          !        a      - real(float64)
           !                 lower limit of integration
           !
-          !        b      - real(real64)
+          !        b      - real(float64)
           !                 upper limit of integration
           !
           !      on return
-          !        result - real(real64)
+          !        result - real(float64)
           !                 approximation to the integral i
           !                 result is computed by applying the 21-point
           !                 kronrod rule (resk) obtained by optimal addition
           !                 of abscissae to the 10-point gauss rule (resg).
           !
-          !        abserr - real(real64)
+          !        abserr - real(float64)
           !                 estimate of the modulus of the absolute error,
           !                 which should not exceed abs(i-result)
           !
-          !        resabs - real(real64)
+          !        resabs - real(float64)
           !                 approximation to the integral j
           !
-          !        resasc - real(real64)
+          !        resasc - real(float64)
           !                 approximation to the integral of abs(f-i/(b-a))
           !                 over (a,b)
           !
@@ -2086,53 +2086,53 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,abserr,b,centr,dhlgth, &
+          real(float64) a,absc,abserr,b,centr,dhlgth, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc, &
                resg,resk,reskh,result,uflow,wg,wgk,xgk
           integer(int32) j,jtw,jtwm1
           external f
           dimension fv1(10),fv2(10),wg(5),wgk(11),xgk(11)
 
-          data wg  (  1) / 0.066671344308688137593568809893332_real64 /
-          data wg  (  2) / 0.149451349150580593145776339657697_real64 /
-          data wg  (  3) / 0.219086362515982043995534934228163_real64 /
-          data wg  (  4) / 0.269266719309996355091226921569469_real64 /
-          data wg  (  5) / 0.295524224714752870173892994651338_real64 /
+          data wg  (  1) / 0.066671344308688137593568809893332_float64 /
+          data wg  (  2) / 0.149451349150580593145776339657697_float64 /
+          data wg  (  3) / 0.219086362515982043995534934228163_float64 /
+          data wg  (  4) / 0.269266719309996355091226921569469_float64 /
+          data wg  (  5) / 0.295524224714752870173892994651338_float64 /
 
-          data xgk (  1) / 0.995657163025808080735527280689003_real64 /
-          data xgk (  2) / 0.973906528517171720077964012084452_real64 /
-          data xgk (  3) / 0.930157491355708226001207180059508_real64 /
-          data xgk (  4) / 0.865063366688984510732096688423493_real64 /
-          data xgk (  5) / 0.780817726586416897063717578345042_real64 /
-          data xgk (  6) / 0.679409568299024406234327365114874_real64 /
-          data xgk (  7) / 0.562757134668604683339000099272694_real64 /
-          data xgk (  8) / 0.433395394129247190799265943165784_real64 /
-          data xgk (  9) / 0.294392862701460198131126603103866_real64 /
-          data xgk ( 10) / 0.148874338981631210884826001129720_real64 /
-          data xgk ( 11) / 0.000000000000000000000000000000000_real64 /
+          data xgk (  1) / 0.995657163025808080735527280689003_float64 /
+          data xgk (  2) / 0.973906528517171720077964012084452_float64 /
+          data xgk (  3) / 0.930157491355708226001207180059508_float64 /
+          data xgk (  4) / 0.865063366688984510732096688423493_float64 /
+          data xgk (  5) / 0.780817726586416897063717578345042_float64 /
+          data xgk (  6) / 0.679409568299024406234327365114874_float64 /
+          data xgk (  7) / 0.562757134668604683339000099272694_float64 /
+          data xgk (  8) / 0.433395394129247190799265943165784_float64 /
+          data xgk (  9) / 0.294392862701460198131126603103866_float64 /
+          data xgk ( 10) / 0.148874338981631210884826001129720_float64 /
+          data xgk ( 11) / 0.000000000000000000000000000000000_float64 /
 
-          data wgk (  1) / 0.011694638867371874278064396062192_real64 /
-          data wgk (  2) / 0.032558162307964727478818972459390_real64 /
-          data wgk (  3) / 0.054755896574351996031381300244580_real64 /
-          data wgk (  4) / 0.075039674810919952767043140916190_real64 /
-          data wgk (  5) / 0.093125454583697605535065465083366_real64 /
-          data wgk (  6) / 0.109387158802297641899210590325805_real64 /
-          data wgk (  7) / 0.123491976262065851077958109831074_real64 /
-          data wgk (  8) / 0.134709217311473325928054001771707_real64 /
-          data wgk (  9) / 0.142775938577060080797094273138717_real64 /
-          data wgk ( 10) / 0.147739104901338491374841515972068_real64 /
-          data wgk ( 11) / 0.149445554002916905664936468389821_real64 /
+          data wgk (  1) / 0.011694638867371874278064396062192_float64 /
+          data wgk (  2) / 0.032558162307964727478818972459390_float64 /
+          data wgk (  3) / 0.054755896574351996031381300244580_float64 /
+          data wgk (  4) / 0.075039674810919952767043140916190_float64 /
+          data wgk (  5) / 0.093125454583697605535065465083366_float64 /
+          data wgk (  6) / 0.109387158802297641899210590325805_float64 /
+          data wgk (  7) / 0.123491976262065851077958109831074_float64 /
+          data wgk (  8) / 0.134709217311473325928054001771707_float64 /
+          data wgk (  9) / 0.142775938577060080797094273138717_float64 /
+          data wgk ( 10) / 0.147739104901338491374841515972068_float64 /
+          data wgk ( 11) / 0.149445554002916905664936468389821_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
-          centr = 0.5_real64*(a+b)
-          hlgth = 0.5_real64*(b-a)
+          centr = 0.5_float64*(a+b)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
           !
           !  compute the 21-point kronrod approximation to
           !  the integral, and estimate the absolute error.
           !
-          resg = 0.0_real64
+          resg = 0.0_float64
           fc = f(centr)
           resk = wgk(11)*fc
           resabs =  abs ( resk)
@@ -2161,7 +2161,7 @@ contains
              resabs = resabs+wgk(jtwm1)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(11)* abs ( fc-reskh)
 
           do j=1,10
@@ -2172,10 +2172,10 @@ contains
           resabs = resabs*dhlgth
           resasc = resasc*dhlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) &
-               abserr = resasc*min(0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr = max &
-               ((epmach*0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) &
+               abserr = resasc*min(0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr = max &
+               ((epmach*0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk21
@@ -2200,19 +2200,19 @@ contains
           !  Parameters:
           !
           !      on entry
-          !        f      - real(real64)
+          !        f      - real(float64)
           !                 function subprogram defining the integrand
           !                 function f(x). the actual name for f needs to be
           !                 declared e x t e r n a l in the calling program.
           !
-          !        a      - real(real64)
+          !        a      - real(float64)
           !                 lower limit of integration
           !
-          !        b      - real(real64)
+          !        b      - real(float64)
           !                 upper limit of integration
           !
           !      on return
-          !        result - real(real64)
+          !        result - real(float64)
           !                 approximation to the integral i
           !                 result is computed by applying the 31-point
           !                 gauss-kronrod rule (resk), obtained by optimal
@@ -2223,10 +2223,10 @@ contains
           !                 estimate of the modulus of the modulus,
           !                 which should not exceed abs(i-result)
           !
-          !        resabs - real(real64)
+          !        resabs - real(float64)
           !                 approximation to the integral j
           !
-          !        resasc - real(real64)
+          !        resasc - real(float64)
           !                 approximation to the integral of abs(f-i/(b-a))
           !                 over (a,b)
           !
@@ -2268,7 +2268,7 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,abserr,b,centr,dhlgth, &
+          real(float64) a,absc,abserr,b,centr,dhlgth, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc, &
                resg,resk,reskh,result,uflow,wg,wgk,xgk
           integer(int32) j,jtw,jtwm1
@@ -2276,53 +2276,53 @@ contains
 
           dimension fv1(15),fv2(15),xgk(16),wgk(16),wg(8)
 
-          data wg  (  1) / 0.030753241996117268354628393577204_real64 /
-          data wg  (  2) / 0.070366047488108124709267416450667_real64 /
-          data wg  (  3) / 0.107159220467171935011869546685869_real64 /
-          data wg  (  4) / 0.139570677926154314447804794511028_real64 /
-          data wg  (  5) / 0.166269205816993933553200860481209_real64 /
-          data wg  (  6) / 0.186161000015562211026800561866423_real64 /
-          data wg  (  7) / 0.198431485327111576456118326443839_real64 /
-          data wg  (  8) / 0.202578241925561272880620199967519_real64 /
+          data wg  (  1) / 0.030753241996117268354628393577204_float64 /
+          data wg  (  2) / 0.070366047488108124709267416450667_float64 /
+          data wg  (  3) / 0.107159220467171935011869546685869_float64 /
+          data wg  (  4) / 0.139570677926154314447804794511028_float64 /
+          data wg  (  5) / 0.166269205816993933553200860481209_float64 /
+          data wg  (  6) / 0.186161000015562211026800561866423_float64 /
+          data wg  (  7) / 0.198431485327111576456118326443839_float64 /
+          data wg  (  8) / 0.202578241925561272880620199967519_float64 /
 
-          data xgk (  1) / 0.998002298693397060285172840152271_real64 /
-          data xgk (  2) / 0.987992518020485428489565718586613_real64 /
-          data xgk (  3) / 0.967739075679139134257347978784337_real64 /
-          data xgk (  4) / 0.937273392400705904307758947710209_real64 /
-          data xgk (  5) / 0.897264532344081900882509656454496_real64 /
-          data xgk (  6) / 0.848206583410427216200648320774217_real64 /
-          data xgk (  7) / 0.790418501442465932967649294817947_real64 /
-          data xgk (  8) / 0.724417731360170047416186054613938_real64 /
-          data xgk (  9) / 0.650996741297416970533735895313275_real64 /
-          data xgk ( 10) / 0.570972172608538847537226737253911_real64 /
-          data xgk ( 11) / 0.485081863640239680693655740232351_real64 /
-          data xgk ( 12) / 0.394151347077563369897207370981045_real64 /
-          data xgk ( 13) / 0.299180007153168812166780024266389_real64 /
-          data xgk ( 14) / 0.201194093997434522300628303394596_real64 /
-          data xgk ( 15) / 0.101142066918717499027074231447392_real64 /
-          data xgk ( 16) / 0.000000000000000000000000000000000_real64 /
+          data xgk (  1) / 0.998002298693397060285172840152271_float64 /
+          data xgk (  2) / 0.987992518020485428489565718586613_float64 /
+          data xgk (  3) / 0.967739075679139134257347978784337_float64 /
+          data xgk (  4) / 0.937273392400705904307758947710209_float64 /
+          data xgk (  5) / 0.897264532344081900882509656454496_float64 /
+          data xgk (  6) / 0.848206583410427216200648320774217_float64 /
+          data xgk (  7) / 0.790418501442465932967649294817947_float64 /
+          data xgk (  8) / 0.724417731360170047416186054613938_float64 /
+          data xgk (  9) / 0.650996741297416970533735895313275_float64 /
+          data xgk ( 10) / 0.570972172608538847537226737253911_float64 /
+          data xgk ( 11) / 0.485081863640239680693655740232351_float64 /
+          data xgk ( 12) / 0.394151347077563369897207370981045_float64 /
+          data xgk ( 13) / 0.299180007153168812166780024266389_float64 /
+          data xgk ( 14) / 0.201194093997434522300628303394596_float64 /
+          data xgk ( 15) / 0.101142066918717499027074231447392_float64 /
+          data xgk ( 16) / 0.000000000000000000000000000000000_float64 /
 
-          data wgk (  1) / 0.005377479872923348987792051430128_real64 /
-          data wgk (  2) / 0.015007947329316122538374763075807_real64 /
-          data wgk (  3) / 0.025460847326715320186874001019653_real64 /
-          data wgk (  4) / 0.035346360791375846222037948478360_real64 /
-          data wgk (  5) / 0.044589751324764876608227299373280_real64 /
-          data wgk (  6) / 0.053481524690928087265343147239430_real64 /
-          data wgk (  7) / 0.062009567800670640285139230960803_real64 /
-          data wgk (  8) / 0.069854121318728258709520077099147_real64 /
-          data wgk (  9) / 0.076849680757720378894432777482659_real64 /
-          data wgk ( 10) / 0.083080502823133021038289247286104_real64 /
-          data wgk ( 11) / 0.088564443056211770647275443693774_real64 /
-          data wgk ( 12) / 0.093126598170825321225486872747346_real64 /
-          data wgk ( 13) / 0.096642726983623678505179907627589_real64 /
-          data wgk ( 14) / 0.099173598721791959332393173484603_real64 /
-          data wgk ( 15) / 0.100769845523875595044946662617570_real64 /
-          data wgk ( 16) / 0.101330007014791549017374792767493_real64 /
+          data wgk (  1) / 0.005377479872923348987792051430128_float64 /
+          data wgk (  2) / 0.015007947329316122538374763075807_float64 /
+          data wgk (  3) / 0.025460847326715320186874001019653_float64 /
+          data wgk (  4) / 0.035346360791375846222037948478360_float64 /
+          data wgk (  5) / 0.044589751324764876608227299373280_float64 /
+          data wgk (  6) / 0.053481524690928087265343147239430_float64 /
+          data wgk (  7) / 0.062009567800670640285139230960803_float64 /
+          data wgk (  8) / 0.069854121318728258709520077099147_float64 /
+          data wgk (  9) / 0.076849680757720378894432777482659_float64 /
+          data wgk ( 10) / 0.083080502823133021038289247286104_float64 /
+          data wgk ( 11) / 0.088564443056211770647275443693774_float64 /
+          data wgk ( 12) / 0.093126598170825321225486872747346_float64 /
+          data wgk ( 13) / 0.096642726983623678505179907627589_float64 /
+          data wgk ( 14) / 0.099173598721791959332393173484603_float64 /
+          data wgk ( 15) / 0.100769845523875595044946662617570_float64 /
+          data wgk ( 16) / 0.101330007014791549017374792767493_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
-          centr = 0.5_real64*(a+b)
-          hlgth = 0.5_real64*(b-a)
+          centr = 0.5_float64*(a+b)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
           !
           !  compute the 31-point kronrod approximation to
@@ -2358,7 +2358,7 @@ contains
              resabs = resabs+wgk(jtwm1)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(16)* abs ( fc-reskh)
 
           do j=1,15
@@ -2369,10 +2369,10 @@ contains
           resabs = resabs*dhlgth
           resasc = resasc*dhlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) &
-               abserr = resasc* min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr = max &
-               ((epmach*0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) &
+               abserr = resasc* min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr = max &
+               ((epmach*0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk31
@@ -2397,33 +2397,33 @@ contains
           !  Parameters:
           !
           !      on entry
-          !        f      - real(real64)
+          !        f      - real(float64)
           !                 function subprogram defining the integrand
           !                 function f(x). the actual name for f needs to be
           !                 declared e x t e r n a l in the calling program.
           !
-          !        a      - real(real64)
+          !        a      - real(float64)
           !                 lower limit of integration
           !
-          !        b      - real(real64)
+          !        b      - real(float64)
           !                 upper limit of integration
           !
           !      on return
-          !        result - real(real64)
+          !        result - real(float64)
           !                 approximation to the integral i
           !                 result is computed by applying the 41-point
           !                 gauss-kronrod rule (resk) obtained by optimal
           !                 addition of abscissae to the 20-point gauss
           !                 rule (resg).
           !
-          !        abserr - real(real64)
+          !        abserr - real(float64)
           !                 estimate of the modulus of the absolute error,
           !                 which should not exceed abs(i-result)
           !
-          !        resabs - real(real64)
+          !        resabs - real(float64)
           !                 approximation to the integral j
           !
-          !        resasc - real(real64)
+          !        resasc - real(float64)
           !                 approximation to the integal of abs(f-i/(b-a))
           !                 over (a,b)
           !
@@ -2465,7 +2465,7 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,abserr,b,centr,dhlgth, &
+          real(float64) a,absc,abserr,b,centr,dhlgth, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc, &
                resg,resk,reskh,result,uflow,wg,wgk,xgk
           integer(int32) j,jtw,jtwm1
@@ -2473,71 +2473,71 @@ contains
 
           dimension fv1(20),fv2(20),xgk(21),wgk(21),wg(10)
 
-          data wg  (  1) / 0.017614007139152118311861962351853_real64 /
-          data wg  (  2) / 0.040601429800386941331039952274932_real64 /
-          data wg  (  3) / 0.062672048334109063569506535187042_real64 /
-          data wg  (  4) / 0.083276741576704748724758143222046_real64 /
-          data wg  (  5) / 0.101930119817240435036750135480350_real64 /
-          data wg  (  6) / 0.118194531961518417312377377711382_real64 /
-          data wg  (  7) / 0.131688638449176626898494499748163_real64 /
-          data wg  (  8) / 0.142096109318382051329298325067165_real64 /
-          data wg  (  9) / 0.149172986472603746787828737001969_real64 /
-          data wg  ( 10) / 0.152753387130725850698084331955098_real64 /
+          data wg  (  1) / 0.017614007139152118311861962351853_float64 /
+          data wg  (  2) / 0.040601429800386941331039952274932_float64 /
+          data wg  (  3) / 0.062672048334109063569506535187042_float64 /
+          data wg  (  4) / 0.083276741576704748724758143222046_float64 /
+          data wg  (  5) / 0.101930119817240435036750135480350_float64 /
+          data wg  (  6) / 0.118194531961518417312377377711382_float64 /
+          data wg  (  7) / 0.131688638449176626898494499748163_float64 /
+          data wg  (  8) / 0.142096109318382051329298325067165_float64 /
+          data wg  (  9) / 0.149172986472603746787828737001969_float64 /
+          data wg  ( 10) / 0.152753387130725850698084331955098_float64 /
 
-          data xgk (  1) / 0.998859031588277663838315576545863_real64 /
-          data xgk (  2) / 0.993128599185094924786122388471320_real64 /
-          data xgk (  3) / 0.981507877450250259193342994720217_real64 /
-          data xgk (  4) / 0.963971927277913791267666131197277_real64 /
-          data xgk (  5) / 0.940822633831754753519982722212443_real64 /
-          data xgk (  6) / 0.912234428251325905867752441203298_real64 /
-          data xgk (  7) / 0.878276811252281976077442995113078_real64 /
-          data xgk (  8) / 0.839116971822218823394529061701521_real64 /
-          data xgk (  9) / 0.795041428837551198350638833272788_real64 /
-          data xgk ( 10) / 0.746331906460150792614305070355642_real64 /
-          data xgk ( 11) / 0.693237656334751384805490711845932_real64 /
-          data xgk ( 12) / 0.636053680726515025452836696226286_real64 /
-          data xgk ( 13) / 0.575140446819710315342946036586425_real64 /
-          data xgk ( 14) / 0.510867001950827098004364050955251_real64 /
-          data xgk ( 15) / 0.443593175238725103199992213492640_real64 /
-          data xgk ( 16) / 0.373706088715419560672548177024927_real64 /
-          data xgk ( 17) / 0.301627868114913004320555356858592_real64 /
-          data xgk ( 18) / 0.227785851141645078080496195368575_real64 /
-          data xgk ( 19) / 0.152605465240922675505220241022678_real64 /
-          data xgk ( 20) / 0.076526521133497333754640409398838_real64 /
-          data xgk ( 21) / 0.000000000000000000000000000000000_real64 /
+          data xgk (  1) / 0.998859031588277663838315576545863_float64 /
+          data xgk (  2) / 0.993128599185094924786122388471320_float64 /
+          data xgk (  3) / 0.981507877450250259193342994720217_float64 /
+          data xgk (  4) / 0.963971927277913791267666131197277_float64 /
+          data xgk (  5) / 0.940822633831754753519982722212443_float64 /
+          data xgk (  6) / 0.912234428251325905867752441203298_float64 /
+          data xgk (  7) / 0.878276811252281976077442995113078_float64 /
+          data xgk (  8) / 0.839116971822218823394529061701521_float64 /
+          data xgk (  9) / 0.795041428837551198350638833272788_float64 /
+          data xgk ( 10) / 0.746331906460150792614305070355642_float64 /
+          data xgk ( 11) / 0.693237656334751384805490711845932_float64 /
+          data xgk ( 12) / 0.636053680726515025452836696226286_float64 /
+          data xgk ( 13) / 0.575140446819710315342946036586425_float64 /
+          data xgk ( 14) / 0.510867001950827098004364050955251_float64 /
+          data xgk ( 15) / 0.443593175238725103199992213492640_float64 /
+          data xgk ( 16) / 0.373706088715419560672548177024927_float64 /
+          data xgk ( 17) / 0.301627868114913004320555356858592_float64 /
+          data xgk ( 18) / 0.227785851141645078080496195368575_float64 /
+          data xgk ( 19) / 0.152605465240922675505220241022678_float64 /
+          data xgk ( 20) / 0.076526521133497333754640409398838_float64 /
+          data xgk ( 21) / 0.000000000000000000000000000000000_float64 /
 
-          data wgk (  1) / 0.003073583718520531501218293246031_real64 /
-          data wgk (  2) / 0.008600269855642942198661787950102_real64 /
-          data wgk (  3) / 0.014626169256971252983787960308868_real64 /
-          data wgk (  4) / 0.020388373461266523598010231432755_real64 /
-          data wgk (  5) / 0.025882133604951158834505067096153_real64 /
-          data wgk (  6) / 0.031287306777032798958543119323801_real64 /
-          data wgk (  7) / 0.036600169758200798030557240707211_real64 /
-          data wgk (  8) / 0.041668873327973686263788305936895_real64 /
-          data wgk (  9) / 0.046434821867497674720231880926108_real64 /
-          data wgk ( 10) / 0.050944573923728691932707670050345_real64 /
-          data wgk ( 11) / 0.055195105348285994744832372419777_real64 /
-          data wgk ( 12) / 0.059111400880639572374967220648594_real64 /
-          data wgk ( 13) / 0.062653237554781168025870122174255_real64 /
-          data wgk ( 14) / 0.065834597133618422111563556969398_real64 /
-          data wgk ( 15) / 0.068648672928521619345623411885368_real64 /
-          data wgk ( 16) / 0.071054423553444068305790361723210_real64 /
-          data wgk ( 17) / 0.073030690332786667495189417658913_real64 /
-          data wgk ( 18) / 0.074582875400499188986581418362488_real64 /
-          data wgk ( 19) / 0.075704497684556674659542775376617_real64 /
-          data wgk ( 20) / 0.076377867672080736705502835038061_real64 /
-          data wgk ( 21) / 0.076600711917999656445049901530102_real64 /
+          data wgk (  1) / 0.003073583718520531501218293246031_float64 /
+          data wgk (  2) / 0.008600269855642942198661787950102_float64 /
+          data wgk (  3) / 0.014626169256971252983787960308868_float64 /
+          data wgk (  4) / 0.020388373461266523598010231432755_float64 /
+          data wgk (  5) / 0.025882133604951158834505067096153_float64 /
+          data wgk (  6) / 0.031287306777032798958543119323801_float64 /
+          data wgk (  7) / 0.036600169758200798030557240707211_float64 /
+          data wgk (  8) / 0.041668873327973686263788305936895_float64 /
+          data wgk (  9) / 0.046434821867497674720231880926108_float64 /
+          data wgk ( 10) / 0.050944573923728691932707670050345_float64 /
+          data wgk ( 11) / 0.055195105348285994744832372419777_float64 /
+          data wgk ( 12) / 0.059111400880639572374967220648594_float64 /
+          data wgk ( 13) / 0.062653237554781168025870122174255_float64 /
+          data wgk ( 14) / 0.065834597133618422111563556969398_float64 /
+          data wgk ( 15) / 0.068648672928521619345623411885368_float64 /
+          data wgk ( 16) / 0.071054423553444068305790361723210_float64 /
+          data wgk ( 17) / 0.073030690332786667495189417658913_float64 /
+          data wgk ( 18) / 0.074582875400499188986581418362488_float64 /
+          data wgk ( 19) / 0.075704497684556674659542775376617_float64 /
+          data wgk ( 20) / 0.076377867672080736705502835038061_float64 /
+          data wgk ( 21) / 0.076600711917999656445049901530102_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
-          centr = 0.5_real64*(a+b)
-          hlgth = 0.5_real64*(b-a)
+          centr = 0.5_float64*(a+b)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
           !
           !  compute the 41-point gauss-kronrod approximation to
           !  the integral, and estimate the absolute error.
           !
-          resg = 0.0_real64
+          resg = 0.0_float64
           fc = f(centr)
           resk = wgk(21)*fc
           resabs =  abs ( resk)
@@ -2567,7 +2567,7 @@ contains
              resabs = resabs+wgk(jtwm1)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(21)* abs ( fc-reskh)
 
           do j=1,20
@@ -2578,10 +2578,10 @@ contains
           resabs = resabs*dhlgth
           resasc = resasc*dhlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) &
-               abserr = resasc* min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr = max &
-               ((epmach*0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) &
+               abserr = resasc* min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr = max &
+               ((epmach*0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk41
@@ -2606,32 +2606,32 @@ contains
           !  Parameters:
           !
           !      on entry
-          !        f      - real(real64)
+          !        f      - real(float64)
           !                 function defining the integrand
           !                 function f(x). the actual name for f needs to be
           !                 declared e x t e r n a l in the calling program.
           !
-          !        a      - real(real64)
+          !        a      - real(float64)
           !                 lower limit of integration
           !
-          !        b      - real(real64)
+          !        b      - real(float64)
           !                 upper limit of integration
           !
           !      on return
-          !        result - real(real64)
+          !        result - real(float64)
           !                 approximation to the integral i
           !                 result is computed by applying the 51-point
           !                 kronrod rule (resk) obtained by optimal addition
           !                 of abscissae to the 25-point gauss rule (resg).
           !
-          !        abserr - real(real64)
+          !        abserr - real(float64)
           !                 estimate of the modulus of the absolute error,
           !                 which should not exceed abs(i-result)
           !
-          !        resabs - real(real64)
+          !        resabs - real(float64)
           !                 approximation to the integral j
           !
-          !        resasc - real(real64)
+          !        resasc - real(float64)
           !                 approximation to the integral of abs(f-i/(b-a))
           !                 over (a,b)
           !
@@ -2671,7 +2671,7 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,abserr,b,centr,dhlgth, &
+          real(float64) a,absc,abserr,b,centr,dhlgth, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc, &
                resg,resk,reskh,result,uflow,wg,wgk,xgk
           integer(int32) j,jtw,jtwm1
@@ -2679,78 +2679,78 @@ contains
 
           dimension fv1(25),fv2(25),xgk(26),wgk(26),wg(13)
 
-          data wg  (  1) / 0.011393798501026287947902964113235_real64 /
-          data wg  (  2) / 0.026354986615032137261901815295299_real64 /
-          data wg  (  3) / 0.040939156701306312655623487711646_real64 /
-          data wg  (  4) / 0.054904695975835191925936891540473_real64 /
-          data wg  (  5) / 0.068038333812356917207187185656708_real64 /
-          data wg  (  6) / 0.080140700335001018013234959669111_real64 /
-          data wg  (  7) / 0.091028261982963649811497220702892_real64 /
-          data wg  (  8) / 0.100535949067050644202206890392686_real64 /
-          data wg  (  9) / 0.108519624474263653116093957050117_real64 /
-          data wg  ( 10) / 0.114858259145711648339325545869556_real64 /
-          data wg  ( 11) / 0.119455763535784772228178126512901_real64 /
-          data wg  ( 12) / 0.122242442990310041688959518945852_real64 /
-          data wg  ( 13) / 0.123176053726715451203902873079050_real64 /
+          data wg  (  1) / 0.011393798501026287947902964113235_float64 /
+          data wg  (  2) / 0.026354986615032137261901815295299_float64 /
+          data wg  (  3) / 0.040939156701306312655623487711646_float64 /
+          data wg  (  4) / 0.054904695975835191925936891540473_float64 /
+          data wg  (  5) / 0.068038333812356917207187185656708_float64 /
+          data wg  (  6) / 0.080140700335001018013234959669111_float64 /
+          data wg  (  7) / 0.091028261982963649811497220702892_float64 /
+          data wg  (  8) / 0.100535949067050644202206890392686_float64 /
+          data wg  (  9) / 0.108519624474263653116093957050117_float64 /
+          data wg  ( 10) / 0.114858259145711648339325545869556_float64 /
+          data wg  ( 11) / 0.119455763535784772228178126512901_float64 /
+          data wg  ( 12) / 0.122242442990310041688959518945852_float64 /
+          data wg  ( 13) / 0.123176053726715451203902873079050_float64 /
 
-          data xgk (  1) / 0.999262104992609834193457486540341_real64 /
-          data xgk (  2) / 0.995556969790498097908784946893902_real64 /
-          data xgk (  3) / 0.988035794534077247637331014577406_real64 /
-          data xgk (  4) / 0.976663921459517511498315386479594_real64 /
-          data xgk (  5) / 0.961614986425842512418130033660167_real64 /
-          data xgk (  6) / 0.942974571228974339414011169658471_real64 /
-          data xgk (  7) / 0.920747115281701561746346084546331_real64 /
-          data xgk (  8) / 0.894991997878275368851042006782805_real64 /
-          data xgk (  9) / 0.865847065293275595448996969588340_real64 /
-          data xgk ( 10) / 0.833442628760834001421021108693570_real64 /
-          data xgk ( 11) / 0.797873797998500059410410904994307_real64 /
-          data xgk ( 12) / 0.759259263037357630577282865204361_real64 /
-          data xgk ( 13) / 0.717766406813084388186654079773298_real64 /
-          data xgk ( 14) / 0.673566368473468364485120633247622_real64 /
-          data xgk ( 15) / 0.626810099010317412788122681624518_real64 /
-          data xgk ( 16) / 0.577662930241222967723689841612654_real64 /
-          data xgk ( 17) / 0.526325284334719182599623778158010_real64 /
-          data xgk ( 18) / 0.473002731445714960522182115009192_real64 /
-          data xgk ( 19) / 0.417885382193037748851814394594572_real64 /
-          data xgk ( 20) / 0.361172305809387837735821730127641_real64 /
-          data xgk ( 21) / 0.303089538931107830167478909980339_real64 /
-          data xgk ( 22) / 0.243866883720988432045190362797452_real64 /
-          data xgk ( 23) / 0.183718939421048892015969888759528_real64 /
-          data xgk ( 24) / 0.122864692610710396387359818808037_real64 /
-          data xgk ( 25) / 0.061544483005685078886546392366797_real64 /
-          data xgk ( 26) / 0.000000000000000000000000000000000_real64 /
+          data xgk (  1) / 0.999262104992609834193457486540341_float64 /
+          data xgk (  2) / 0.995556969790498097908784946893902_float64 /
+          data xgk (  3) / 0.988035794534077247637331014577406_float64 /
+          data xgk (  4) / 0.976663921459517511498315386479594_float64 /
+          data xgk (  5) / 0.961614986425842512418130033660167_float64 /
+          data xgk (  6) / 0.942974571228974339414011169658471_float64 /
+          data xgk (  7) / 0.920747115281701561746346084546331_float64 /
+          data xgk (  8) / 0.894991997878275368851042006782805_float64 /
+          data xgk (  9) / 0.865847065293275595448996969588340_float64 /
+          data xgk ( 10) / 0.833442628760834001421021108693570_float64 /
+          data xgk ( 11) / 0.797873797998500059410410904994307_float64 /
+          data xgk ( 12) / 0.759259263037357630577282865204361_float64 /
+          data xgk ( 13) / 0.717766406813084388186654079773298_float64 /
+          data xgk ( 14) / 0.673566368473468364485120633247622_float64 /
+          data xgk ( 15) / 0.626810099010317412788122681624518_float64 /
+          data xgk ( 16) / 0.577662930241222967723689841612654_float64 /
+          data xgk ( 17) / 0.526325284334719182599623778158010_float64 /
+          data xgk ( 18) / 0.473002731445714960522182115009192_float64 /
+          data xgk ( 19) / 0.417885382193037748851814394594572_float64 /
+          data xgk ( 20) / 0.361172305809387837735821730127641_float64 /
+          data xgk ( 21) / 0.303089538931107830167478909980339_float64 /
+          data xgk ( 22) / 0.243866883720988432045190362797452_float64 /
+          data xgk ( 23) / 0.183718939421048892015969888759528_float64 /
+          data xgk ( 24) / 0.122864692610710396387359818808037_float64 /
+          data xgk ( 25) / 0.061544483005685078886546392366797_float64 /
+          data xgk ( 26) / 0.000000000000000000000000000000000_float64 /
 
-          data wgk (  1) / 0.001987383892330315926507851882843_real64 /
-          data wgk (  2) / 0.005561932135356713758040236901066_real64 /
-          data wgk (  3) / 0.009473973386174151607207710523655_real64 /
-          data wgk (  4) / 0.013236229195571674813656405846976_real64 /
-          data wgk (  5) / 0.016847817709128298231516667536336_real64 /
-          data wgk (  6) / 0.020435371145882835456568292235939_real64 /
-          data wgk (  7) / 0.024009945606953216220092489164881_real64 /
-          data wgk (  8) / 0.027475317587851737802948455517811_real64 /
-          data wgk (  9) / 0.030792300167387488891109020215229_real64 /
-          data wgk ( 10) / 0.034002130274329337836748795229551_real64 /
-          data wgk ( 11) / 0.037116271483415543560330625367620_real64 /
-          data wgk ( 12) / 0.040083825504032382074839284467076_real64 /
-          data wgk ( 13) / 0.042872845020170049476895792439495_real64 /
-          data wgk ( 14) / 0.045502913049921788909870584752660_real64 /
-          data wgk ( 15) / 0.047982537138836713906392255756915_real64 /
-          data wgk ( 16) / 0.050277679080715671963325259433440_real64 /
-          data wgk ( 17) / 0.052362885806407475864366712137873_real64 /
-          data wgk ( 18) / 0.054251129888545490144543370459876_real64 /
-          data wgk ( 19) / 0.055950811220412317308240686382747_real64 /
-          data wgk ( 20) / 0.057437116361567832853582693939506_real64 /
-          data wgk ( 21) / 0.058689680022394207961974175856788_real64 /
-          data wgk ( 22) / 0.059720340324174059979099291932562_real64 /
-          data wgk ( 23) / 0.060539455376045862945360267517565_real64 /
-          data wgk ( 24) / 0.061128509717053048305859030416293_real64 /
-          data wgk ( 25) / 0.061471189871425316661544131965264_real64 /
-          data wgk ( 26) / 0.061580818067832935078759824240066_real64 /
+          data wgk (  1) / 0.001987383892330315926507851882843_float64 /
+          data wgk (  2) / 0.005561932135356713758040236901066_float64 /
+          data wgk (  3) / 0.009473973386174151607207710523655_float64 /
+          data wgk (  4) / 0.013236229195571674813656405846976_float64 /
+          data wgk (  5) / 0.016847817709128298231516667536336_float64 /
+          data wgk (  6) / 0.020435371145882835456568292235939_float64 /
+          data wgk (  7) / 0.024009945606953216220092489164881_float64 /
+          data wgk (  8) / 0.027475317587851737802948455517811_float64 /
+          data wgk (  9) / 0.030792300167387488891109020215229_float64 /
+          data wgk ( 10) / 0.034002130274329337836748795229551_float64 /
+          data wgk ( 11) / 0.037116271483415543560330625367620_float64 /
+          data wgk ( 12) / 0.040083825504032382074839284467076_float64 /
+          data wgk ( 13) / 0.042872845020170049476895792439495_float64 /
+          data wgk ( 14) / 0.045502913049921788909870584752660_float64 /
+          data wgk ( 15) / 0.047982537138836713906392255756915_float64 /
+          data wgk ( 16) / 0.050277679080715671963325259433440_float64 /
+          data wgk ( 17) / 0.052362885806407475864366712137873_float64 /
+          data wgk ( 18) / 0.054251129888545490144543370459876_float64 /
+          data wgk ( 19) / 0.055950811220412317308240686382747_float64 /
+          data wgk ( 20) / 0.057437116361567832853582693939506_float64 /
+          data wgk ( 21) / 0.058689680022394207961974175856788_float64 /
+          data wgk ( 22) / 0.059720340324174059979099291932562_float64 /
+          data wgk ( 23) / 0.060539455376045862945360267517565_float64 /
+          data wgk ( 24) / 0.061128509717053048305859030416293_float64 /
+          data wgk ( 25) / 0.061471189871425316661544131965264_float64 /
+          data wgk ( 26) / 0.061580818067832935078759824240066_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
-          centr = 0.5_real64*(a+b)
-          hlgth = 0.5_real64*(b-a)
+          centr = 0.5_float64*(a+b)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
           !
           !  compute the 51-point kronrod approximation to
@@ -2786,7 +2786,7 @@ contains
              resabs = resabs+wgk(jtwm1)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(26)* abs ( fc-reskh)
 
           do j=1,25
@@ -2797,10 +2797,10 @@ contains
           resabs = resabs*dhlgth
           resasc = resasc*dhlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) &
-               abserr = resasc* min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr = max &
-               ((epmach*0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) &
+               abserr = resasc* min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr = max &
+               ((epmach*0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk51
@@ -2825,32 +2825,32 @@ contains
           !  Parameters:
           !
           !   on entry
-          !     f      - real(real64)
+          !     f      - real(float64)
           !              function subprogram defining the integrand
           !              function f(x). the actual name for f needs to be
           !              declared e x t e r n a l in the calling program.
           !
-          !     a      - real(real64)
+          !     a      - real(float64)
           !              lower limit of integration
           !
-          !     b      - real(real64)
+          !     b      - real(float64)
           !              upper limit of integration
           !
           !   on return
-          !     result - real(real64)
+          !     result - real(float64)
           !              approximation to the integral i
           !              result is computed by applying the 61-point
           !              kronrod rule (resk) obtained by optimal addition of
           !              abscissae to the 30-point gauss rule (resg).
           !
-          !     abserr - real(real64)
+          !     abserr - real(float64)
           !              estimate of the modulus of the absolute error,
           !              which should equal or exceed  abs ( i-result)
           !
-          !     resabs - real(real64)
+          !     resabs - real(float64)
           !              approximation to the integral j
           !
-          !     resasc - real(real64)
+          !     resasc - real(float64)
           !              approximation to the integral of  abs ( f-i/(b-a))
           !
           !  Local Parameters:
@@ -2890,7 +2890,7 @@ contains
           !
           implicit none
 
-          real(real64) a,dabsc,abserr,b,centr,dhlgth, &
+          real(float64) a,dabsc,abserr,b,centr,dhlgth, &
                epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc, &
                resg,resk,reskh,result,uflow,wg,wgk,xgk
           integer(int32) j,jtw,jtwm1
@@ -2898,96 +2898,96 @@ contains
 
           dimension fv1(30),fv2(30),xgk(31),wgk(31),wg(15)
 
-          data wg  (  1) / 0.007968192496166605615465883474674_real64 /
-          data wg  (  2) / 0.018466468311090959142302131912047_real64 /
-          data wg  (  3) / 0.028784707883323369349719179611292_real64 /
-          data wg  (  4) / 0.038799192569627049596801936446348_real64 /
-          data wg  (  5) / 0.048402672830594052902938140422808_real64 /
-          data wg  (  6) / 0.057493156217619066481721689402056_real64 /
-          data wg  (  7) / 0.065974229882180495128128515115962_real64 /
-          data wg  (  8) / 0.073755974737705206268243850022191_real64 /
-          data wg  (  9) / 0.080755895229420215354694938460530_real64 /
-          data wg  ( 10) / 0.086899787201082979802387530715126_real64 /
-          data wg  ( 11) / 0.092122522237786128717632707087619_real64 /
-          data wg  ( 12) / 0.096368737174644259639468626351810_real64 /
-          data wg  ( 13) / 0.099593420586795267062780282103569_real64 /
-          data wg  ( 14) / 0.101762389748405504596428952168554_real64 /
-          data wg  ( 15) / 0.102852652893558840341285636705415_real64 /
+          data wg  (  1) / 0.007968192496166605615465883474674_float64 /
+          data wg  (  2) / 0.018466468311090959142302131912047_float64 /
+          data wg  (  3) / 0.028784707883323369349719179611292_float64 /
+          data wg  (  4) / 0.038799192569627049596801936446348_float64 /
+          data wg  (  5) / 0.048402672830594052902938140422808_float64 /
+          data wg  (  6) / 0.057493156217619066481721689402056_float64 /
+          data wg  (  7) / 0.065974229882180495128128515115962_float64 /
+          data wg  (  8) / 0.073755974737705206268243850022191_float64 /
+          data wg  (  9) / 0.080755895229420215354694938460530_float64 /
+          data wg  ( 10) / 0.086899787201082979802387530715126_float64 /
+          data wg  ( 11) / 0.092122522237786128717632707087619_float64 /
+          data wg  ( 12) / 0.096368737174644259639468626351810_float64 /
+          data wg  ( 13) / 0.099593420586795267062780282103569_float64 /
+          data wg  ( 14) / 0.101762389748405504596428952168554_float64 /
+          data wg  ( 15) / 0.102852652893558840341285636705415_float64 /
 
-          data xgk (  1) / 0.999484410050490637571325895705811_real64 /
-          data xgk (  2) / 0.996893484074649540271630050918695_real64 /
-          data xgk (  3) / 0.991630996870404594858628366109486_real64 /
-          data xgk (  4) / 0.983668123279747209970032581605663_real64 /
-          data xgk (  5) / 0.973116322501126268374693868423707_real64 /
-          data xgk (  6) / 0.960021864968307512216871025581798_real64 /
-          data xgk (  7) / 0.944374444748559979415831324037439_real64 /
-          data xgk (  8) / 0.926200047429274325879324277080474_real64 /
-          data xgk (  9) / 0.905573307699907798546522558925958_real64 /
-          data xgk ( 10) / 0.882560535792052681543116462530226_real64 /
-          data xgk ( 11) / 0.857205233546061098958658510658944_real64 /
-          data xgk ( 12) / 0.829565762382768397442898119732502_real64 /
-          data xgk ( 13) / 0.799727835821839083013668942322683_real64 /
-          data xgk ( 14) / 0.767777432104826194917977340974503_real64 /
-          data xgk ( 15) / 0.733790062453226804726171131369528_real64 /
-          data xgk ( 16) / 0.697850494793315796932292388026640_real64 /
-          data xgk ( 17) / 0.660061064126626961370053668149271_real64 /
-          data xgk ( 18) / 0.620526182989242861140477556431189_real64 /
-          data xgk ( 19) / 0.579345235826361691756024932172540_real64 /
-          data xgk ( 20) / 0.536624148142019899264169793311073_real64 /
-          data xgk ( 21) / 0.492480467861778574993693061207709_real64 /
-          data xgk ( 22) / 0.447033769538089176780609900322854_real64 /
-          data xgk ( 23) / 0.400401254830394392535476211542661_real64 /
-          data xgk ( 24) / 0.352704725530878113471037207089374_real64 /
-          data xgk ( 25) / 0.304073202273625077372677107199257_real64 /
-          data xgk ( 26) / 0.254636926167889846439805129817805_real64 /
-          data xgk ( 27) / 0.204525116682309891438957671002025_real64 /
-          data xgk ( 28) / 0.153869913608583546963794672743256_real64 /
-          data xgk ( 29) / 0.102806937966737030147096751318001_real64 /
-          data xgk ( 30) / 0.051471842555317695833025213166723_real64 /
-          data xgk ( 31) / 0.000000000000000000000000000000000_real64 /
+          data xgk (  1) / 0.999484410050490637571325895705811_float64 /
+          data xgk (  2) / 0.996893484074649540271630050918695_float64 /
+          data xgk (  3) / 0.991630996870404594858628366109486_float64 /
+          data xgk (  4) / 0.983668123279747209970032581605663_float64 /
+          data xgk (  5) / 0.973116322501126268374693868423707_float64 /
+          data xgk (  6) / 0.960021864968307512216871025581798_float64 /
+          data xgk (  7) / 0.944374444748559979415831324037439_float64 /
+          data xgk (  8) / 0.926200047429274325879324277080474_float64 /
+          data xgk (  9) / 0.905573307699907798546522558925958_float64 /
+          data xgk ( 10) / 0.882560535792052681543116462530226_float64 /
+          data xgk ( 11) / 0.857205233546061098958658510658944_float64 /
+          data xgk ( 12) / 0.829565762382768397442898119732502_float64 /
+          data xgk ( 13) / 0.799727835821839083013668942322683_float64 /
+          data xgk ( 14) / 0.767777432104826194917977340974503_float64 /
+          data xgk ( 15) / 0.733790062453226804726171131369528_float64 /
+          data xgk ( 16) / 0.697850494793315796932292388026640_float64 /
+          data xgk ( 17) / 0.660061064126626961370053668149271_float64 /
+          data xgk ( 18) / 0.620526182989242861140477556431189_float64 /
+          data xgk ( 19) / 0.579345235826361691756024932172540_float64 /
+          data xgk ( 20) / 0.536624148142019899264169793311073_float64 /
+          data xgk ( 21) / 0.492480467861778574993693061207709_float64 /
+          data xgk ( 22) / 0.447033769538089176780609900322854_float64 /
+          data xgk ( 23) / 0.400401254830394392535476211542661_float64 /
+          data xgk ( 24) / 0.352704725530878113471037207089374_float64 /
+          data xgk ( 25) / 0.304073202273625077372677107199257_float64 /
+          data xgk ( 26) / 0.254636926167889846439805129817805_float64 /
+          data xgk ( 27) / 0.204525116682309891438957671002025_float64 /
+          data xgk ( 28) / 0.153869913608583546963794672743256_float64 /
+          data xgk ( 29) / 0.102806937966737030147096751318001_float64 /
+          data xgk ( 30) / 0.051471842555317695833025213166723_float64 /
+          data xgk ( 31) / 0.000000000000000000000000000000000_float64 /
 
-          data wgk (  1) / 0.001389013698677007624551591226760_real64 /
-          data wgk (  2) / 0.003890461127099884051267201844516_real64 /
-          data wgk (  3) / 0.006630703915931292173319826369750_real64 /
-          data wgk (  4) / 0.009273279659517763428441146892024_real64 /
-          data wgk (  5) / 0.011823015253496341742232898853251_real64 /
-          data wgk (  6) / 0.014369729507045804812451432443580_real64 /
-          data wgk (  7) / 0.016920889189053272627572289420322_real64 /
-          data wgk (  8) / 0.019414141193942381173408951050128_real64 /
-          data wgk (  9) / 0.021828035821609192297167485738339_real64 /
-          data wgk ( 10) / 0.024191162078080601365686370725232_real64 /
-          data wgk ( 11) / 0.026509954882333101610601709335075_real64 /
-          data wgk ( 12) / 0.028754048765041292843978785354334_real64 /
-          data wgk ( 13) / 0.030907257562387762472884252943092_real64 /
-          data wgk ( 14) / 0.032981447057483726031814191016854_real64 /
-          data wgk ( 15) / 0.034979338028060024137499670731468_real64 /
-          data wgk ( 16) / 0.036882364651821229223911065617136_real64 /
-          data wgk ( 17) / 0.038678945624727592950348651532281_real64 /
-          data wgk ( 18) / 0.040374538951535959111995279752468_real64 /
-          data wgk ( 19) / 0.041969810215164246147147541285970_real64 /
-          data wgk ( 20) / 0.043452539701356069316831728117073_real64 /
-          data wgk ( 21) / 0.044814800133162663192355551616723_real64 /
-          data wgk ( 22) / 0.046059238271006988116271735559374_real64 /
-          data wgk ( 23) / 0.047185546569299153945261478181099_real64 /
-          data wgk ( 24) / 0.048185861757087129140779492298305_real64 /
-          data wgk ( 25) / 0.049055434555029778887528165367238_real64 /
-          data wgk ( 26) / 0.049795683427074206357811569379942_real64 /
-          data wgk ( 27) / 0.050405921402782346840893085653585_real64 /
-          data wgk ( 28) / 0.050881795898749606492297473049805_real64 /
-          data wgk ( 29) / 0.051221547849258772170656282604944_real64 /
-          data wgk ( 30) / 0.051426128537459025933862879215781_real64 /
-          data wgk ( 31) / 0.051494729429451567558340433647099_real64 /
+          data wgk (  1) / 0.001389013698677007624551591226760_float64 /
+          data wgk (  2) / 0.003890461127099884051267201844516_float64 /
+          data wgk (  3) / 0.006630703915931292173319826369750_float64 /
+          data wgk (  4) / 0.009273279659517763428441146892024_float64 /
+          data wgk (  5) / 0.011823015253496341742232898853251_float64 /
+          data wgk (  6) / 0.014369729507045804812451432443580_float64 /
+          data wgk (  7) / 0.016920889189053272627572289420322_float64 /
+          data wgk (  8) / 0.019414141193942381173408951050128_float64 /
+          data wgk (  9) / 0.021828035821609192297167485738339_float64 /
+          data wgk ( 10) / 0.024191162078080601365686370725232_float64 /
+          data wgk ( 11) / 0.026509954882333101610601709335075_float64 /
+          data wgk ( 12) / 0.028754048765041292843978785354334_float64 /
+          data wgk ( 13) / 0.030907257562387762472884252943092_float64 /
+          data wgk ( 14) / 0.032981447057483726031814191016854_float64 /
+          data wgk ( 15) / 0.034979338028060024137499670731468_float64 /
+          data wgk ( 16) / 0.036882364651821229223911065617136_float64 /
+          data wgk ( 17) / 0.038678945624727592950348651532281_float64 /
+          data wgk ( 18) / 0.040374538951535959111995279752468_float64 /
+          data wgk ( 19) / 0.041969810215164246147147541285970_float64 /
+          data wgk ( 20) / 0.043452539701356069316831728117073_float64 /
+          data wgk ( 21) / 0.044814800133162663192355551616723_float64 /
+          data wgk ( 22) / 0.046059238271006988116271735559374_float64 /
+          data wgk ( 23) / 0.047185546569299153945261478181099_float64 /
+          data wgk ( 24) / 0.048185861757087129140779492298305_float64 /
+          data wgk ( 25) / 0.049055434555029778887528165367238_float64 /
+          data wgk ( 26) / 0.049795683427074206357811569379942_float64 /
+          data wgk ( 27) / 0.050405921402782346840893085653585_float64 /
+          data wgk ( 28) / 0.050881795898749606492297473049805_float64 /
+          data wgk ( 29) / 0.051221547849258772170656282604944_float64 /
+          data wgk ( 30) / 0.051426128537459025933862879215781_float64 /
+          data wgk ( 31) / 0.051494729429451567558340433647099_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
-          centr = 0.5_real64*(b+a)
-          hlgth = 0.5_real64*(b-a)
+          centr = 0.5_float64*(b+a)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
           !
           !  compute the 61-point kronrod approximation to the
           !  integral, and estimate the absolute error.
           !
-          resg = 0.0_real64
+          resg = 0.0_float64
           fc = f(centr)
           resk = wgk(31)*fc
           resabs =  abs ( resk)
@@ -3017,7 +3017,7 @@ contains
              resabs = resabs+wgk(jtwm1)*( abs ( fval1)+ abs ( fval2))
           end do
 
-          reskh = resk*0.5_real64
+          reskh = resk*0.5_float64
           resasc = wgk(31)* abs ( fc-reskh)
 
           do j=1,30
@@ -3028,10 +3028,10 @@ contains
           resabs = resabs*dhlgth
           resasc = resasc*dhlgth
           abserr =  abs ( (resk-resg)*hlgth)
-          if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) &
-               abserr = resasc* min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
-          if(resabs.gt.uflow/(0.5e2_real64*epmach)) abserr = max &
-               ((epmach*0.5e2_real64)*resabs,abserr)
+          if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) &
+               abserr = resasc* min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
+          if(resabs.gt.uflow/(0.5e2_float64*epmach)) abserr = max &
+               ((epmach*0.5e2_float64)*resabs,abserr)
 
           return
         end subroutine dqk61
@@ -3056,28 +3056,28 @@ contains
           !
           !  Parameters:
           !
-          !     alfa   - real(real64)
+          !     alfa   - real(float64)
           !              parameter in the weight function w(x), alfa.gt.(-1)
           !
-          !     beta   - real(real64)
+          !     beta   - real(float64)
           !              parameter in the weight function w(x), beta.gt.(-1)
           !
-          !     ri     - real(real64)
+          !     ri     - real(float64)
           !              vector of dimension 25
           !              ri(k) is the integral over (-1,1) of
           !              (1+x)**alfa*t(k-1,x), k = 1, ..., 25.
           !
-          !     rj     - real(real64)
+          !     rj     - real(float64)
           !              vector of dimension 25
           !              rj(k) is the integral over (-1,1) of
           !              (1-x)**beta*t(k-1,x), k = 1, ..., 25.
           !
-          !     rg     - real(real64)
+          !     rg     - real(float64)
           !              vector of dimension 25
           !              rg(k) is the integral over (-1,1) of
           !              (1+x)**alfa*log((1+x)/2)*t(k-1,x), k = 1, ..., 25.
           !
-          !     rh     - real(real64)
+          !     rh     - real(float64)
           !              vector of dimension 25
           !              rh(k) is the integral over (-1,1) of
           !              (1-x)**beta*log((1-x)/2)*t(k-1,x), k = 1, ..., 25.
@@ -3092,17 +3092,17 @@ contains
           !
           implicit none
 
-          real(real64) alfa,alfp1,alfp2,an,anm1,beta,betp1,betp2,ralf, &
+          real(float64) alfa,alfp1,alfp2,an,anm1,beta,betp1,betp2,ralf, &
                rbet,rg,rh,ri,rj
           integer(int32) i,im1,integr
           dimension rg(25),rh(25),ri(25),rj(25)
 
-          alfp1 = alfa+0.1e1_real64
-          betp1 = beta+0.1e1_real64
-          alfp2 = alfa+0.2e1_real64
-          betp2 = beta+0.2e1_real64
-          ralf = 0.2e1_real64**alfp1
-          rbet = 0.2e1_real64**betp1
+          alfp1 = alfa+0.1e1_float64
+          betp1 = beta+0.1e1_float64
+          alfp2 = alfa+0.2e1_float64
+          betp2 = beta+0.2e1_float64
+          ralf = 0.2e1_float64**alfp1
+          rbet = 0.2e1_float64**betp1
           !
           !  compute ri, rj using a forward recurrence relation.
           !
@@ -3110,14 +3110,14 @@ contains
           rj(1) = rbet/betp1
           ri(2) = ri(1)*alfa/alfp2
           rj(2) = rj(1)*beta/betp2
-          an = 0.2e1_real64
-          anm1 = 0.1e1_real64
+          an = 0.2e1_float64
+          anm1 = 0.1e1_float64
 
           do i=3,25
              ri(i) = -(ralf+an*(an-alfp2)*ri(i-1))/(anm1*(an+alfp1))
              rj(i) = -(rbet+an*(an-betp2)*rj(i-1))/(anm1*(an+betp1))
              anm1 = an
-             an = an+0.1e1_real64
+             an = an+0.1e1_float64
           end do
 
           if(integr.eq.1) go to 70
@@ -3127,15 +3127,15 @@ contains
           !
           rg(1) = -ri(1)/alfp1
           rg(2) = -(ralf+ralf)/(alfp2*alfp2)-rg(1)
-          an = 0.2e1_real64
-          anm1 = 0.1e1_real64
+          an = 0.2e1_float64
+          anm1 = 0.1e1_float64
           im1 = 2
 
           do i=3,25
              rg(i) = -(an*(an-alfp2)*rg(im1)-an*ri(im1)+anm1*ri(i))/ &
                   (anm1*(an+alfp1))
              anm1 = an
-             an = an+0.1e1_real64
+             an = an+0.1e1_float64
              im1 = i
           end do
 
@@ -3145,15 +3145,15 @@ contains
           !
 40        rh(1) = -rj(1)/betp1
           rh(2) = -(rbet+rbet)/(betp2*betp2)-rh(1)
-          an = 0.2e1_real64
-          anm1 = 0.1e1_real64
+          an = 0.2e1_float64
+          anm1 = 0.1e1_float64
           im1 = 2
 
           do i=3,25
              rh(i) = -(an*(an-betp2)*rh(im1)-an*rj(im1)+ &
                   anm1*rj(i))/(anm1*(an+betp1))
              anm1 = an
-             an = an+0.1e1_real64
+             an = an+0.1e1_float64
              im1 = i
           end do
 
@@ -3192,27 +3192,27 @@ contains
           !
           !  Parameters:
           !
-          !     f      - real(real64)
+          !     f      - real(float64)
           !              function subprogram defining the integrand function
           !              f(x). the actual name for f needs to be declared
           !              e x t e r n a l in the driver program.
           !
-          !     a      - real(real64)
+          !     a      - real(float64)
           !              lower limit of integration
           !
-          !     b      - real(real64)
+          !     b      - real(float64)
           !              upper limit of integration
           !
-          !     epsabs - real(real64)
+          !     epsabs - real(float64)
           !              absolute accuracy requested
-          !     epsrel - real(real64)
+          !     epsrel - real(float64)
           !              relative accuracy requested
           !              if  epsabs.le.0
           !              and epsrel.lt.max(50*rel.mach.acc.,0.5d-28),
           !              the routine will end with ier = 6.
           !
           !   on return
-          !     result - real(real64)
+          !     result - real(float64)
           !              approximation to the integral i
           !              result is obtained by applying the 21-point
           !              gauss-kronrod rule (res21) obtained by optimal
@@ -3223,7 +3223,7 @@ contains
           !              87-point rule (res87) obtained by optimal addition
           !              of abscissae to the 43-point rule.
           !
-          !     abserr - real(real64)
+          !     abserr - real(float64)
           !              estimate of the modulus of the absolute error,
           !              which should equal or exceed abs(i-result)
           !
@@ -3290,7 +3290,7 @@ contains
           !
           implicit none
 
-          real(real64) a,absc,abserr,b,centr,dhlgth, &
+          real(float64) a,absc,abserr,b,centr,dhlgth, &
                epmach,epsabs,epsrel,f,fcentr,fval,fval1,fval2,fv1,fv2, &
                fv3,fv4,hlgth,result,res10,res21,res43,res87,resabs,resasc, &
                reskh,savfun,uflow,w10,w21a,w21b,w43a,w43b,w87a,w87b,x1,x2,x3,x4
@@ -3300,149 +3300,149 @@ contains
                w10(5),w21a(5),w21b(6),w43a(10),w43b(12),w87a(21),w87b(23), &
                savfun(21)
 
-          data x1    (  1) / 0.973906528517171720077964012084452_real64 /
-          data x1    (  2) / 0.865063366688984510732096688423493_real64 /
-          data x1    (  3) / 0.679409568299024406234327365114874_real64 /
-          data x1    (  4) / 0.433395394129247190799265943165784_real64 /
-          data x1    (  5) / 0.148874338981631210884826001129720_real64 /
-          data w10   (  1) / 0.066671344308688137593568809893332_real64 /
-          data w10   (  2) / 0.149451349150580593145776339657697_real64 /
-          data w10   (  3) / 0.219086362515982043995534934228163_real64 /
-          data w10   (  4) / 0.269266719309996355091226921569469_real64 /
-          data w10   (  5) / 0.295524224714752870173892994651338_real64 /
+          data x1    (  1) / 0.973906528517171720077964012084452_float64 /
+          data x1    (  2) / 0.865063366688984510732096688423493_float64 /
+          data x1    (  3) / 0.679409568299024406234327365114874_float64 /
+          data x1    (  4) / 0.433395394129247190799265943165784_float64 /
+          data x1    (  5) / 0.148874338981631210884826001129720_float64 /
+          data w10   (  1) / 0.066671344308688137593568809893332_float64 /
+          data w10   (  2) / 0.149451349150580593145776339657697_float64 /
+          data w10   (  3) / 0.219086362515982043995534934228163_float64 /
+          data w10   (  4) / 0.269266719309996355091226921569469_float64 /
+          data w10   (  5) / 0.295524224714752870173892994651338_float64 /
 
-          data x2    (  1) / 0.995657163025808080735527280689003_real64 /
-          data x2    (  2) / 0.930157491355708226001207180059508_real64 /
-          data x2    (  3) / 0.780817726586416897063717578345042_real64 /
-          data x2    (  4) / 0.562757134668604683339000099272694_real64 /
-          data x2    (  5) / 0.294392862701460198131126603103866_real64 /
-          data w21a  (  1) / 0.032558162307964727478818972459390_real64 /
-          data w21a  (  2) / 0.075039674810919952767043140916190_real64 /
-          data w21a  (  3) / 0.109387158802297641899210590325805_real64 /
-          data w21a  (  4) / 0.134709217311473325928054001771707_real64 /
-          data w21a  (  5) / 0.147739104901338491374841515972068_real64 /
-          data w21b  (  1) / 0.011694638867371874278064396062192_real64 /
-          data w21b  (  2) / 0.054755896574351996031381300244580_real64 /
-          data w21b  (  3) / 0.093125454583697605535065465083366_real64 /
-          data w21b  (  4) / 0.123491976262065851077958109831074_real64 /
-          data w21b  (  5) / 0.142775938577060080797094273138717_real64 /
-          data w21b  (  6) / 0.149445554002916905664936468389821_real64 /
+          data x2    (  1) / 0.995657163025808080735527280689003_float64 /
+          data x2    (  2) / 0.930157491355708226001207180059508_float64 /
+          data x2    (  3) / 0.780817726586416897063717578345042_float64 /
+          data x2    (  4) / 0.562757134668604683339000099272694_float64 /
+          data x2    (  5) / 0.294392862701460198131126603103866_float64 /
+          data w21a  (  1) / 0.032558162307964727478818972459390_float64 /
+          data w21a  (  2) / 0.075039674810919952767043140916190_float64 /
+          data w21a  (  3) / 0.109387158802297641899210590325805_float64 /
+          data w21a  (  4) / 0.134709217311473325928054001771707_float64 /
+          data w21a  (  5) / 0.147739104901338491374841515972068_float64 /
+          data w21b  (  1) / 0.011694638867371874278064396062192_float64 /
+          data w21b  (  2) / 0.054755896574351996031381300244580_float64 /
+          data w21b  (  3) / 0.093125454583697605535065465083366_float64 /
+          data w21b  (  4) / 0.123491976262065851077958109831074_float64 /
+          data w21b  (  5) / 0.142775938577060080797094273138717_float64 /
+          data w21b  (  6) / 0.149445554002916905664936468389821_float64 /
           !
-          data x3    (  1) / 0.999333360901932081394099323919911_real64 /
-          data x3    (  2) / 0.987433402908088869795961478381209_real64 /
-          data x3    (  3) / 0.954807934814266299257919200290473_real64 /
-          data x3    (  4) / 0.900148695748328293625099494069092_real64 /
-          data x3    (  5) / 0.825198314983114150847066732588520_real64 /
-          data x3    (  6) / 0.732148388989304982612354848755461_real64 /
-          data x3    (  7) / 0.622847970537725238641159120344323_real64 /
-          data x3    (  8) / 0.499479574071056499952214885499755_real64 /
-          data x3    (  9) / 0.364901661346580768043989548502644_real64 /
-          data x3    ( 10) / 0.222254919776601296498260928066212_real64 /
-          data x3    ( 11) / 0.074650617461383322043914435796506_real64 /
-          data w43a  (  1) / 0.016296734289666564924281974617663_real64 /
-          data w43a  (  2) / 0.037522876120869501461613795898115_real64 /
-          data w43a  (  3) / 0.054694902058255442147212685465005_real64 /
-          data w43a  (  4) / 0.067355414609478086075553166302174_real64 /
-          data w43a  (  5) / 0.073870199632393953432140695251367_real64 /
-          data w43a  (  6) / 0.005768556059769796184184327908655_real64 /
-          data w43a  (  7) / 0.027371890593248842081276069289151_real64 /
-          data w43a  (  8) / 0.046560826910428830743339154433824_real64 /
-          data w43a  (  9) / 0.061744995201442564496240336030883_real64 /
-          data w43a  ( 10) / 0.071387267268693397768559114425516_real64 /
-          data w43b  (  1) / 0.001844477640212414100389106552965_real64 /
-          data w43b  (  2) / 0.010798689585891651740465406741293_real64 /
-          data w43b  (  3) / 0.021895363867795428102523123075149_real64 /
-          data w43b  (  4) / 0.032597463975345689443882222526137_real64 /
-          data w43b  (  5) / 0.042163137935191811847627924327955_real64 /
-          data w43b  (  6) / 0.050741939600184577780189020092084_real64 /
-          data w43b  (  7) / 0.058379395542619248375475369330206_real64 /
-          data w43b  (  8) / 0.064746404951445885544689259517511_real64 /
-          data w43b  (  9) / 0.069566197912356484528633315038405_real64 /
-          data w43b  ( 10) / 0.072824441471833208150939535192842_real64 /
-          data w43b  ( 11) / 0.074507751014175118273571813842889_real64 /
-          data w43b  ( 12) / 0.074722147517403005594425168280423_real64 /
+          data x3    (  1) / 0.999333360901932081394099323919911_float64 /
+          data x3    (  2) / 0.987433402908088869795961478381209_float64 /
+          data x3    (  3) / 0.954807934814266299257919200290473_float64 /
+          data x3    (  4) / 0.900148695748328293625099494069092_float64 /
+          data x3    (  5) / 0.825198314983114150847066732588520_float64 /
+          data x3    (  6) / 0.732148388989304982612354848755461_float64 /
+          data x3    (  7) / 0.622847970537725238641159120344323_float64 /
+          data x3    (  8) / 0.499479574071056499952214885499755_float64 /
+          data x3    (  9) / 0.364901661346580768043989548502644_float64 /
+          data x3    ( 10) / 0.222254919776601296498260928066212_float64 /
+          data x3    ( 11) / 0.074650617461383322043914435796506_float64 /
+          data w43a  (  1) / 0.016296734289666564924281974617663_float64 /
+          data w43a  (  2) / 0.037522876120869501461613795898115_float64 /
+          data w43a  (  3) / 0.054694902058255442147212685465005_float64 /
+          data w43a  (  4) / 0.067355414609478086075553166302174_float64 /
+          data w43a  (  5) / 0.073870199632393953432140695251367_float64 /
+          data w43a  (  6) / 0.005768556059769796184184327908655_float64 /
+          data w43a  (  7) / 0.027371890593248842081276069289151_float64 /
+          data w43a  (  8) / 0.046560826910428830743339154433824_float64 /
+          data w43a  (  9) / 0.061744995201442564496240336030883_float64 /
+          data w43a  ( 10) / 0.071387267268693397768559114425516_float64 /
+          data w43b  (  1) / 0.001844477640212414100389106552965_float64 /
+          data w43b  (  2) / 0.010798689585891651740465406741293_float64 /
+          data w43b  (  3) / 0.021895363867795428102523123075149_float64 /
+          data w43b  (  4) / 0.032597463975345689443882222526137_float64 /
+          data w43b  (  5) / 0.042163137935191811847627924327955_float64 /
+          data w43b  (  6) / 0.050741939600184577780189020092084_float64 /
+          data w43b  (  7) / 0.058379395542619248375475369330206_float64 /
+          data w43b  (  8) / 0.064746404951445885544689259517511_float64 /
+          data w43b  (  9) / 0.069566197912356484528633315038405_float64 /
+          data w43b  ( 10) / 0.072824441471833208150939535192842_float64 /
+          data w43b  ( 11) / 0.074507751014175118273571813842889_float64 /
+          data w43b  ( 12) / 0.074722147517403005594425168280423_float64 /
 
-          data x4    (  1) / 0.999902977262729234490529830591582_real64 /
-          data x4    (  2) / 0.997989895986678745427496322365960_real64 /
-          data x4    (  3) / 0.992175497860687222808523352251425_real64 /
-          data x4    (  4) / 0.981358163572712773571916941623894_real64 /
-          data x4    (  5) / 0.965057623858384619128284110607926_real64 /
-          data x4    (  6) / 0.943167613133670596816416634507426_real64 /
-          data x4    (  7) / 0.915806414685507209591826430720050_real64 /
-          data x4    (  8) / 0.883221657771316501372117548744163_real64 /
-          data x4    (  9) / 0.845710748462415666605902011504855_real64 /
-          data x4    ( 10) / 0.803557658035230982788739474980964_real64 /
-          data x4    ( 11) / 0.757005730685495558328942793432020_real64 /
-          data x4    ( 12) / 0.706273209787321819824094274740840_real64 /
-          data x4    ( 13) / 0.651589466501177922534422205016736_real64 /
-          data x4    ( 14) / 0.593223374057961088875273770349144_real64 /
-          data x4    ( 15) / 0.531493605970831932285268948562671_real64 /
-          data x4    ( 16) / 0.466763623042022844871966781659270_real64 /
-          data x4    ( 17) / 0.399424847859218804732101665817923_real64 /
-          data x4    ( 18) / 0.329874877106188288265053371824597_real64 /
-          data x4    ( 19) / 0.258503559202161551802280975429025_real64 /
-          data x4    ( 20) / 0.185695396568346652015917141167606_real64 /
-          data x4    ( 21) / 0.111842213179907468172398359241362_real64 /
-          data x4    ( 22) / 0.037352123394619870814998165437704_real64 /
-          data w87a  (  1) / 0.008148377384149172900002878448190_real64 /
-          data w87a  (  2) / 0.018761438201562822243935059003794_real64 /
-          data w87a  (  3) / 0.027347451050052286161582829741283_real64 /
-          data w87a  (  4) / 0.033677707311637930046581056957588_real64 /
-          data w87a  (  5) / 0.036935099820427907614589586742499_real64 /
-          data w87a  (  6) / 0.002884872430211530501334156248695_real64 /
-          data w87a  (  7) / 0.013685946022712701888950035273128_real64 /
-          data w87a  (  8) / 0.023280413502888311123409291030404_real64 /
-          data w87a  (  9) / 0.030872497611713358675466394126442_real64 /
-          data w87a  ( 10) / 0.035693633639418770719351355457044_real64 /
-          data w87a  ( 11) / 0.000915283345202241360843392549948_real64 /
-          data w87a  ( 12) / 0.005399280219300471367738743391053_real64 /
-          data w87a  ( 13) / 0.010947679601118931134327826856808_real64 /
-          data w87a  ( 14) / 0.016298731696787335262665703223280_real64 /
-          data w87a  ( 15) / 0.021081568889203835112433060188190_real64 /
-          data w87a  ( 16) / 0.025370969769253827243467999831710_real64 /
-          data w87a  ( 17) / 0.029189697756475752501446154084920_real64 /
-          data w87a  ( 18) / 0.032373202467202789685788194889595_real64 /
-          data w87a  ( 19) / 0.034783098950365142750781997949596_real64 /
-          data w87a  ( 20) / 0.036412220731351787562801163687577_real64 /
-          data w87a  ( 21) / 0.037253875503047708539592001191226_real64 /
-          data w87b  (  1) / 0.000274145563762072350016527092881_real64 /
-          data w87b  (  2) / 0.001807124155057942948341311753254_real64 /
-          data w87b  (  3) / 0.004096869282759164864458070683480_real64 /
-          data w87b  (  4) / 0.006758290051847378699816577897424_real64 /
-          data w87b  (  5) / 0.009549957672201646536053581325377_real64 /
-          data w87b  (  6) / 0.012329447652244853694626639963780_real64 /
-          data w87b  (  7) / 0.015010447346388952376697286041943_real64 /
-          data w87b  (  8) / 0.017548967986243191099665352925900_real64 /
-          data w87b  (  9) / 0.019938037786440888202278192730714_real64 /
-          data w87b  ( 10) / 0.022194935961012286796332102959499_real64 /
-          data w87b  ( 11) / 0.024339147126000805470360647041454_real64 /
-          data w87b  ( 12) / 0.026374505414839207241503786552615_real64 /
-          data w87b  ( 13) / 0.028286910788771200659968002987960_real64 /
-          data w87b  ( 14) / 0.030052581128092695322521110347341_real64 /
-          data w87b  ( 15) / 0.031646751371439929404586051078883_real64 /
-          data w87b  ( 16) / 0.033050413419978503290785944862689_real64 /
-          data w87b  ( 17) / 0.034255099704226061787082821046821_real64 /
-          data w87b  ( 18) / 0.035262412660156681033782717998428_real64 /
-          data w87b  ( 19) / 0.036076989622888701185500318003895_real64 /
-          data w87b  ( 20) / 0.036698604498456094498018047441094_real64 /
-          data w87b  ( 21) / 0.037120549269832576114119958413599_real64 /
-          data w87b  ( 22) / 0.037334228751935040321235449094698_real64 /
-          data w87b  ( 23) / 0.037361073762679023410321241766599_real64 /
+          data x4    (  1) / 0.999902977262729234490529830591582_float64 /
+          data x4    (  2) / 0.997989895986678745427496322365960_float64 /
+          data x4    (  3) / 0.992175497860687222808523352251425_float64 /
+          data x4    (  4) / 0.981358163572712773571916941623894_float64 /
+          data x4    (  5) / 0.965057623858384619128284110607926_float64 /
+          data x4    (  6) / 0.943167613133670596816416634507426_float64 /
+          data x4    (  7) / 0.915806414685507209591826430720050_float64 /
+          data x4    (  8) / 0.883221657771316501372117548744163_float64 /
+          data x4    (  9) / 0.845710748462415666605902011504855_float64 /
+          data x4    ( 10) / 0.803557658035230982788739474980964_float64 /
+          data x4    ( 11) / 0.757005730685495558328942793432020_float64 /
+          data x4    ( 12) / 0.706273209787321819824094274740840_float64 /
+          data x4    ( 13) / 0.651589466501177922534422205016736_float64 /
+          data x4    ( 14) / 0.593223374057961088875273770349144_float64 /
+          data x4    ( 15) / 0.531493605970831932285268948562671_float64 /
+          data x4    ( 16) / 0.466763623042022844871966781659270_float64 /
+          data x4    ( 17) / 0.399424847859218804732101665817923_float64 /
+          data x4    ( 18) / 0.329874877106188288265053371824597_float64 /
+          data x4    ( 19) / 0.258503559202161551802280975429025_float64 /
+          data x4    ( 20) / 0.185695396568346652015917141167606_float64 /
+          data x4    ( 21) / 0.111842213179907468172398359241362_float64 /
+          data x4    ( 22) / 0.037352123394619870814998165437704_float64 /
+          data w87a  (  1) / 0.008148377384149172900002878448190_float64 /
+          data w87a  (  2) / 0.018761438201562822243935059003794_float64 /
+          data w87a  (  3) / 0.027347451050052286161582829741283_float64 /
+          data w87a  (  4) / 0.033677707311637930046581056957588_float64 /
+          data w87a  (  5) / 0.036935099820427907614589586742499_float64 /
+          data w87a  (  6) / 0.002884872430211530501334156248695_float64 /
+          data w87a  (  7) / 0.013685946022712701888950035273128_float64 /
+          data w87a  (  8) / 0.023280413502888311123409291030404_float64 /
+          data w87a  (  9) / 0.030872497611713358675466394126442_float64 /
+          data w87a  ( 10) / 0.035693633639418770719351355457044_float64 /
+          data w87a  ( 11) / 0.000915283345202241360843392549948_float64 /
+          data w87a  ( 12) / 0.005399280219300471367738743391053_float64 /
+          data w87a  ( 13) / 0.010947679601118931134327826856808_float64 /
+          data w87a  ( 14) / 0.016298731696787335262665703223280_float64 /
+          data w87a  ( 15) / 0.021081568889203835112433060188190_float64 /
+          data w87a  ( 16) / 0.025370969769253827243467999831710_float64 /
+          data w87a  ( 17) / 0.029189697756475752501446154084920_float64 /
+          data w87a  ( 18) / 0.032373202467202789685788194889595_float64 /
+          data w87a  ( 19) / 0.034783098950365142750781997949596_float64 /
+          data w87a  ( 20) / 0.036412220731351787562801163687577_float64 /
+          data w87a  ( 21) / 0.037253875503047708539592001191226_float64 /
+          data w87b  (  1) / 0.000274145563762072350016527092881_float64 /
+          data w87b  (  2) / 0.001807124155057942948341311753254_float64 /
+          data w87b  (  3) / 0.004096869282759164864458070683480_float64 /
+          data w87b  (  4) / 0.006758290051847378699816577897424_float64 /
+          data w87b  (  5) / 0.009549957672201646536053581325377_float64 /
+          data w87b  (  6) / 0.012329447652244853694626639963780_float64 /
+          data w87b  (  7) / 0.015010447346388952376697286041943_float64 /
+          data w87b  (  8) / 0.017548967986243191099665352925900_float64 /
+          data w87b  (  9) / 0.019938037786440888202278192730714_float64 /
+          data w87b  ( 10) / 0.022194935961012286796332102959499_float64 /
+          data w87b  ( 11) / 0.024339147126000805470360647041454_float64 /
+          data w87b  ( 12) / 0.026374505414839207241503786552615_float64 /
+          data w87b  ( 13) / 0.028286910788771200659968002987960_float64 /
+          data w87b  ( 14) / 0.030052581128092695322521110347341_float64 /
+          data w87b  ( 15) / 0.031646751371439929404586051078883_float64 /
+          data w87b  ( 16) / 0.033050413419978503290785944862689_float64 /
+          data w87b  ( 17) / 0.034255099704226061787082821046821_float64 /
+          data w87b  ( 18) / 0.035262412660156681033782717998428_float64 /
+          data w87b  ( 19) / 0.036076989622888701185500318003895_float64 /
+          data w87b  ( 20) / 0.036698604498456094498018047441094_float64 /
+          data w87b  ( 21) / 0.037120549269832576114119958413599_float64 /
+          data w87b  ( 22) / 0.037334228751935040321235449094698_float64 /
+          data w87b  ( 23) / 0.037361073762679023410321241766599_float64 /
 
           epmach = epsilon ( epmach )
           uflow = tiny ( uflow )
           !
           !  test on validity of parameters
           !
-          result = 0.0_real64
-          abserr = 0.0_real64
+          result = 0.0_float64
+          abserr = 0.0_float64
           neval = 0
           ier = 6
-          if(epsabs.le.0.0_real64.and.epsrel.lt. max ( 0.5e2_real64*epmach,0.5e-28_real64)) &
+          if(epsabs.le.0.0_float64.and.epsrel.lt. max ( 0.5e2_float64*epmach,0.5e-28_float64)) &
                go to 80
-          hlgth = 0.5_real64*(b-a)
+          hlgth = 0.5_float64*(b-a)
           dhlgth =  abs ( hlgth)
-          centr = 0.5_real64*(b+a)
+          centr = 0.5_float64*(b+a)
           fcentr = f(centr)
           neval = 21
           ier = 1
@@ -3453,7 +3453,7 @@ contains
 
              go to (5,25,45),l
 
-5            res10 = 0.0_real64
+5            res10 = 0.0_float64
              res21 = w21b(6)*fcentr
              resabs = w21b(6)* abs ( fcentr)
 
@@ -3489,7 +3489,7 @@ contains
              !
              result = res21*hlgth
              resabs = resabs*dhlgth
-             reskh = 0.5_real64*res21
+             reskh = 0.5_float64*res21
              resasc = w21b(6)* abs ( fcentr-reskh)
 
              do k = 1,5
@@ -3543,12 +3543,12 @@ contains
 
 65           continue
 
-             if(resasc.ne.0.0_real64.and.abserr.ne.0.0_real64) then
-                abserr = resasc* min (0.1e1_real64,(0.2e3_real64*abserr/resasc)**1.5_real64)
+             if(resasc.ne.0.0_float64.and.abserr.ne.0.0_float64) then
+                abserr = resasc* min (0.1e1_float64,(0.2e3_float64*abserr/resasc)**1.5_float64)
              end if
 
-             if (resabs.gt.uflow/(0.5e2_real64*epmach)) then
-                abserr = max ((epmach*0.5e2_real64)*resabs,abserr)
+             if (resabs.gt.uflow/(0.5e2_float64*epmach)) then
+                abserr = max ((epmach*0.5e2_float64)*resabs,abserr)
              end if
 
              if (abserr.le. max ( epsabs,epsrel* abs ( result))) then
@@ -3597,11 +3597,11 @@ contains
              !                 maxerr points to the nrmax-th largest error
              !                 estimate currently in the list
              !
-             !        ermax  - real(real64)
+             !        ermax  - real(float64)
              !                 nrmax-th largest error estimate
              !                 ermax = elist(maxerr)
              !
-             !        elist  - real(real64)
+             !        elist  - real(float64)
              !                 vector of dimension last containing
              !                 the error estimates
              !
@@ -3619,7 +3619,7 @@ contains
              !
              implicit none
 
-             real(real64) elist,ermax,errmax,errmin
+             real(float64) elist,ermax,errmax,errmin
              integer(int32) i,ibeg,ido,iord,isucc,j,jbnd,jupbn,k,last, &
                   lim
              integer(int32) limit
@@ -3713,11 +3713,11 @@ contains
              !
              implicit none
 
-             real(real64) dqwgtc
-             real(real64) c,p2,p3,p4,x
+             real(float64) dqwgtc
+             real(float64) c,p2,p3,p4,x
              integer(int32) kp
 
-             dqwgtc = 0.1e1_real64 / ( x - c )
+             dqwgtc = 0.1e1_float64 / ( x - c )
 
              return
            end function dqwgtc

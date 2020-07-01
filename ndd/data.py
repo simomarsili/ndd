@@ -97,6 +97,13 @@ class DataArray(Sequence):
         cls = type(self)
         return '%s(data=\n%s\nks=%s\n)' % (cls.__name__, self.data, self.ks)
 
+    def __eq__(self, other):
+        if not isinstance(other, DataArray):
+            return NotImplemented
+        return ((self.data == other.data).all()
+                and (self.ks == other.ks or (self.ks == other.ks).all())
+                and self.k() == other.k())
+
     @property
     def data(self):
         """Data are stored as a p-by-n ndarray."""
@@ -117,10 +124,11 @@ class DataArray(Sequence):
         p, _ = self.shape
         if is_sequence(value):
             if len(value) != p:
-                raise DataArrayError('len(ks) must be equal to p')
+                raise DataArrayError('len(ks) (%r) must be equal to p (%r)' %
+                                     (len(value), p))
             self._ks = value
         else:
-            self._ks = [value] * p
+            self._ks = value * numpy.ones(p)
 
     def counts(self, r=None):
         """Frequency array(s)."""

@@ -1,11 +1,45 @@
+#Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+.pytest_cache/
+
 *~
 *#
-*.pyc
-.cache
-.pytest_cache
-.tox
-ndd.egg-info
-venv
+.libs
 TODO
 MANIFEST
 tests/*
@@ -16,10 +50,12 @@ tests/*
 exts/*
 !exts/*.f90
 !exts/*.pyf
-build/*
-dist/*
 ndd/*.so
 ndd/*.c
+ndd/*.f90
 figs/*
 !tests/*.py
+docs/*
+!exts/bias.f90
+!exts/bias.rst
 
