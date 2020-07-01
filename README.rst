@@ -45,8 +45,14 @@ in the strongly undersampled regime (Equations. 29, 30 in
   >>> entropy(counts)
   7.2072993808389789
 
-.. image:: https://github.com/simomarsili/ndd/blob/restructuredtext/docs/bars.png?raw=true
-  :width: 400
+
+.. image:: ./figs/bars.svg
+   :height: 300px
+   :width: 800 px
+   :scale: 100 %
+   :alt: https://github.com/simomarsili/ndd/blob/master/docs/figs/bars.svg
+   :align: center
+   :target: ./figs/bars.svg
 
 Where to get it
 ===============
