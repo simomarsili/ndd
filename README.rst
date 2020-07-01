@@ -50,7 +50,7 @@ in the strongly undersampled regime (Equations. 29, 30 in
   >>> entropy(counts)
   7.2072993808389789
 
-.. image:: docs/bars.svg
+.. image:: https://github.com/simomarsili/ndd/blob/restructuredtext/docs/bars.png
   :width: 400
   :alt: Alternative text
 
