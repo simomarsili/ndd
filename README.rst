@@ -50,6 +50,10 @@ in the strongly undersampled regime (Equations. 29, 30 in
   >>> entropy(counts)
   7.2072993808389789
 
+.. image:: docs/bars.svg
+  :width: 400
+  :alt: Alternative text
+
 Where to get it
 ===============
 Install using pip::
