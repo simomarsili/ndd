@@ -50,7 +50,7 @@ in the strongly undersampled regime (Equations. 29, 30 in
    :height: 300px
    :width: 800 px
    :scale: 100 %
-   :alt: https://github.com/simomarsili/ndd/blob/master/docs/figs/bars.svg
+   :alt: https://github.com/simomarsili/ndd/blob/restructuredtext/docs/figs/bars.svg
    :align: center
    :target: ./figs/bars.svg
 
