@@ -47,7 +47,6 @@ in the strongly undersampled regime (Equations. 29, 30 in
 
 .. image:: https://github.com/simomarsili/ndd/blob/restructuredtext/docs/bars.png?raw=true
   :width: 400
-  :alt: Alternative text
 
 Where to get it
 ===============
