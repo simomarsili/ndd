@@ -43,8 +43,8 @@ class Counts:
     def fit(self, counts):
         """Fit nk, zk (multiplicities) data."""
         self.nk, self.zk = unique(counts)
-        self._n = unique.counter.n_data
-        self._k1 = unique.counter.k1
+        self._n = numpy.sum(self.zk * self.nk)
+        self._k1 = numpy.sum(self.zk[self.nk > 0])
 
     def random(self, k=1000, n=100):
         """Generate random counts and fit multiplicities."""
