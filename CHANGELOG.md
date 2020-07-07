@@ -1,6 +1,8 @@
 # Change log
 
 ## Unreleased
+
+## [1.9.1] - 2020-07-07
 ### Fixed
 - fix Counts.fit()
 
