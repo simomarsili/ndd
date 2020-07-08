@@ -151,7 +151,7 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
 
     # annotate the entropy function
     entropy.entropy = S
-    entropy.std = err
+    entropy.err = err
     entropy.bounded = err is not None and numpy.isfinite(err)
     if isinstance(estimator, AutoEstimator):
         entropy.estimator = estimator.estimator

@@ -37,12 +37,12 @@ posterior standard deviation (see Eq. 13 in `Archer 2013
 If the alphabet size is unknown or infinite, the ``k`` argument can be omitted
 and the ``entropy`` function will use an upper bound estimate for ``k``, or
 switch to the asymptotic NSB estimator
-in the strongly undersampled regime (Equations. 29, 30 in
+in the strongly undersampled regime (Equations 29, 30 in
 `Nemenman 2011 <https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf>`_) ::
 
   >>> ndd.entropy(counts)  # k is omitted
   2.8130746489179046
-  >>> counts = [1]*100 + [2]*10  # undersampled distribution
+  >>> counts = [1]*100 + [2]*10  # mimic undersampled distribution
   >>> entropy(counts)
   7.2072993808389789
 
