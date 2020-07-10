@@ -11,7 +11,18 @@ import pytest
 
 import ndd
 from make_test_ref import SEED, approx, cases
-from utils import tests_dir
+
+
+def tests_dir():
+    """Return None if no tests dir."""
+    cwd = os.getcwd()
+    basename = os.path.basename(cwd)
+    if basename == 'tests':
+        return cwd
+    tdir = os.path.join(cwd, 'tests')
+    if os.path.exists(tdir):
+        return tdir
+    return None
 
 
 def random_ndarray(n, p, seed):
