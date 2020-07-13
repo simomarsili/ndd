@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 # @dump_on_fail()
-def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
+def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     """
     Bayesian Entropy estimate from an array of counts.
 
@@ -50,35 +50,34 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     2.8060922529931225
 
     The uncertainty in the entropy estimate can be quantified using the
-    posterior standad deviation, that is stored as an attribute of the
-    `entropy()` function:
-    >>> entropy.err
-    0.32429359488122139
+    posterior standard deviation (see Eq. 13 in Archer 2013:
+    https://pillowlab.princeton.edu/pubs/Archer13_MIestim_Entropy.pdf
 
-    If the `k` argument is omitted (the alphabet size can be unknown/infinite)
-    the most appropriate estimator will be selected depending on the sampling
-    regime, and an upper bound estimate for `k` will be used.
+    >>> ndd.entropy(counts, k=100, return_std=True)
+    (2.8060922529931225, 0.11945501149743358)
 
-    >>> counts = [1]*100 + [2]*10
-    >>> entropy(counts)  # `k` is omitted
+    If the alphabet size is unknown or infinite, the `k` argument can be
+    omitted and the `entropy` function will either use an upper bound
+    estimate for `k` or switch to the asymptotic NSB estimator for strongly
+    undersampled distributions (see Equations 29, 30 in Nemenman2011:
+    https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf)
+
+    >>> import ndd
+    >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+    >>> ndd.entropy(counts)  # k is omitted
+    2.8130746489179046
+    >>> counts = [1]*100 + [2]*10  # mimic undersampled distribution
+    >>> ndd.entropy(counts)
     7.2072993808389789
-    >>> entropy.estimator
-    AsymptoticNSB()
-    >>> entropy.err
-    0.3242935948812214
 
-    When the alphabet size is unknown and no coincidences (bins with
+    When the alphabet size is unknown and no coincidences (no bins with
     counts > 1) can be found in the `counts` array, no entropy estimator can
-    give a reasonable estimate. In this case, the the "plugin" estimate will be
-    returned, with entropy.err set to inf.
+    give a reasonable estimate. In this case, the function returns the
+    "plugin" estimate with error set to inf.
 
     >>> counts = [1]*100
-    >>> entropy(counts)
-    4.605170185988092
-    >>> entropy.estimator
-    Plugin(alpha=None)
-    >>> entropy.err
-    inf
+    >>> ndd.entropy(counts, return_std=True)
+    (4.605170185988092, inf)
 
     Parameters
     ----------
@@ -94,11 +93,12 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
         Counts distribution or "multiplicities". If passed, nk contains
         the observed counts values and len(zk) == len(nk).
     estimator : str or entropy estimator obj, optional
-        Check `ndd.entropy_estimators` for the available estimators.
-        Default: NSB estimator.
+        Enforce a specific estimator. Check `ndd.entropy_estimators` for
+        available estimators. Default: use the NSB estimator (or the zeroth
+        order approximation discussed in Nemenman2011 if the distribution is
+        strongly undersampled).
     return_std : boolean, optional
-        If True, also return an approximation for the standard deviation
-        over the entropy posterior.
+        If True, also return the standard deviation over the entropy posterior.
 
     Returns
     -------
@@ -110,20 +110,18 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
 
     Notes
     -----
-    The fit parameters can be retrieved using `entropy` function attributes
-    after a function call:
+    After a call, the fitted parameters can be inspected checking the
+    `entropy.info` dictionary:
 
-    entropy.entropy : float
-        The entropy estimate.
-    entropy.err : float
-        Error bound on the entropy value.
-    entropy.estimator : estimator object
-        The entropy estimator object (sklearn-like Estimator object).
-    entropy.k : int or float or None
-        The alphabet size used for the fit.
-    entropy.bounded : bool
-        If the entropy estimate has error bounds. When no coincidences have
-        occurred in the data, the estimate is unbounded.
+    >>> import ndd
+    >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+    >>> ndd.entropy(counts)
+    2.8130746489179046
+    >>> ndd.entropy.info
+    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': True, 'estimator': NSB(alpha=None), 'k': 6008}  # pylint: disable=line-too-long
+
+    `entropy.info['bounded']` is True if the entropy estimate has error bounds.
+    When no coincidences have occurred in the data, the estimate is unbounded.
 
     """
 
@@ -131,9 +129,6 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
     nk, zk = counts.multiplicities
 
     if estimator is None:
-        estimator = 'NSB'
-
-    if (estimator == 'NSB' or isinstance(estimator, NSB)) and k is None:
         estimator = 'AutoEstimator'
 
     estimator, _ = check_estimator(estimator)
@@ -150,15 +145,16 @@ def entropy(nk, k=None, zk=None, estimator='NSB', return_std=False):
         err = numpy.nan
 
     # annotate the entropy function
-    entropy.entropy = S
-    entropy.err = err
-    entropy.bounded = err is not None and numpy.isfinite(err)
+    entropy.info = {}
+    entropy.info['entropy'] = S
+    entropy.info['err'] = err
+    entropy.info['bounded'] = err is not None and numpy.isfinite(err)
     if isinstance(estimator, AutoEstimator):
-        entropy.estimator = estimator.estimator
-        entropy.k = estimator.k
+        entropy.info['estimator'] = estimator.estimator
+        entropy.info['k'] = estimator.k
     else:
-        entropy.estimator = estimator
-        entropy.k = k
+        entropy.info['estimator'] = estimator
+        entropy.info['k'] = k
 
     if return_std:
         if err is not None and numpy.isnan(err):

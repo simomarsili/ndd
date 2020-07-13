@@ -40,6 +40,8 @@ switch to the asymptotic NSB estimator
 in the strongly undersampled regime (Equations 29, 30 in
 `Nemenman 2011 <https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf>`_) ::
 
+  >>> import ndd
+  >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
   >>> ndd.entropy(counts)  # k is omitted
   2.8130746489179046
   >>> counts = [1]*100 + [2]*10  # mimic undersampled distribution
