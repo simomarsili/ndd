@@ -6,12 +6,14 @@ ndd - Bayesian entropy estimation from discrete data
 .. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
     :target: https://travis-ci.com/simomarsili/ndd
 
-The **ndd** package provides a simple Python interface to an efficient
-implementation of the `Nemenman-Schafee-Bialek (NSB) algorithm
-<https://arxiv.org/abs/physics/0108025>`_,
-a parameter-free, Bayesian entropy estimator for discrete data.
-The NSB algorithm allows entropy estimation when the number of samples is much
-smaller than the number of classes with non-zero probability.
+**ndd** is a Python package for Bayesian entropy estimation from discrete
+data. It provides the ``ndd.entropy`` function, a Bayesian drop-in replacement
+for the ``scipy.stats.entropy`` function from the SciPy library,
+based on an efficient implementation of the
+`Nemenman-Schafee-Bialek (NSB) algorithm
+<https://arxiv.org/abs/physics/0108025>`_.
+Remarkably, The NSB algorithm allows entropy estimation when the number of
+samples is much smaller than the number of classes with non-zero probability.
 
 
 Basic usage
@@ -34,19 +36,16 @@ posterior standard deviation (see Eq. 13 in `Archer 2013
   >>> ndd.entropy(counts, k=100, return_std=True)
   (2.8060922529931225, 0.11945501149743358)
 
-If the alphabet size is unknown or infinite, the ``k`` argument can be omitted
-and the ``entropy`` function will use an upper bound estimate for ``k``, or
-switch to the asymptotic NSB estimator
-in the strongly undersampled regime (Equations 29, 30 in
+If the alphabet size is unknown or countably infinite, the ``k`` argument can
+be omitted and the ``entropy`` function will either use an upper bound estimate
+for ``k``, or switch to the asymptotic NSB estimator for strongly undersampled
+distributions (Equations 29, 30 in
 `Nemenman 2011 <https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf>`_) ::
 
   >>> import ndd
   >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
   >>> ndd.entropy(counts)  # k is omitted
   2.8130746489179046
-  >>> counts = [1]*100 + [2]*10  # mimic undersampled distribution
-  >>> entropy(counts)
-  7.2072993808389789
 
 Where to get it
 ===============

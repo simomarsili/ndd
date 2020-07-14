@@ -38,7 +38,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     """
     Bayesian Entropy estimate from an array of counts.
 
-    The entropy function takes as input a vector of frequency counts `nk`
+    The `entropy` function takes as input a vector of frequency counts `nk`
     (the observed frequencies for a set of classes or states) and an alphabet
     size `k` (the number of classes with non-zero probability, including
     unobserved classes) and returns an entropy estimate (in nats) computed
@@ -56,7 +56,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     >>> ndd.entropy(counts, k=100, return_std=True)
     (2.8060922529931225, 0.11945501149743358)
 
-    If the alphabet size is unknown or countable infinite, the `k` argument
+    If the alphabet size is unknown or countably infinite, the `k` argument
     can be omitted and the function will either use an upper bound
     estimate for `k` or switch to the asymptotic NSB estimator for strongly
     undersampled distributions (see Equations 29, 30 in Nemenman2011:
@@ -70,7 +70,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     When the alphabet size is unknown and no coincidences (no bins with
     counts > 1) can be found in the counts array, no entropy estimator can
     give a reasonable estimate. In this case, the function returns the
-    logarithm of the number of samples with error set to inf.
+    logarithm of the number of samples, and the error is set to inf.
 
     >>> counts = [1]*100
     >>> ndd.entropy(counts, return_std=True)
