@@ -42,7 +42,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     (the observed frequencies for a set of classes or states) and an alphabet
     size `k` (the number of classes with non-zero probability, including
     unobserved classes) and returns an entropy estimate (in nats) computed
-    using the Nemenman-Schafee-Bialek (NSB) algorithm:
+    using the Nemenman-Schafee-Bialek (NSB) algorithm.
 
     >>> import ndd
     >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
@@ -56,8 +56,8 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     >>> ndd.entropy(counts, k=100, return_std=True)
     (2.8060922529931225, 0.11945501149743358)
 
-    If the alphabet size is unknown or infinite, the `k` argument can be
-    omitted and the `entropy` function will either use an upper bound
+    If the alphabet size is unknown or countable infinite, the `k` argument
+    can be omitted and the function will either use an upper bound
     estimate for `k` or switch to the asymptotic NSB estimator for strongly
     undersampled distributions (see Equations 29, 30 in Nemenman2011:
     https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf)
@@ -66,14 +66,11 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
     >>> ndd.entropy(counts)  # k is omitted
     2.8130746489179046
-    >>> counts = [1]*100 + [2]*10  # mimic undersampled distribution
-    >>> ndd.entropy(counts)
-    7.2072993808389789
 
     When the alphabet size is unknown and no coincidences (no bins with
-    counts > 1) can be found in the `counts` array, no entropy estimator can
+    counts > 1) can be found in the counts array, no entropy estimator can
     give a reasonable estimate. In this case, the function returns the
-    "plugin" estimate with error set to inf.
+    logarithm of the number of samples with error set to inf.
 
     >>> counts = [1]*100
     >>> ndd.entropy(counts, return_std=True)
@@ -86,9 +83,9 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     k : int or array-like, optional
         Alphabet size (the number of bins with non-zero probability).
         If an array, set k = numpy.prod(k).
-        Default: use an upper bound estimate for the alphabet size, or
-        switch to the asymptotic NSB estimator in the strongly under-sampled
-        regime.
+        Default: use an upper bound estimate for the alphabet size. If the
+        distribution is strongly undersampled, switch to the asymptotic NSB
+        estimator that can be used even if the alphabet size is unknown.
     zk : array_like, optional
         Counts distribution or "multiplicities". If passed, nk contains
         the observed counts values and len(zk) == len(nk).
