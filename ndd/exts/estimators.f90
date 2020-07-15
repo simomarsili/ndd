@@ -573,6 +573,30 @@ subroutine plugin(n, counts, estimate)
 
 end subroutine plugin
 
+subroutine pmf_plugin(n, pp, estimate)
+  ! plugin estimator for PMF
+  use constants
+  use counter
+  implicit none
+
+  integer, intent(in) :: n
+  real(float64), intent(in) :: pp(n)
+  real(float64),  intent(out) :: estimate
+
+  integer :: i
+  real(float64)   :: pi, nrm
+
+  estimate = 0.0_float64
+  nrm = 0.0_float64
+  do i = 1,size(pp)
+     pi = pp(i)
+     if (pi > 0) estimate = estimate - pi*log(pi)
+     nrm = nrm + pi
+  end do
+  estimate = estimate / nrm + log(nrm)
+
+end subroutine pmf_plugin
+
 subroutine plugin_from_multiplicities(n, nk1, zk1, estimate)
   ! plugin estimator - no prior, no regularization
   use constants

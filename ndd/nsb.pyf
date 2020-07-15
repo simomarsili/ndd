@@ -153,6 +153,13 @@ python module fnsb ! in
             integer dimension(n),intent(in) :: counts
             real(kind=8) intent(out) :: estimate
         end subroutine plugin
+        subroutine pmf_plugin(n,pp,estimate) ! in :fnsb:estimators.f90
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(pp)>=n),depend(pp) :: n=len(pp)
+            real(kind=8) dimension(n),intent(in) :: pp
+            real(kind=8) intent(out) :: estimate
+        end subroutine pmf_plugin
         subroutine plugin_from_multiplicities(n,nk1,zk1,estimate) ! in :fnsb:estimators.f90
             use constants
             use counter
