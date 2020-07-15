@@ -7,7 +7,7 @@ ndd - Bayesian entropy estimation from discrete data
     :target: https://travis-ci.com/simomarsili/ndd
 
 **ndd** is a Python package for Bayesian entropy estimation from discrete
-data. It provides the ``ndd.entropy`` function, a Bayesian drop-in replacement
+data. **ndd** provides the ``ndd.entropy`` function, a Bayesian replacement
 for the ``scipy.stats.entropy`` function from the SciPy library,
 based on an efficient implementation of the
 `Nemenman-Schafee-Bialek (NSB) algorithm

@@ -574,7 +574,7 @@ subroutine plugin(n, counts, estimate)
 end subroutine plugin
 
 subroutine pmf_plugin(n, pp, estimate)
-  ! plugin estimator for PMF
+  ! plugin estimator for PMF; normalize when needed
   use constants
   use counter
   implicit none
