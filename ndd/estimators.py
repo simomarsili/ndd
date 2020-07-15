@@ -291,6 +291,28 @@ class Plugin(EntropyEstimator):
         return self
 
 
+class PMFPlugin(EntropyEstimator):
+    """Entropy from probability mass function array."""
+
+    @check_input
+    def fit(self, nk, k=None, zk=None):
+        """
+        Parameters
+        ----------
+        nk : array-like
+            Probabilities over a set of bins.
+
+        Returns
+        -------
+        float
+            Entropy estimate.
+
+        """
+        self.estimate_ = ndd.fnsb.pmf_plugin(nk)
+        self.err_ = 0
+        return self
+
+
 class MillerMadow(EntropyEstimator):
     """Miller-Madow entropy estimator."""
 
