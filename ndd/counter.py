@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
 """Counts class."""
+import logging
+
 import numpy
 
 import ndd.fnsb
+
+logger = logging.getLogger(__name__)
 
 
 def unique(nk, sort=True):
     """Return nk, zk"""
     counter = ndd.fnsb.counter
     counter.fit(nk)
-    # return a copy
     nk = counter.nk
     zk = counter.zk
     unique.counter = counter
+    # always return a copy
     if sort:
         ids = numpy.argsort(nk)
         nk = nk[ids]
@@ -45,6 +49,14 @@ class Counts:
         self.nk, self.zk = unique(counts)
         self._n = numpy.sum(self.zk * self.nk)
         self._k1 = numpy.sum(self.zk[self.nk > 0])
+
+    @property
+    def normalized(self):
+        """Counts are normalized."""
+        if self.nk is None:
+            return False
+        return (len(self.nk) == 1 and self.nk[0] == 0
+                and numpy.isclose(sum(self.nk), 1))
 
     def random(self, k=1000, n=100):
         """Generate random counts and fit multiplicities."""
