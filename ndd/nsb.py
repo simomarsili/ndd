@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 # @dump_on_fail()
+# pylint: disable=line-too-long
 def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     """
     Bayesian Entropy estimate from an array of counts.
@@ -115,7 +116,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     >>> ndd.entropy(counts)
     2.8130746489179046
     >>> ndd.entropy.info
-    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': True, 'estimator': NSB(alpha=None), 'k': 6008}  # pylint: disable=line-too-long
+    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': True, 'estimator': NSB(alpha=None), 'k': 6008}
 
     `entropy.info['bounded']` is True if the entropy estimate has error bounds.
     When no coincidences have occurred in the data, the estimate is unbounded.
