@@ -1,0 +1,1 @@
+dict(real=dict(float32='float', float64='double'))

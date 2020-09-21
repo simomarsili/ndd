@@ -113,7 +113,9 @@ import pkg_resources
 
 from ndd import package_setup
 from ndd.divergence import DivergenceEstimator
+from ndd.divergence import estimators as divergence_estimators
 from ndd.estimators import EntropyEstimator
+from ndd.estimators import estimators as entropy_estimators
 from ndd.nsb import entropy  # pylint: disable=unused-import
 from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
                      interaction_information, jensen_shannon_divergence,
@@ -133,6 +135,3 @@ __all__ = [
     'histogram',
     'from_data',
 ]
-
-entropy_estimators = list(package_setup.subclasses(EntropyEstimator))
-divergence_estimators = list(package_setup.subclasses(DivergenceEstimator))

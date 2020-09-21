@@ -6,27 +6,46 @@ ndd - Bayesian entropy estimation from discrete data
 .. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
     :target: https://travis-ci.com/simomarsili/ndd
 
-The **ndd** package provides a simple Python interface to an efficient
-implementation of the `Nemenman-Schafee-Bialek (NSB) algorithm
-<https://arxiv.org/abs/physics/0108025>`_,
-a parameter-free, Bayesian entropy estimator for discrete data.
-The NSB algorithm allows entropy estimation when the number of samples is much
-smaller than the number of classes with non-zero probability.
+**ndd** is a Python package for Bayesian entropy estimation from discrete
+data. **ndd** provides the ``ndd.entropy`` function, a Bayesian replacement
+for the ``scipy.stats.entropy`` function from the SciPy library,
+based on an efficient implementation of the
+`Nemenman-Schafee-Bialek (NSB) algorithm
+<https://arxiv.org/abs/physics/0108025>`_.
+Remarkably, The NSB algorithm allows entropy estimation when the number of
+samples is much smaller than the number of classes with non-zero probability.
 
 
 Basic usage
 ===========
 
-The **entropy** function takes as input a vector of **frequency counts**
+The ``entropy`` function takes as input a vector of **frequency counts**
 (the observed frequencies for a set of classes or states) and an **alphabet size**
 (the number of classes with non-zero probability, including unobserved classes)
 and returns an entropy estimate (in nats)::
 
   >>> import ndd
-  >>> counts = [12, 4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
-  >>> entropy_estimate = ndd.entropy(counts, k=100)
-  >>> entropy_estimate
-  2.8246841846955486
+  >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+  >>> ndd.entropy(counts, k=100)
+  2.8060922529931225
+
+The uncertainty in the entropy estimate can be quantified using the
+posterior standard deviation (see Eq. 13 in `Archer 2013
+<https://pillowlab.princeton.edu/pubs/Archer13_MIestim_Entropy.pdf>`_) ::
+
+  >>> ndd.entropy(counts, k=100, return_std=True)
+  (2.8060922529931225, 0.11945501149743358)
+
+If the alphabet size is unknown or countably infinite, the ``k`` argument can
+be omitted and the ``entropy`` function will either use an upper bound estimate
+for ``k``, or switch to the asymptotic NSB estimator for strongly undersampled
+distributions (Equations 29, 30 in
+`Nemenman 2011 <https://nemenmanlab.org/~ilya/images/c/c1/Nemenman_2011b.pdf>`_) ::
+
+  >>> import ndd
+  >>> counts = [4, 12, 4, 5, 3, 1, 5, 1, 2, 2, 2, 2, 11, 3, 4, 12, 12, 1, 2]
+  >>> ndd.entropy(counts)  # k is omitted
+  2.8130746489179046
 
 Where to get it
 ===============
@@ -57,6 +76,35 @@ with pre-compiled extensions. numpy >= 1.16 is needed.
 Changes
 =======
 
+**v.1.9**
+   Changed:
+
+   the ``entropy`` function takes frequency counts (multiplicities) as input
+   via the ``zk`` optional argument.
+
+   if argument ``k`` is omitted, the ``entropy`` function will guess a
+   reasonable alphabet size and select the best estimator for the sampling
+   regime.
+
+**v.1.8.3**
+   Fixed:
+
+   integration for huge cardinalities
+
+**v1.8**
+   Added:
+
+   full Bayesian error estimate (from direct computation of the posterior
+   variance of the entropy)
+
+**v1.7**
+   Changed:
+
+   estimation is much faster (removed unnecessary checks on input counts)
+
+   ``entropy()`` function needs cardinality ``k`` for the default (NSB)
+   estimator
+
 **v1.6.1**
    Changed:
    Fixed numerical integration for large alphabet sizes.
@@ -64,7 +112,7 @@ Changes
 **v1.6**
    Changed:
 
-   The signature of the *entropy* function has been changed to allow
+   The signature of the ``entropy`` function has been changed to allow
    arbitrary entropy estimators. The new signature is::
 
      entropy(pk, k=None, estimator='NSB', return_std=False)

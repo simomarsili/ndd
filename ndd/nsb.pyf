@@ -2,85 +2,293 @@
 ! Note: the context of this file is case sensitive.
 
 python module fnsb ! in
-interface  ! in :fnsb
+    interface  ! in :fnsb
+        module constants ! in :fnsb:estimators.f90
+            integer, parameter,optional :: int32=kind(1)
+            integer, parameter,optional :: float32=kind(1.0)
+            integer, parameter,optional :: float64=kind(1.d0)
+            real(kind=8), parameter,optional :: zero=0.0_float64
+            real(kind=8), parameter,optional :: one=1.0_float64
+            real(kind=8), parameter,optional :: two=2.0_float64
+        end module constants
+        module counter ! in :fnsb:estimators.f90
+            use constants
+            integer, allocatable,dimension(:) :: nk
+            real(kind=8), allocatable,dimension(:) :: zk
+            real(kind=8) :: n_data
+            real(kind=8) :: n_bins
+            real(kind=8) :: k1
+            subroutine counts_reset ! in :fnsb:estimators.f90:counter
+            end subroutine counts_reset
+            subroutine fit(n,ar) ! in :fnsb:estimators.f90:counter
+                integer, optional,intent(in),check(len(ar)>=n),depend(ar) :: n=len(ar)
+                integer dimension(n),intent(in) :: ar
+            end subroutine fit
+            subroutine fit_zk(n,ar,br) ! in :fnsb:estimators.f90:counter
+                integer, optional,intent(in),check(len(ar)>=n),depend(ar) :: n=len(ar)
+                integer dimension(n),intent(in) :: ar
+                integer dimension(n),intent(in),depend(n) :: br
+            end subroutine fit_zk
+            subroutine counts_fit(ar,br) ! in :fnsb:estimators.f90:counter
+                integer dimension(:),intent(in) :: ar
+                integer, optional,dimension(:),intent(in) :: br
+            end subroutine counts_fit
+            subroutine add_empty_bins(alphabet_size) ! in :fnsb:estimators.f90:counter
+                real(kind=8) intent(in) :: alphabet_size
+            end subroutine add_empty_bins
+        end module counter
+        module dirichlet_mod ! in :fnsb:estimators.f90
+            use constants
+            use counter
+            real(kind=8) :: alphabet_size
+            real(kind=8), allocatable,dimension(:) :: phi
+            subroutine initialize(counts,nc,zk1) ! in :fnsb:estimators.f90:dirichlet_mod
+                integer dimension(:),intent(in) :: counts
+                real(kind=8) intent(in) :: nc
+                integer, optional,dimension(:),intent(in) :: zk1
+            end subroutine initialize
+            subroutine finalize ! in :fnsb:estimators.f90:dirichlet_mod
+            end subroutine finalize
+            function log_pna(alpha) ! in :fnsb:estimators.f90:dirichlet_mod
+                real(kind=8) intent(in) :: alpha
+                real(kind=8), pure :: log_pna
+            end function log_pna
+            function log_pna_u(alpha) ! in :fnsb:estimators.f90:dirichlet_mod
+                real(kind=8) intent(in) :: alpha
+                real(kind=8), pure :: log_pna_u
+            end function log_pna_u
+            function alpha_prior(alpha) ! in :fnsb:estimators.f90:dirichlet_mod
+                use gamma_funcs, only: trigamma
+                real(kind=8) intent(in) :: alpha
+                real :: alpha_prior
+            end function alpha_prior
+            function log_weight(alpha) ! in :fnsb:estimators.f90:dirichlet_mod
+                real(kind=8) intent(in) :: alpha
+                integer :: log_weight
+            end function log_weight
+            function h_dir(alpha) ! in :fnsb:estimators.f90:dirichlet_mod
+                use gamma_funcs, only: digamma
+                real(kind=8) intent(in) :: alpha
+                real :: h_dir
+            end function h_dir
+            function h_var(alpha) ! in :fnsb:estimators.f90:dirichlet_mod
+                use gamma_funcs, only: digamma,trigamma
+                real(kind=8) intent(in) :: alpha
+                real(kind=8) :: h_var
+            end function h_var
+            function integrand(alpha,amax,order) ! in :fnsb:estimators.f90:dirichlet_mod
+                use gamma_funcs, only: digamma
+                real(kind=8) intent(in) :: alpha
+                real(kind=8) intent(in) :: amax
+                integer intent(in) :: order
+                real(kind=8) :: integrand
+            end function integrand
+        end module dirichlet_mod
+        module nsb_mod ! in :fnsb:estimators.f90
+            use constants
+            real(kind=8) :: alpha1
+            real(kind=8) :: alpha2
+            real(kind=8) :: log_alpha1
+            real(kind=8) :: log_alpha2
+            real(kind=8) :: amax
+            real(kind=8) :: ascale
+            function log_weight(alpha) ! in :fnsb:estimators.f90:nsb_mod
+                use dirichlet_mod, only: log_pna_u,alpha_prior
+                real(kind=8) intent(in) :: alpha
+                integer :: log_weight
+            end function log_weight
+            subroutine log_weight_d(alpha,logw,dlogw) ! in :fnsb:estimators.f90:nsb_mod
+                use gamma_funcs, only: digamma,trigamma,quadgamma
+                use dirichlet_mod, only: log_pna_u,alpha_prior
+                real(kind=8) intent(in) :: alpha
+                real(kind=8) intent(out) :: logw
+                real(kind=8) intent(out) :: dlogw
+            end subroutine log_weight_d
+            subroutine compute_integration_range ! in :fnsb:estimators.f90:nsb_mod
+                use dirichlet_mod, only: alphabet_size
+            end subroutine compute_integration_range
+            function m_func(x) ! in :fnsb:estimators.f90:nsb_mod
+                use dirichlet_mod, only: integrand
+                real(kind=8) intent(in) :: x
+                real(kind=8) :: m_func
+            end function m_func
+            function m2_func(x) ! in :fnsb:estimators.f90:nsb_mod
+                use dirichlet_mod, only: integrand
+                real(kind=8) intent(in) :: x
+                real(kind=8) :: m2_func
+            end function m2_func
+            function nrm_func(x) ! in :fnsb:estimators.f90:nsb_mod
+                use dirichlet_mod, only: integrand
+                real(kind=8) intent(in) :: x
+                real(kind=8) :: nrm_func
+            end function nrm_func
+            function var_func(x) ! in :fnsb:estimators.f90:nsb_mod
+                use dirichlet_mod, only: log_weight
+                real(kind=8) intent(in) :: x
+                real(kind=8) :: var_func
+            end function var_func
+            subroutine weight_std(std,err) ! in :fnsb:estimators.f90:nsb_mod
+                real(kind=8) intent(out) :: std
+                integer intent(out) :: err
+            end subroutine weight_std
+            subroutine hnsb(estimate,err_estimate,err) ! in :fnsb:estimators.f90:nsb_mod
+                use dirichlet_mod, only: h_dir,h_var
+                real(kind=8) intent(out) :: estimate
+                real(kind=8) intent(out) :: err_estimate
+                integer intent(out) :: err
+            end subroutine hnsb
+            subroutine quad(func,a1,a2,integral,ier) ! in :fnsb:estimators.f90:nsb_mod
+                use quadrature, only: dqag
+                real(kind=8) :: func
+                real(kind=8) intent(in) :: a1
+                real(kind=8) intent(in) :: a2
+                real(kind=8) intent(out) :: integral
+                integer intent(out) :: ier
+            end subroutine quad
+        end module nsb_mod
         subroutine plugin(n,counts,estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
-            integer(4), optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
-            integer(4) dimension(n),intent(in) :: counts
-            real(8) intent(out) :: estimate
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(out) :: estimate
         end subroutine plugin
+        subroutine pmf_plugin(n,pp,estimate) ! in :fnsb:estimators.f90
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(pp)>=n),depend(pp) :: n=len(pp)
+            real(kind=8) dimension(n),intent(in) :: pp
+            real(kind=8) intent(out) :: estimate
+        end subroutine pmf_plugin
+        subroutine plugin_from_multiplicities(n,nk1,zk1,estimate) ! in :fnsb:estimators.f90
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(nk1)>=n),depend(nk1) :: n=len(nk1)
+            integer dimension(n),intent(in) :: nk1
+            integer dimension(n),intent(in),depend(n) :: zk1
+            real(kind=8) intent(out) :: estimate
+        end subroutine plugin_from_multiplicities
         subroutine pseudo(n,counts,nc,alpha,estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
-            integer(4), optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
-            integer(4) dimension(n),intent(in) :: counts
-            integer(4) intent(in) :: nc
-            real(8) intent(in) :: alpha
-            real(8) intent(out) :: estimate
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(in) :: alpha
+            real(kind=8) intent(out) :: estimate
         end subroutine pseudo
-        subroutine dirichlet(n,counts,nc,alpha,estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
-            use dirichlet_mod, only: h_bayes
-            integer(4), optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
-            integer(4) dimension(n),intent(in) :: counts
-            real(8) intent(in) :: nc
-            real(8) intent(in) :: alpha
-            real(8) intent(out) :: estimate
-        end subroutine dirichlet
+        subroutine pseudo_from_multiplicities(n,nk1,zk1,nc,alpha,estimate) ! in :fnsb:estimators.f90
+            use constants
+            use counter
+            integer, optional,intent(in),check(len(nk1)>=n),depend(nk1) :: n=len(nk1)
+            integer dimension(n),intent(in) :: nk1
+            integer dimension(n),intent(in),depend(n) :: zk1
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(in) :: alpha
+            real(kind=8) intent(out) :: estimate
+        end subroutine pseudo_from_multiplicities
+        subroutine ww(n,counts,nc,alpha,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use constants
+            use dirichlet_mod, only: h_dir,h_var
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(in) :: alpha
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
+        end subroutine ww
+        subroutine ww_from_multiplicities(n,nk1,zk1,nc,alpha,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use constants
+            use dirichlet_mod, only: h_dir,h_var
+            integer, optional,intent(in),check(len(nk1)>=n),depend(nk1) :: n=len(nk1)
+            integer dimension(n),intent(in) :: nk1
+            integer dimension(n),intent(in),depend(n) :: zk1
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(in) :: alpha
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
+        end subroutine ww_from_multiplicities
         subroutine nsb(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
+            use constants
+            use dirichlet_mod, only: initialize,finalize
             use nsb_mod, only: compute_integration_range
-            use dirichlet_mod, only: compute_multiplicities,initialize_dirichlet,dirichlet_finalize
-            integer(4), optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
-            integer(4) dimension(n),intent(in) :: counts
-            real(8) intent(in) :: nc
-            real(8) intent(out) :: estimate
-            real(8) intent(out) :: err_estimate
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
         end subroutine nsb
-        subroutine plugin2d(n,m,counts,estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
-            integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
-            integer(4), optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
-            integer(4) dimension(n,m),intent(in) :: counts
-            real(8) dimension(m),intent(out),depend(m) :: estimate
-        end subroutine plugin2d
-        subroutine pseudo2d(n,m,counts,nc,alpha,estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
-            integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
-            integer(4), optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
-            integer(4) dimension(n,m),intent(in) :: counts
-            integer(4) intent(in) :: nc
-            real(8) intent(in) :: alpha
-            real(8) dimension(m),intent(out),depend(m) :: estimate
-        end subroutine pseudo2d
-        subroutine dirichlet2d(n,m,counts,nc,alpha,estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
-            integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
-            integer(4), optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
-            integer(4) dimension(n,m),intent(in) :: counts
-            real(8) intent(in) :: nc
-            real(8) intent(in) :: alpha
-            real(8) dimension(m),intent(out),depend(m) :: estimate
-        end subroutine dirichlet2d
+        subroutine nsb_from_multiplicities(n,nk1,zk1,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use constants
+            use dirichlet_mod, only: initialize,finalize
+            use nsb_mod, only: compute_integration_range
+            integer, optional,intent(in),check(len(nk1)>=n),depend(nk1) :: n=len(nk1)
+            integer dimension(n),intent(in) :: nk1
+            integer dimension(n),intent(in),depend(n) :: zk1
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
+        end subroutine nsb_from_multiplicities
+        subroutine phony_1(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use constants
+            use dirichlet_mod, only: initialize,finalize
+            use nsb_mod, only: compute_integration_range
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
+        end subroutine phony_1
+        subroutine phony_2(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use constants
+            use dirichlet_mod, only: initialize,finalize
+            use nsb_mod, only: compute_integration_range
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
+        end subroutine phony_2
+        subroutine phony_3(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use constants
+            use dirichlet_mod, only: initialize,finalize
+            use nsb_mod, only: compute_integration_range
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
+        end subroutine phony_3
+        subroutine phony_4(n,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
+            use constants
+            use dirichlet_mod, only: initialize,finalize
+            use nsb_mod, only: compute_integration_range
+            integer, optional,intent(in),check(len(counts)>=n),depend(counts) :: n=len(counts)
+            integer dimension(n),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) intent(out) :: estimate
+            real(kind=8) intent(out) :: err_estimate
+        end subroutine phony_4
         subroutine nsb2d(n,m,counts,nc,estimate,err_estimate) ! in :fnsb:estimators.f90
-            use iso_fortran_env
-            integer(4), optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
-            integer(4), optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
-            integer(4) dimension(n,m),intent(in) :: counts
-            real(8) intent(in) :: nc
-            real(8) dimension(m),intent(out),depend(m) :: estimate
-            real(8) dimension(m),intent(out),depend(m) :: err_estimate
+            use constants
+            integer, optional,intent(in),check(shape(counts,0)==n),depend(counts) :: n=shape(counts,0)
+            integer, optional,intent(in),check(shape(counts,1)==m),depend(counts) :: m=shape(counts,1)
+            integer dimension(n,m),intent(in) :: counts
+            real(kind=8) intent(in) :: nc
+            real(kind=8) dimension(m),intent(out),depend(m) :: estimate
+            real(kind=8) dimension(m),intent(out),depend(m) :: err_estimate
         end subroutine nsb2d
         subroutine gamma0(x,y) ! in :fnsb:estimators.f90
-            use iso_fortran_env
+            use constants
             use gamma_funcs, only: digamma
-            real(8) intent(in) :: x
-            real(8) intent(out) :: y
+            real(kind=8) intent(in) :: x
+            real(kind=8) intent(out) :: y
         end subroutine gamma0
         subroutine gamma1(x,y) ! in :fnsb:estimators.f90
-            use iso_fortran_env
+            use constants
             use gamma_funcs, only: trigamma
-            real(8) intent(in) :: x
-            real(8) intent(out) :: y
+            real(kind=8) intent(in) :: x
+            real(kind=8) intent(out) :: y
         end subroutine gamma1
     end interface
 end python module fnsb

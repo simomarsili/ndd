@@ -9,9 +9,10 @@ from abc import ABCMeta, abstractmethod
 import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
-import ndd
 from ndd.estimators import NSB, EntropyEstimator, check_input
+from ndd.estimators import estimators as entropy_estimators
 from ndd.exceptions import NddError
+from ndd.package_setup import subclasses
 
 __all__ = ['DivergenceEstimator', 'JSDivergence']
 
@@ -31,7 +32,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         self.input_data_ndim = 2
 
         estimator_name = type(entropy).__name__
-        if estimator_name not in ndd.entropy_estimators:
+        if estimator_name not in entropy_estimators:
             raise NddError('%s is not a valid entropy estimator' %
                            estimator_name)
 
@@ -43,18 +44,17 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         return self.entropy_estimator.__class__.__name__
 
     @abstractmethod
-    def fit(self, pk, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
-        pk : array_like
+        nk : array_like
             n-by-p array. Different rows correspond to counts from different
             distributions with the same discrete sample space.
-
         k : int, optional
-            Number of bins. k >= p if pk is n-by-p.
+            Number of bins. k >= p if nk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to pk.shape[1].
+            Defaults to nk.shape[1].
 
         Returns
         -------
@@ -64,7 +64,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         Raises
         ------
         CountsError
-            If pk is not a 2D array.
+            If nk is not a 2D array.
 
         """
 
@@ -79,18 +79,17 @@ class JSDivergence(DivergenceEstimator):
     """
 
     @check_input
-    def fit(self, pk, k=None):
+    def fit(self, nk, k=None, zk=None):
         """
         Parameters
         ----------
-        pk : array_like
+        nk : array_like
             n-by-p array. Different rows correspond to counts from different
             distributions with the same discrete sample space.
-
         k : int, optional
-            Number of bins. k >= p if pk is n-by-p.
+            Number of bins. k >= p if nk is n-by-p.
             Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to pk.shape[1].
+            Defaults to nk.shape[1].
 
         Returns
         -------
@@ -100,18 +99,21 @@ class JSDivergence(DivergenceEstimator):
         Raises
         ------
         CountsError
-            If pk is not a 2D array.
+            If nk is not a 2D array.
 
         """
 
-        ws = numpy.float64(pk.sum(axis=1))
+        ws = numpy.float64(nk.sum(axis=1))
         ws /= ws.sum()
         if k is None:
-            k = pk.shape[1]
+            k = nk.shape[1]
         if k == 1:  # single bin
             return PZERO
 
-        self.estimate_ = (self.entropy_estimator(pk.sum(axis=0), k=k) -
+        self.estimate_ = (self.entropy_estimator(nk.sum(axis=0), k=k) -
                           sum(ws[i] * self.entropy_estimator(x, k=k)
-                              for i, x in enumerate(pk)))
+                              for i, x in enumerate(nk)))
         return self
+
+
+estimators = subclasses(DivergenceEstimator)

@@ -1,6 +1,48 @@
 # Change log
 
-## [Unreleased]
+## Unreleased
+
+## [1.9.1] - 2020-07-07
+### Fixed
+- fix Counts.fit()
+
+## [1.9] - 2020-06-25
+### Changed
+- if argument `k` is omitted, the `entropy` function will guess a reasonable
+  alphabet size and select the best estimator for the sampling regime.
+
+## [1.8.4] - 2020-06-24
+### Changed
+- the `entropy` function takes frequency counts (multiplicities) as input via
+  the `zk` optional argument
+- renamed `pk` to `nk`
+- the signature of the *entropy* function is:
+  ```
+  entropy(nk, k=None, zk=None, estimator='NSB', return_std=False)
+  ```
+
+## [1.8.3] - 2020-06-16
+### Fixed
+- integration for large cardinalities
+
+## [1.8] - 2020-06-10
+### Added
+- full Bayesian error estimate (from direct computation of the posterior
+  variance of the entropy)
+
+## [1.7] - 2020-06-09
+### Changed
+- rename version.json to package.json
+- check_pk: elements of input counts array are converted to int32 with no check
+- entropy() function: NSB estimator needs cardinality `k` as input
+- entropy() function: non-flat arrays are valid input counts
+### Fixed
+- robust integration range
+
+## [1.6.4] - 2020-05-07
+### Fixed
+- fix coinformation function for combinations of features
+- fix from_data for scalar inputs
 
 ## [1.6.1] - 2019-08-11
 ### Changed
