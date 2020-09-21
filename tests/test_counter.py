@@ -45,7 +45,7 @@ def test_generator():
 def test_series():
     try:
         from pandas import Series
-    except ModuleNotFoundError:
+    except ImportError:
         assert 1
     else:
         y = Series(X)
