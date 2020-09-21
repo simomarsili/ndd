@@ -13,14 +13,15 @@ def main():
     data = json.load(sys.stdin)
 
     k = None
-    if isinstance(data, dict) and 'counts' in data:
-        counts = data['counts']
+    if isinstance(data, dict) and 'nk' in data:
+        nk = data['nk']
         k = data.get('k', None)
+        zk = data.get('zk', None)
     else:
-        # list of integer counts or an histogram dict
-        counts = data
+        # list of integer counts or histogram dict
+        nk = data
 
-    _ = ndd.entropy(counts, k=k)
+    _ = ndd.entropy(nk, k=k, zk=zk)
     json.dump(ndd.entropy.info, sys.stdout, indent=4)
 
 
