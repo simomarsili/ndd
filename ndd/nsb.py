@@ -117,10 +117,11 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     >>> ndd.entropy(counts)
     2.8130746489179046
     >>> ndd.entropy.info
-    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': True, 'estimator': NSB(alpha=None), 'k': 6008}
+    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': 1, 'estimator': NSB(alpha=None), 'k': 6008}
 
-    `entropy.info['bounded']` is True if the entropy estimate has error bounds.
-    When no coincidences have occurred in the data, the estimate is unbounded.
+    `entropy.info['bounded']` is equal to 1 if the entropy estimate has error
+    bounds, 0 when the estimate is unbounded (when no coincidences have
+    occurred in the data).
 
     """
 
@@ -147,12 +148,12 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     entropy.info = {}
     entropy.info['entropy'] = S
     entropy.info['err'] = err
-    entropy.info['bounded'] = err is not None and numpy.isfinite(err)
+    entropy.info['bounded'] = int(err is not None and numpy.isfinite(err))
     if isinstance(estimator, AutoEstimator):
-        entropy.info['estimator'] = estimator.estimator
+        entropy.info['estimator'] = str(estimator.estimator)
         entropy.info['k'] = estimator.k
     else:
-        entropy.info['estimator'] = estimator
+        entropy.info['estimator'] = str(estimator)
         entropy.info['k'] = k
 
     if return_std:
