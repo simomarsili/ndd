@@ -1,8 +1,10 @@
 # Change log
 
 ## Unreleased
+
+## [1.9.2] - 2020-09-21
 ### Added
-- the `entropy` function correctly handles mappings and generators as input.
+- the `entropy` function handles mappings and generators as input counts.
 
 ## [1.9.1] - 2020-07-07
 ### Fixed
