@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Counts class."""
 import logging
+from collections.abc import Mapping, MappingView, Sequence
 
 import numpy
 
@@ -27,8 +28,31 @@ def unique(nk, sort=True):
     return nk, zk
 
 
+def to_array(counts):
+    """Convert input to counts array."""
+    if isinstance(counts, (Mapping, MappingView)):
+        counts = list(counts.values())
+    if not isinstance(counts, Sequence):
+        counts = list(counts)
+    return numpy.asarray(counts)
+
+
 class Counts:
-    """Statistics from counts"""
+    """
+    Statistics from counts.
+
+    Parameters
+    ----------
+    nk : array
+        Observed counts values.
+    zk : array
+        Frequency of the nk elements.
+    n : int
+        Total number of samples.
+    k1 : int
+        Number of bins with counts > 0.
+
+    """
 
     def __init__(self, nk=None, zk=None):
         self.nk = None
@@ -37,15 +61,16 @@ class Counts:
         self._k1 = None
         self.counts = None
         if nk is not None:
-            self.nk = numpy.asarray(nk)
+            self.nk = to_array(nk)
             if zk is None:
                 self.counts = self.nk
                 self.fit(self.nk)
         if zk is not None:
-            self.zk = numpy.asarray(zk)
+            self.zk = to_array(zk)
 
     def fit(self, counts):
         """Fit nk, zk (multiplicities) data."""
+        counts = to_array(counts)
         self.nk, self.zk = unique(counts)
         self._n = numpy.sum(self.zk * self.nk)
         self._k1 = numpy.sum(self.zk[self.nk > 0])

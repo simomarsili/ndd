@@ -79,8 +79,9 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
 
     Parameters
     ----------
-    nk : array-like
-        The number of occurrences of a set of bins.
+    nk : array-like or mapping
+        The number of occurrences of a set of bins. For mappings
+        use the dictionary values `nk.values()` as counts.
     k : int or array-like, optional
         Alphabet size (the number of bins with non-zero probability).
         If an array, set k = numpy.prod(k).

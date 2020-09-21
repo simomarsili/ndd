@@ -13,6 +13,9 @@ from ndd.counter import Counts, unique
 
 numpy.random.seed(SEED)
 
+P = 100
+X = numpy.random.randint(2, size=P)
+
 
 @pytest.fixture(params=product([10, 100, 1000], [10, 100, 1000]))
 def data(request):
@@ -27,3 +30,23 @@ def test_fcounter(data):
 
 def test_unique(data):
     assert Counts(*unique(nk=data.counts, sort=True)) == data
+
+
+def test_mapping():
+    y = dict(zip(range(P), X))
+    assert Counts(X) == Counts(y)
+
+
+def test_generator():
+    y = (n for n in X)
+    assert Counts(X) == Counts(y)
+
+
+def test_series():
+    try:
+        from pandas import Series
+    except ModuleNotFoundError:
+        assert 1
+    else:
+        y = Series(X)
+        assert Counts(X) == Counts(y)
