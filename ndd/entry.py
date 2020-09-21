@@ -1,35 +1,27 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016,2017 Simone Marsili
-# All rights reserved.
+# Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from builtins import (  # pylint: disable=redefined-builtin, unused-import
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super,
-    filter, map, zip)
+"""Entry points. """
 
 
 def main():
+    """ndd script."""
     import sys
     import json
     import ndd
-    """
-    with open(sys.stdin, 'r') as f:
-        data = json.load(f)
-        print(data)
-    """
     # load data from json file
-    histogram = json.load(sys.stdin)
-    entropy, error = ndd.entropy(list(histogram.values()), return_std=True)
-    json.dump(
-        {'entropy': entropy,
-         'error': error
-        },
-        sys.stdout,
-        indent=4
-    )
+    data = json.load(sys.stdin)
+
+    k = None
+    if isinstance(data, dict) and 'counts' in data:
+        counts = data['counts']
+        k = data.get('k', None)
+    else:
+        # list of integer counts or an histogram dict
+        counts = data
+
+    _ = ndd.entropy(counts, k=k)
+    json.dump(ndd.entropy.info, sys.stdout, indent=4)
 
 
 if __name__ == '__main__':
