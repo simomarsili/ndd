@@ -5,6 +5,7 @@
 import json
 import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
 
 import ndd
 
@@ -14,6 +15,16 @@ available_estimators = ', '.join(ndd.entropy_estimators.keys())
 def parse_args():
     """Parse command line options."""
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument('-i',
+                        '--input_file',
+                        type=str,
+                        help='Input file; defaults to stdin.',
+                        default=None)
+    parser.add_argument('-o',
+                        '--output_file',
+                        type=str,
+                        help='Output file; defaults to stdout.',
+                        default=None)
     parser.add_argument('-k',
                         '--alphabet_size',
                         type=float,
@@ -38,7 +49,11 @@ def main():
 
     args = parse_args()
 
-    data = json.load(sys.stdin)
+    if args.input_file is None:
+        data = json.load(sys.stdin)
+    else:
+        with open(Path(args.input_file), 'r') as fp:
+            data = json.load(fp)
 
     k = args.alphabet_size
     zk = None
@@ -65,7 +80,12 @@ def main():
         estimator = None
 
     _ = ndd.entropy(nk, k=k, zk=zk, estimator=estimator)
-    json.dump(ndd.entropy.info, sys.stdout, indent=4)
+
+    if args.output_file is None:
+        json.dump(ndd.entropy.info, sys.stdout, indent=4)
+    else:
+        with open(Path(args.output_file), 'w') as fp:
+            json.dump(ndd.entropy.info, fp, indent=4)
 
 
 if __name__ == '__main__':
