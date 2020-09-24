@@ -1,11 +1,25 @@
 # -*- coding: utf-8 -*-
 # Author: Simone Marsili <simomarsili@gmail.com>
 # License: BSD 3 clause
-"""Entry points. """
+"""
+Entropy estimate from frequency counts data.
+
+The input file must be a JSON file containing either:
+* a list of integer counts:
+  [1, 2, 3, 4]
+* a dictionary mapping class labels to integer counts:
+  {"a": 1, "b": 2, "c": 3, "d": 4}
+* a dictionary storing counts either as a list/dict and
+  (optionally) the alphabet size:
+  {
+      "nk": [1, 2, 3, 4],
+      "k": 100
+  }
+
+"""
 import json
 import sys
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from pathlib import Path
+from argparse import ArgumentParser, FileType, RawDescriptionHelpFormatter
 
 import ndd
 
@@ -14,32 +28,35 @@ available_estimators = ', '.join(ndd.entropy_estimators.keys())
 
 def parse_args():
     """Parse command line options."""
-    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter)
+    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+                            description=__doc__)
     parser.add_argument('-i',
                         '--input_file',
-                        type=str,
-                        help='JSON input file; defaults to stdin.',
-                        default=None)
+                        nargs='?',
+                        type=FileType('r'),
+                        default=sys.stdin)
     parser.add_argument('-o',
                         '--output_file',
-                        type=str,
-                        help='Output file; defaults to stdout.',
-                        default=None)
+                        nargs='?',
+                        type=FileType('w'),
+                        default=sys.stdout)
     parser.add_argument('-k',
                         '--alphabet_size',
                         type=float,
-                        help='alphabet size (override value in input file)',
+                        help='alphabet size (override value in input file).',
                         default=None)
     parser.add_argument('-e',
                         '--estimator',
                         type=str,
                         help='Use a specific estimator (available: '
-                        '%s)' % available_estimators,
+                        '%s.)' % available_estimators,
                         default=None)
     parser.add_argument('-a',
                         '--alpha',
                         type=float,
-                        help='concentration parameter/pseudocounts',
+                        help='Concentration parameter/pseudocounts '
+                        '(only if a specific estimator is passed as '
+                        'an argument).',
                         default=None)
     return parser.parse_args()
 
@@ -79,23 +96,15 @@ def main():
     """ndd script."""
 
     args = parse_args()
-
-    if args.input_file is None:
-        data = json.load(sys.stdin)
-    else:
-        with open(Path(args.input_file), 'r') as fp:
-            data = json.load(fp)
-
-    info = compute_estimate(data,
-                            k=args.alphabet_size,
-                            estimator=args.estimator,
-                            alpha=args.alpha)
-
-    if args.output_file is None:
-        json.dump(info, sys.stdout, indent=4)
-    else:
-        with open(Path(args.output_file), 'w') as fp:
-            json.dump(info, fp, indent=4)
+    try:
+        data = json.load(args.input_file)
+    except json.decoder.JSONDecodeError:
+        raise ndd.exceptions.NddError('Input file must be a valid JSON file.')
+    result = compute_estimate(data,
+                              k=args.alphabet_size,
+                              estimator=args.estimator,
+                              alpha=args.alpha)
+    json.dump(result, args.output_file, indent=4)
 
 
 if __name__ == '__main__':
