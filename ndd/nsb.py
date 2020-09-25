@@ -125,7 +125,11 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
 
     """
 
-    counts = Counts(nk=nk, zk=zk)
+    if zk is None:
+        counts = Counts().fit(nk)
+    else:
+        counts = Counts(nk=nk, zk=zk)
+
     nk, zk = counts.multiplicities
 
     if estimator is None:

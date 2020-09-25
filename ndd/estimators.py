@@ -522,7 +522,10 @@ class AsymptoticNSB(EntropyEstimator):
             No coincindences.
 
         """
-        counts = Counts(nk=nk, zk=zk)
+        if zk is None:
+            counts = Counts().fit(nk)
+        else:
+            counts = Counts(nk=nk, zk=zk)
 
         if not counts.coincidences:
             raise NddError('AsymptoticNSB estimator: no coincidences '
@@ -641,7 +644,10 @@ class AutoEstimator(EntropyEstimator):
             self.estimator = NSB()
             return
 
-        counts = Counts(nk=nk, zk=zk)
+        if zk is None:
+            counts = Counts().fit(nk)
+        else:
+            counts = Counts(nk=nk, zk=zk)
 
         if not counts.coincidences:  # has coincidences?
             logging.warning(

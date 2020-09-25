@@ -89,38 +89,34 @@ class Counts:
     Parameters
     ----------
     nk : array-like
-        The number of occurrences of a set of bins.
+        Unique frequencies in a counts array.
+    zk : array_like, optional
+        Frequencies distribution or "multiplicities".
+        Must be len(zk) == len(nk).
     k : int or array-like, optional
         Alphabet size (the number of bins with non-zero probability).
         Must be >= len(nk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
         Default: k = sum(nk > 0)
-    zk : array_like, optional
-        Counts distribution or "multiplicities". If passed, nk contains
-        the observed counts values.
-    n : int
-        Total number of samples.
-    k1 : int
-        Number of bins with counts > 0.
 
     """
 
-    def __init__(self, *, nk=None, k=None, zk=None):
+    def __init__(self, *, nk=None, zk=None, k=None):
         self.nk = None
         self.k = None
         self.zk = None
         self._n = None
         self._k1 = None
         self.counts = None
+        if (nk is None) != (zk is None):
+            raise NddError('nk and zk should be passed together.')
         if nk is not None:
             self.nk = to_array(nk)
-            if zk is None:
-                self.counts = self.nk
-                self.fit(self.nk)
+            self.zk = to_array(zk)
+            self._n = numpy.sum(self.zk * self.nk)
+            self._k1 = numpy.sum(self.zk[self.nk > 0])
         if k is not None:
             self.k = check_k(k)
-        if zk is not None:
-            self.zk = to_array(zk)
 
     def __repr__(self):
         return 'Counts(nk=%r, k=%r, zk=%r)' % (self.nk, self.k, self.zk)
@@ -135,11 +131,12 @@ class Counts:
             indent=4)
 
     def fit(self, counts):
-        """Fit nk, zk (multiplicities) data."""
+        """Fit nk, zk (multiplicities) from counts array."""
         counts = to_array(counts)
         self.nk, self.zk = unique(counts)
         self._n = numpy.sum(self.zk * self.nk)
         self._k1 = numpy.sum(self.zk[self.nk > 0])
+        return self
 
     @property
     def normalized(self):

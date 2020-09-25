@@ -35,12 +35,12 @@ def test_unique(data):
 
 def test_mapping():
     y = dict(zip(range(P), X))
-    assert Counts(nk=X) == Counts(nk=y)
+    assert Counts().fit(X) == Counts().fit(y)
 
 
 def test_generator():
     y = (n for n in X)
-    assert Counts(nk=X) == Counts(nk=y)
+    assert Counts().fit(X) == Counts().fit(y)
 
 
 def test_series():
@@ -50,4 +50,4 @@ def test_series():
         assert 1
     else:
         y = Series(X)
-        assert Counts(nk=X) == Counts(nk=y)
+        assert Counts().fit(X) == Counts().fit(y)
