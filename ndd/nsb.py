@@ -9,7 +9,7 @@ from itertools import combinations
 
 import numpy
 
-from ndd.counter import Counts
+from ndd.counts import Counts
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import guess_alphabet_size  # pylint: disable=unused-import

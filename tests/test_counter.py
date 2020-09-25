@@ -9,7 +9,7 @@ import pytest
 
 from make_test_ref import SEED
 from ndd import fnsb
-from ndd.counter import Counts, unique
+from ndd.counts import Counts, unique
 
 numpy.random.seed(SEED)
 

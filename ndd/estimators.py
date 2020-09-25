@@ -11,7 +11,7 @@ from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
 from ndd.base import BaseEstimator
-from ndd.counter import Counts
+from ndd.counts import Counts
 from ndd.exceptions import AlphaError, CardinalityError, NddError
 from ndd.package_setup import subclasses
 
