@@ -88,14 +88,16 @@ class Counts:
 
     Parameters
     ----------
-    nk : array
-        Observed counts values.
-    k : int or array-like
+    nk : array-like
+        The number of occurrences of a set of bins.
+    k : int or array-like, optional
         Alphabet size (the number of bins with non-zero probability).
         Must be >= len(nk). A float is a valid input for whole numbers
         (e.g. k=1.e3). If an array, set k = numpy.prod(k).
-    zk : array
-        Frequency of the nk elements.
+        Default: k = sum(nk > 0)
+    zk : array_like, optional
+        Counts distribution or "multiplicities". If passed, nk contains
+        the observed counts values.
     n : int
         Total number of samples.
     k1 : int
@@ -103,7 +105,7 @@ class Counts:
 
     """
 
-    def __init__(self, nk=None, *, k=None, zk=None):
+    def __init__(self, *, nk=None, k=None, zk=None):
         self.nk = None
         self.k = None
         self.zk = None

@@ -11,8 +11,8 @@ from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
 from ndd.base import BaseEstimator
-from ndd.counts import Counts
-from ndd.exceptions import AlphaError, CardinalityError, NddError
+from ndd.counts import Counts, check_k
+from ndd.exceptions import AlphaError, NddError
 from ndd.package_setup import subclasses
 
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
         nk = numpy.asarray(nk)
         if zk is not None:
             zk = numpy.asarray(zk)
-        k = obj.check_k(k)
+        k = check_k(k)
         return fit_function(obj, nk, k=k, zk=zk)
 
     return wrapper
@@ -148,50 +148,6 @@ class EntropyEstimator(BaseEstimator, ABC):
         if a <= 0:
             raise AlphaError(error_msg)
         return a
-
-    @staticmethod
-    def check_k(k):
-        """
-        if k is an integer, just check
-        if an array set k = prod(k)
-        if None, return
-
-        Raises
-        ------
-        CardinalityError
-            If k is not valid (wrong type, negative, too large...)
-
-        """
-        MAX_LOGK = 200 * numpy.log(2)
-
-        if k is None:
-            return k
-        try:
-            k = numpy.float64(k)
-        except ValueError:
-            raise CardinalityError('%r is not a valid cardinality' % k)
-        if k.ndim:
-            # if k is a sequence, set k = prod(k)
-            if k.ndim > 1:
-                raise CardinalityError('k must be a scalar or 1D array')
-            logk = numpy.sum(numpy.log(x) for x in k)
-            if logk > MAX_LOGK:
-                # too large a number; backoff to n_bins?
-                # TODO: log warning
-                raise CardinalityError('k is too large (%e).'
-                                       'Must be < 2^200 ' % numpy.exp(logk))
-            k = numpy.prod(k)
-        else:
-            # if a scalar check size
-            if k <= 0:
-                raise CardinalityError('k must be > 0 (%r)' % k)
-            if numpy.log(k) > MAX_LOGK:
-                raise CardinalityError('k is too large (%e).'
-                                       'Must be < 2^200 ' % k)
-        if not k.is_integer():
-            raise CardinalityError('k must be a whole number (got %r).' % k)
-
-        return k
 
     @abstractmethod
     def fit(self, nk, k=None, zk=None):
@@ -685,7 +641,7 @@ class AutoEstimator(EntropyEstimator):
             self.estimator = NSB()
             return
 
-        counts = Counts(nk, zk=zk)
+        counts = Counts(nk=nk, zk=zk)
 
         if not counts.coincidences:  # has coincidences?
             logging.warning(

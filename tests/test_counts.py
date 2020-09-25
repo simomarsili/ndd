@@ -25,22 +25,22 @@ def data(request):
 def test_fcounter(data):
     fcounter = fnsb.counter
     fcounter.fit(ar=data.counts)
-    assert Counts(fcounter.nk, zk=fcounter.zk) == data
+    assert Counts(nk=fcounter.nk, zk=fcounter.zk) == data
 
 
 def test_unique(data):
     nk, zk = unique(nk=data.counts, sort=True)
-    assert Counts(nk, zk=zk) == data
+    assert Counts(nk=nk, zk=zk) == data
 
 
 def test_mapping():
     y = dict(zip(range(P), X))
-    assert Counts(X) == Counts(y)
+    assert Counts(nk=X) == Counts(nk=y)
 
 
 def test_generator():
     y = (n for n in X)
-    assert Counts(X) == Counts(y)
+    assert Counts(nk=X) == Counts(nk=y)
 
 
 def test_series():
@@ -50,4 +50,4 @@ def test_series():
         assert 1
     else:
         y = Series(X)
-        assert Counts(X) == Counts(y)
+        assert Counts(nk=X) == Counts(nk=y)
