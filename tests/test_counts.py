@@ -25,11 +25,12 @@ def data(request):
 def test_fcounter(data):
     fcounter = fnsb.counter
     fcounter.fit(ar=data.counts)
-    assert Counts(fcounter.nk, fcounter.zk) == data
+    assert Counts(fcounter.nk, zk=fcounter.zk) == data
 
 
 def test_unique(data):
-    assert Counts(*unique(nk=data.counts, sort=True)) == data
+    nk, zk = unique(nk=data.counts, sort=True)
+    assert Counts(nk, zk=zk) == data
 
 
 def test_mapping():

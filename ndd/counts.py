@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """Counts class."""
+import json
 import logging
 from collections.abc import Mapping, MappingView, Sequence
 
 import numpy
 
 import ndd.fnsb
+from ndd.exceptions import NddError
 
 logger = logging.getLogger(__name__)
 
@@ -37,14 +39,61 @@ def to_array(counts):
     return numpy.asarray(counts)
 
 
+def check_k(k):
+    """
+    if k is an integer, just check
+    if an array set k = prod(k)
+    if None, return
+
+    Raises
+    ------
+    NddError
+        If k is not valid (wrong type, negative, too large...)
+
+    """
+    MAX_LOGK = 200 * numpy.log(2)
+
+    if k is None:
+        return k
+    try:
+        k = numpy.float64(k)
+    except ValueError:
+        raise NddError('%r is not a valid cardinality' % k)
+    if k.ndim:
+        # if k is a sequence, set k = prod(k)
+        if k.ndim > 1:
+            raise NddError('k must be a scalar or 1D array')
+        logk = numpy.sum(numpy.log(x) for x in k)
+        if logk > MAX_LOGK:
+            # too large a number; backoff to n_bins?
+            # TODO: log warning
+            raise NddError('k is too large (%e).'
+                           'Must be < 2^200 ' % numpy.exp(logk))
+        k = numpy.prod(k)
+    else:
+        # if a scalar check size
+        if k <= 0:
+            raise NddError('k must be > 0 (%r)' % k)
+        if numpy.log(k) > MAX_LOGK:
+            raise NddError('k is too large (%e).' 'Must be < 2^200 ' % k)
+    if not k.is_integer():
+        raise NddError('k must be a whole number (got %r).' % k)
+
+    return k
+
+
 class Counts:
     """
-    Statistics from counts.
+    Contains counts data and statistics.
 
     Parameters
     ----------
     nk : array
         Observed counts values.
+    k : int or array-like
+        Alphabet size (the number of bins with non-zero probability).
+        Must be >= len(nk). A float is a valid input for whole numbers
+        (e.g. k=1.e3). If an array, set k = numpy.prod(k).
     zk : array
         Frequency of the nk elements.
     n : int
@@ -54,8 +103,9 @@ class Counts:
 
     """
 
-    def __init__(self, nk=None, zk=None):
+    def __init__(self, nk=None, *, k=None, zk=None):
         self.nk = None
+        self.k = None
         self.zk = None
         self._n = None
         self._k1 = None
@@ -65,8 +115,22 @@ class Counts:
             if zk is None:
                 self.counts = self.nk
                 self.fit(self.nk)
+        if k is not None:
+            self.k = check_k(k)
         if zk is not None:
             self.zk = to_array(zk)
+
+    def __repr__(self):
+        return 'Counts(nk=%r, k=%r, zk=%r)' % (self.nk, self.k, self.zk)
+
+    def __str__(self):
+        return json.dumps(
+            {
+                'nk': [int(x) for x in self.nk],
+                'k': self.k,
+                'zk': [int(x) for x in self.zk]
+            },
+            indent=4)
 
     def fit(self, counts):
         """Fit nk, zk (multiplicities) data."""
