@@ -112,6 +112,7 @@ and interesting links:
 import pkg_resources
 
 from ndd import package_setup
+from ndd.counts import Counts
 from ndd.divergence import DivergenceEstimator
 from ndd.divergence import estimators as divergence_estimators
 from ndd.estimators import EntropyEstimator
