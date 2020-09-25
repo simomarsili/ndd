@@ -112,7 +112,7 @@ and interesting links:
 import pkg_resources
 
 from ndd import package_setup
-from ndd.counts import Counts
+from ndd.counts import CountsDistribution
 from ndd.divergence import DivergenceEstimator
 from ndd.divergence import estimators as divergence_estimators
 from ndd.estimators import EntropyEstimator
@@ -126,13 +126,7 @@ package_name = package_setup.package_name
 package_path = package_setup.package_path
 __version__ = pkg_resources.require(package_name)[0].version
 __all__ = [
-    'entropy',
-    'jensen_shannon_divergence',
-    'kullback_leibler_divergence',
-    'interaction_information',
-    'coinformation',
-    'mutual_information',
-    'conditional_entropy',
-    'histogram',
-    'from_data',
+    'coinformation', 'conditional_entropy', 'entropy', 'from_data',
+    'histogram', 'interaction_information', 'jensen_shannon_divergence',
+    'kullback_leibler_divergence', 'mutual_information', 'CountsDistribution'
 ]

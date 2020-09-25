@@ -11,7 +11,7 @@ from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
 
 import ndd.fnsb
 from ndd.base import BaseEstimator
-from ndd.counts import Counts, check_k
+from ndd.counts import CountsDistribution, check_k
 from ndd.exceptions import AlphaError, NddError
 from ndd.package_setup import subclasses
 
@@ -523,9 +523,9 @@ class AsymptoticNSB(EntropyEstimator):
 
         """
         if zk is None:
-            counts = Counts().fit(nk)
+            counts = CountsDistribution().fit(nk)
         else:
-            counts = Counts(nk=nk, zk=zk)
+            counts = CountsDistribution(nk=nk, zk=zk)
 
         if not counts.coincidences:
             raise NddError('AsymptoticNSB estimator: no coincidences '
@@ -645,9 +645,9 @@ class AutoEstimator(EntropyEstimator):
             return
 
         if zk is None:
-            counts = Counts().fit(nk)
+            counts = CountsDistribution().fit(nk)
         else:
-            counts = Counts(nk=nk, zk=zk)
+            counts = CountsDistribution(nk=nk, zk=zk)
 
         if not counts.coincidences:  # has coincidences?
             logging.warning(

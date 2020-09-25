@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Counts class."""
+"""CountsDistribution class."""
 import json
 import logging
 from collections.abc import Mapping, MappingView, Sequence
@@ -82,7 +82,7 @@ def check_k(k):
     return k
 
 
-class Counts:
+class CountsDistribution:
     """
     Contains counts data and statistics.
 
@@ -119,7 +119,8 @@ class Counts:
             self.k = check_k(k)
 
     def __repr__(self):
-        return 'Counts(nk=%r, k=%r, zk=%r)' % (self.nk, self.k, self.zk)
+        return 'CountsDistribution(nk=%r, k=%r, zk=%r)' % (self.nk, self.k,
+                                                           self.zk)
 
     def __str__(self):
         return json.dumps(
@@ -140,7 +141,7 @@ class Counts:
 
     @property
     def normalized(self):
-        """Counts are normalized."""
+        """CountsDistribution are normalized."""
         if self.nk is None:
             return False
         return (len(self.nk) == 1 and self.nk[0] == 0

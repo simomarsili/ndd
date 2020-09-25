@@ -9,7 +9,7 @@ from itertools import combinations
 
 import numpy
 
-from ndd.counts import Counts
+from ndd.counts import CountsDistribution
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import guess_alphabet_size  # pylint: disable=unused-import
@@ -19,15 +19,15 @@ from ndd.exceptions import EstimatorInputError, PmfError
 # from ndd.failing import dump_on_fail
 
 __all__ = [
+    'coinformation',
+    'conditional_entropy',
     'entropy',
     'from_data',
+    'histogram',
+    'interaction_information',
     'jensen_shannon_divergence',
     'kullback_leibler_divergence',
-    'interaction_information',
-    'coinformation',
     'mutual_information',
-    'conditional_entropy',
-    'histogram',
 ]
 
 logger = logging.getLogger(__name__)
@@ -126,9 +126,9 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
     """
 
     if zk is None:
-        counts = Counts().fit(nk)
+        counts = CountsDistribution().fit(nk)
     else:
-        counts = Counts(nk=nk, zk=zk)
+        counts = CountsDistribution(nk=nk, zk=zk)
 
     nk, zk = counts.multiplicities
 
