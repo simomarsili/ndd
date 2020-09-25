@@ -87,7 +87,11 @@ def compute_estimate(data, k=None, estimator=None, alpha=None):
     else:
         estimator = None
 
-    _ = ndd.entropy(nk, k=k, zk=zk, estimator=estimator)
+    if zk:
+        nk = ndd.CountsDistribution(nk=nk, zk=zk, k=k)
+    else:
+        nk = ndd.CountsDistribution(k=k).fit(nk)
+    _ = ndd.entropy(nk, estimator=estimator)
 
     return ndd.entropy.info
 

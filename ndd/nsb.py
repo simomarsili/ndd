@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # @dump_on_fail()
 # pylint: disable=line-too-long
-def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
+def entropy(nk, k=None, estimator=None, return_std=False):
     """
     Bayesian Entropy estimate from an array of counts.
 
@@ -79,7 +79,7 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
 
     Parameters
     ----------
-    nk : array-like or mapping
+    nk : array-like or mapping or ndd.CountsDistribution object
         The number of occurrences of a set of bins. For mappings
         use the dictionary values `nk.values()` as counts.
     k : int or array-like, optional
@@ -88,9 +88,6 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
         Default: use an upper bound estimate for the alphabet size. If the
         distribution is strongly undersampled, switch to the asymptotic NSB
         estimator that can be used even if the alphabet size is unknown.
-    zk : array_like, optional
-        Counts distribution or "multiplicities". If passed, nk contains
-        the observed counts values and len(zk) == len(nk).
     estimator : str or entropy estimator obj, optional
         Enforce a specific estimator. Check `ndd.entropy_estimators` for
         available estimators. Default: use the NSB estimator (or the zeroth
@@ -125,12 +122,10 @@ def entropy(nk, k=None, zk=None, estimator=None, return_std=False):
 
     """
 
-    if zk is None:
-        counts = CountsDistribution().fit(nk)
+    if isinstance(nk, CountsDistribution):
+        nk, zk = nk.multiplicities
     else:
-        counts = CountsDistribution(nk=nk, zk=zk)
-
-    nk, zk = counts.multiplicities
+        nk, zk = CountsDistribution().fit(nk).multiplicities
 
     if estimator is None:
         estimator = 'AutoEstimator'
