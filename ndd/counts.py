@@ -2,7 +2,7 @@
 """CountsDistribution class."""
 import json
 import logging
-from collections.abc import Mapping, MappingView, Sequence
+from collections.abc import Mapping, MappingView
 
 import numpy
 
@@ -34,8 +34,6 @@ def to_array(counts):
     """Convert input to counts array."""
     if isinstance(counts, (Mapping, MappingView)):
         counts = list(counts.values())
-    if not isinstance(counts, Sequence):
-        counts = list(counts)
     return numpy.asarray(counts)
 
 
