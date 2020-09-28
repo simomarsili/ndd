@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+- `entropy()` function: renamed `nk` to `counts`
+- removed the `zk` argument
+- the signature of the *entropy* function is:
+  ```
+  entropy(counts, k=None, estimator='NSB', return_std=False)
+  ```
+
 ## [1.9.2] - 2020-09-21
 ### Added
 - the `entropy` function handles mappings and generators as input counts.
