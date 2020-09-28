@@ -3,6 +3,7 @@
 import json
 import logging
 from collections.abc import Mapping, MappingView
+from types import GeneratorType
 
 import numpy
 
@@ -33,7 +34,9 @@ def unique(nk, sort=True):
 def to_array(counts):
     """Convert input to counts array."""
     if isinstance(counts, (Mapping, MappingView)):
-        counts = list(counts.values())
+        return numpy.fromiter(counts.values(), dtype=int)
+    if isinstance(counts, (GeneratorType, map, filter)):
+        return numpy.fromiter(counts, dtype=int)
     return numpy.asarray(counts)
 
 
