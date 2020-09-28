@@ -81,10 +81,10 @@ def entropy(counts, k=None, estimator=None, return_std=False):
     ----------
     counts : array-like or mapping or tuple
         The number of occurrences of a set of bins. For mappings
-        use the dictionary values `nk.values()` as counts.
-        If a 2-tuple of integer arrays, the arrays should contain
-        the set of counts values and their frequencies (multiplicities)
-        observed in a counts array.
+        use the dictionary values `counts.values()` as counts.
+        If `counts` is a tuple of two arrays, these correspond respectively to
+        the set of unique counts values and the number of times each unique
+        value comes up in a counts array (multiplicities representation).
     k : int or array-like, optional
         Alphabet size (the number of bins with non-zero probability).
         If an array, set k = numpy.prod(k).
