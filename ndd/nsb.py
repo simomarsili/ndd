@@ -12,7 +12,6 @@ import numpy
 from ndd.counts import CountsDistribution
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
-from ndd.estimators import guess_alphabet_size  # pylint: disable=unused-import
 from ndd.estimators import NSB, AutoEstimator, Plugin, check_estimator
 from ndd.exceptions import EstimatorInputError, PmfError
 
