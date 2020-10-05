@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+## [1.10] - 2020-10-05
 ### Changed
 - `entropy()` function: renamed `nk` to `counts`
 - removed the `zk` argument
