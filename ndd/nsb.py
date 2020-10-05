@@ -9,7 +9,7 @@ from itertools import combinations
 
 import numpy
 
-from ndd.counts import CountsDistribution
+from ndd.counts import CountsDistribution, to_array
 from ndd.data import DataArray
 from ndd.divergence import JSDivergence
 from ndd.estimators import NSB, AutoEstimator, Plugin, check_estimator
@@ -34,11 +34,11 @@ logger = logging.getLogger(__name__)
 
 # @dump_on_fail()
 # pylint: disable=line-too-long
-def entropy(counts, k=None, estimator=None, return_std=False):
+def entropy(pk, *, k=None, estimator=None, return_std=False):
     """
     Bayesian Entropy estimate from an array of counts.
 
-    The `entropy` function takes as input a vector of frequency counts
+    The `entropy` function takes as input a vector of frequency counts `pk`
     (the observed frequencies for a set of classes or states) and an alphabet
     size `k` (the number of classes with non-zero probability, including
     unobserved classes) and returns an entropy estimate (in nats) computed
@@ -78,10 +78,11 @@ def entropy(counts, k=None, estimator=None, return_std=False):
 
     Parameters
     ----------
-    counts : array-like or mapping or tuple
-        The number of occurrences of a set of bins. For mappings
+    pk : array-like or dict or tuple
+        The number of occurrences of a set of bins. If a dictionary
         use the dictionary values `counts.values()` as counts.
-        If `counts` is a tuple of two arrays, these correspond respectively to
+        If normalized, take `pk` as a PMF and return the corresponding entropy.
+        If `pk` is a tuple of two arrays, these correspond respectively to
         the set of unique counts values and the number of times each unique
         value comes up in a counts array (multiplicities representation).
     k : int or array-like, optional
@@ -124,10 +125,15 @@ def entropy(counts, k=None, estimator=None, return_std=False):
 
     """
 
-    if isinstance(counts, tuple) and len(counts) == 2:
-        nk, zk = counts
+    if isinstance(pk, tuple) and len(pk) == 2:
+        nk, zk = pk
     else:
-        nk, zk = CountsDistribution().fit(counts).multiplicities
+        pk = to_array(pk)
+        if numpy.isclose(pk.sum(), 1):  # is normalized
+            estimator = 'PMFPlugin'
+            nk, zk = pk, None
+        else:  # encode as multiplicities
+            nk, zk = CountsDistribution().fit(pk).multiplicities
 
     if estimator is None:
         estimator = 'AutoEstimator'

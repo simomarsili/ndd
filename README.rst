@@ -12,7 +12,7 @@ for the ``scipy.stats.entropy`` function from the SciPy library,
 based on an efficient implementation of the
 `Nemenman-Schafee-Bialek (NSB) algorithm
 <https://arxiv.org/abs/physics/0108025>`_.
-Remarkably, The NSB algorithm allows entropy estimation when the number of
+Remarkably, the NSB algorithm allows entropy estimation when the number of
 samples is much smaller than the number of classes with non-zero probability.
 
 
