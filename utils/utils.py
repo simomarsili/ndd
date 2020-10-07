@@ -57,3 +57,10 @@ def camelcase_to_delimited(string, d='_', remove=None):
         remove = remove.lower()
         result = d.join([x for x in result.split(d) if x != remove])
     return result
+
+
+def register_class(clss, register):
+    """Add a class to register."""
+    class_name = camelcase_to_delimited(clss.__name__, d='_', remove='filter')
+    register[class_name] = clss
+    return register

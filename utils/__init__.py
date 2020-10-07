@@ -3,4 +3,4 @@
 # License: BSD 3 clause
 """Utilities."""
 
-from .utils import camelcase_to_delimited, delimited_to_camelcase
+from .utils import register_class
