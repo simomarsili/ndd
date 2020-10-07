@@ -38,6 +38,8 @@ def dump_on_fail(fp=sys.stdout):
 
 def delimited_to_camelcase(string, d='_', remove=None):
     """Convert string from delimiter_separated to CamelCase."""
+    if d not in string:
+        return string.title()
     string = string.title()
     if remove:
         string = string.replace(remove.lower().title(), '')
@@ -59,8 +61,12 @@ def camelcase_to_delimited(string, d='_', remove=None):
     return result
 
 
-def register_class(clss, register):
+def as_class_name(*args, **kwargs):
+    """Convert string into a CamelCase class name."""
+    return delimited_to_camelcase(*args, **kwargs)
+
+
+def register_class(cls, register):
     """Add a class to register."""
-    class_name = camelcase_to_delimited(clss.__name__, d='_', remove='filter')
-    register[class_name] = clss
+    register[cls.__name__] = cls
     return register

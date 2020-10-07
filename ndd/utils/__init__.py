@@ -3,4 +3,4 @@
 # License: BSD 3 clause
 """Utilities."""
 
-from .utils import register_class
+from .utils import as_class_name, register_class

@@ -11,8 +11,8 @@ import numpy
 
 from ndd.counts import CountsDistribution, to_array
 from ndd.data import DataArray
-from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, AutoEstimator, Plugin, check_estimator
+from ndd.divergence import JsDivergence
+from ndd.estimators import AutoEstimator, Nsb, Plugin, check_estimator
 from ndd.exceptions import EstimatorInputError, PmfError
 
 # from ndd.failing import dump_on_fail
@@ -130,13 +130,13 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     else:
         nk = to_array(nk)
         if numpy.isclose(nk.sum(), 1):  # is normalized
-            estimator = 'PMFPlugin'
+            estimator = 'pmf_plugin'
             zk = None
         else:  # encode as multiplicities
             nk, zk = CountsDistribution().fit(nk).multiplicities
 
     if estimator is None:
-        estimator = 'AutoEstimator'
+        estimator = 'auto_estimator'
 
     estimator, _ = check_estimator(estimator)
 
@@ -171,7 +171,7 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     return S
 
 
-def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
+def from_data(ar, ks=None, estimator='nsb', axis=0, r=None):
     """
     Entropy estimate from data matrix.
 
@@ -247,7 +247,7 @@ def jensen_shannon_divergence(nk, k=None, estimator='NSB'):
 
     estimator, _ = check_estimator(estimator)
 
-    estimator = JSDivergence(estimator).fit(nk, k=k)
+    estimator = JsDivergence(estimator).fit(nk, k=k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
@@ -633,9 +633,9 @@ def select_estimator(alpha, plugin):
         estimator = Plugin(alpha)
     else:
         if alpha is None:
-            estimator = NSB()
+            estimator = Nsb()
         else:
-            estimator = NSB(alpha)
+            estimator = Nsb(alpha)
     return estimator
 
 

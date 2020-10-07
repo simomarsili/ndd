@@ -10,7 +10,7 @@ import numpy.random as random
 import pytest
 
 import ndd
-from ndd.estimators import NSB, Plugin
+from ndd.estimators import Nsb, Plugin
 
 SEED = 123
 
@@ -29,9 +29,9 @@ def random_counts(n=None, k=None, alpha=None):
 
 def estimator_prms():
     return [
-        {},  # NSB
+        {},  # Nsb
         {
-            'estimator': NSB(alpha=1.0),
+            'estimator': Nsb(alpha=1.0),
         },  # Wolpert-Wolf
         {
             'estimator': Plugin(),

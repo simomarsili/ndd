@@ -4,29 +4,38 @@
 # pylint: disable=c-extension-no-member
 """Compute divergences between distributions."""
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
-from ndd.estimators import NSB, EntropyEstimator, check_input
+from ndd.estimators import EntropyEstimator, Nsb, check_input
 from ndd.estimators import estimators as entropy_estimators
 from ndd.exceptions import NddError
-from ndd.package_setup import subclasses
+from ndd.utils import register_class
 
-__all__ = ['DivergenceEstimator', 'JSDivergence']
+__all__ = ['DivergenceEstimator', 'JsDivergence']
 
 logger = logging.getLogger(__name__)
 
-# compatible with both Python 2 and 3
-# https://stackoverflow.com/a/38668373
-ABC = ABCMeta('ABC', (object, ), {'__slots__': ()})
+estimators = {}
 
 
-class DivergenceEstimator(EntropyEstimator, ABC):
+class DivergenceEstimatorType(type(EntropyEstimator)):
+    """Metaclass for entropy estimators."""
+
+    def __new__(cls, name, bases, namespace, **kwargs):
+        estimator_class = type.__new__(cls, name, bases, namespace, **kwargs)
+        register_class(estimator_class, estimators)
+        return estimator_class
+
+
+class DivergenceEstimator(EntropyEstimator,
+                          ABC,
+                          metaclass=DivergenceEstimatorType):
     """Base class for estimators of divergences."""
 
-    def __init__(self, entropy=NSB()):
+    def __init__(self, entropy=Nsb()):
         """Default entropy estimator is NSB."""
         super(DivergenceEstimator, self).__init__()
         self.input_data_ndim = 2
@@ -69,7 +78,7 @@ class DivergenceEstimator(EntropyEstimator, ABC):
         """
 
 
-class JSDivergence(DivergenceEstimator):
+class JsDivergence(DivergenceEstimator):
     """Jensen-Shannon divergence estimator.
 
     Parameters
@@ -114,6 +123,3 @@ class JSDivergence(DivergenceEstimator):
                           sum(ws[i] * self.entropy_estimator(x, k=k)
                               for i, x in enumerate(nk)))
         return self
-
-
-estimators = subclasses(DivergenceEstimator)
