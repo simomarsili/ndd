@@ -140,6 +140,7 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     S, err = estimator.estimate_, estimator.err_
 
     if S is not None and numpy.isnan(S):
+        # happens if 0 <= pk <= 1
         # (possibly unnormalized) pmf
         pk_sum = pk.sum()
         if pk_sum > 0 and isinstance(estimator, AutoEstimator):
