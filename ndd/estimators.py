@@ -110,7 +110,7 @@ class EntropyEstimator(BaseEstimator, ABC, metaclass=EntropyEstimatorType):
 
     def __init__(self):
         self.estimate_ = None
-        self.err_ = numpy.float('inf')
+        self.err_ = None
         self.input_data_ndim = 1
 
     def __call__(self, nk, k=None, zk=None):
@@ -227,6 +227,7 @@ class Plugin(EntropyEstimator):
             Entropy estimate.
 
         """
+        self.err_ = numpy.inf
         if zk is not None:
             if k is None:
                 k = numpy.sum(zk[nk > 0])
