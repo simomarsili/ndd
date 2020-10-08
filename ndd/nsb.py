@@ -129,27 +129,27 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
         nk, zk = nk
     else:
         nk = to_array(nk)
-        if numpy.isclose(nk.sum(), 1):  # is normalized
-            estimator = 'pmf_plugin'
-            zk = None
-        else:  # encode as multiplicities
-            nk, zk = CountsDistribution().fit(nk).multiplicities
+        pk = nk
+        nk, zk = CountsDistribution().fit(nk).multiplicities
 
     if estimator is None:
         estimator = 'auto_estimator'
 
     estimator, _ = check_estimator(estimator)
-
     estimator = estimator.fit(nk=nk, zk=zk, k=k)
-
     S, err = estimator.estimate_, estimator.err_
 
     if S is not None and numpy.isnan(S):
-        logger.warning('nan value for entropy estimate')
-        S = numpy.nan
-
-    if err is not None and numpy.isnan(err):
-        err = numpy.nan
+        # (possibly unnormalized) pmf
+        pk_sum = pk.sum()
+        if pk_sum > 0 and isinstance(estimator, AutoEstimator):
+            nk = pk / pk_sum
+            estimator = 'pmf_plugin'
+            estimator, _ = check_estimator(estimator)
+            estimator = estimator.fit(nk=nk)
+            S, err = estimator.estimate_, estimator.err_
+        else:
+            logger.warning('nan value for entropy estimate')
 
     # annotate the entropy function
     entropy.info = {}
