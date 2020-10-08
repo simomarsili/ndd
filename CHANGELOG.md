@@ -4,8 +4,8 @@
 
 ## [1.10] - 2020-10-05
 ### Changed
-- removed the `zk` argument
-- the signature of the *entropy* function is:
+- `entropy` function: removed the `zk` argument
+- the signature of the `entropy` function is:
   ```
   entropy(nk, k=None, estimator='NSB', return_std=False)
   ```
