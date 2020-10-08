@@ -4,11 +4,10 @@
 
 ## [1.10] - 2020-10-05
 ### Changed
-- `entropy()` function: renamed `nk` to `counts`
 - removed the `zk` argument
 - the signature of the *entropy* function is:
   ```
-  entropy(counts, k=None, estimator='NSB', return_std=False)
+  entropy(nk, k=None, estimator='NSB', return_std=False)
   ```
 
 ## [1.9.2] - 2020-09-21

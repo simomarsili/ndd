@@ -13,7 +13,7 @@ import ndd.fnsb
 from ndd.base import BaseEstimator
 from ndd.counts import CountsDistribution, check_k
 from ndd.exceptions import AlphaError, NddError
-from ndd.package_setup import subclasses
+from ndd.utils import as_class_name, register_class
 
 logger = logging.getLogger(__name__)
 
@@ -22,29 +22,24 @@ __all__ = [
     'Plugin',
     'MillerMadow',
     'WolpertWolf',
-    'NSB',
+    'Nsb',
     'Grassberger',
-    'AsymptoticNSB',
+    'AsymptoticNsb',
     'AutoEstimator',
 ]
+
+estimators = {}
 
 
 def check_estimator(estimator):
     """Check that estimator is a valid entropy estimator."""
     if isinstance(estimator, str):
-        try:
-            estimator_name = estimator
-            estimator = getattr(ndd.estimators, estimator_name)()
-        except AttributeError:
-            raise NddError('%s is not a valid entropy estimator' %
-                           estimator_name)
-    else:
-        estimator_name = type(estimator).__name__
+        name = as_class_name(estimator)
+        if name not in ndd.entropy_estimators:
+            raise NddError('%s is not a valid entropy estimator' % name)
+        return ndd.entropy_estimators[name](), name
 
-    if estimator_name not in ndd.entropy_estimators:
-        raise NddError('%s is not a valid entropy estimator' % estimator_name)
-
-    return estimator, estimator_name
+    return estimator, estimator.__class__.__name__
 
 
 def check_input(fit_function):  # pylint: disable=no-self-argument
@@ -63,8 +58,8 @@ def check_input(fit_function):  # pylint: disable=no-self-argument
 
 def guess_alphabet_size(nk, zk=None, eps=1.e-3):
     """Guess a reasonable value for the cardinality."""
-    nsb = NSB()
-    asym = AsymptoticNSB()
+    nsb = Nsb()
+    asym = AsymptoticNsb()
     multiplier = 10
     dk = numpy.log(multiplier)
     if zk is not None:
@@ -91,7 +86,16 @@ def guess_alphabet_size(nk, zk=None, eps=1.e-3):
     return round(k1 / numpy.sqrt(multiplier))  # midpoint value
 
 
-class EntropyEstimator(BaseEstimator, ABC):
+class EntropyEstimatorType(type(ABC), type(BaseEstimator)):
+    """Metaclass for entropy estimators."""
+
+    def __new__(cls, name, bases, namespace, **kwargs):
+        estimator_class = type.__new__(cls, name, bases, namespace, **kwargs)
+        register_class(estimator_class, estimators)
+        return estimator_class
+
+
+class EntropyEstimator(BaseEstimator, ABC, metaclass=EntropyEstimatorType):
     """
     Base class for entropy estimators.
 
@@ -106,7 +110,7 @@ class EntropyEstimator(BaseEstimator, ABC):
 
     def __init__(self):
         self.estimate_ = None
-        self.err_ = numpy.float('inf')
+        self.err_ = None
         self.input_data_ndim = 1
 
     def __call__(self, nk, k=None, zk=None):
@@ -223,6 +227,7 @@ class Plugin(EntropyEstimator):
             Entropy estimate.
 
         """
+        self.err_ = numpy.inf
         if zk is not None:
             if k is None:
                 k = numpy.sum(zk[nk > 0])
@@ -247,7 +252,7 @@ class Plugin(EntropyEstimator):
         return self
 
 
-class PMFPlugin(EntropyEstimator):
+class PmfPlugin(EntropyEstimator):
     """Entropy from probability mass function array."""
 
     @check_input
@@ -379,7 +384,7 @@ class WolpertWolf(EntropyEstimator):
         return self
 
 
-class NSB(EntropyEstimator):
+class Nsb(EntropyEstimator):
     """
     Nemenman-Shafee-Bialek (NSB) entropy estimator.
 
@@ -417,7 +422,7 @@ class NSB(EntropyEstimator):
     """
 
     def __init__(self, alpha=None):
-        super(NSB, self).__init__()
+        super(Nsb, self).__init__()
         if alpha:
             self.alpha = self.check_alpha(alpha)
         else:
@@ -468,7 +473,7 @@ class NSB(EntropyEstimator):
         return self
 
 
-class AsymptoticNSB(EntropyEstimator):
+class AsymptoticNsb(EntropyEstimator):
     """
     Asymptotic NSB estimator for countably infinite distributions (or with
     unknown cardinality).
@@ -641,7 +646,7 @@ class AutoEstimator(EntropyEstimator):
 
         if k is not None:  # has k?
             self.k = k
-            self.estimator = NSB()
+            self.estimator = Nsb()
             return
 
         if zk is None:
@@ -659,12 +664,12 @@ class AutoEstimator(EntropyEstimator):
 
         if counts.sampling_ratio < 0.1:  # is strongly under-sampled?
             self.k = None
-            self.estimator = AsymptoticNSB()
+            self.estimator = AsymptoticNsb()
             return
 
         self.k = guess_alphabet_size(nk=nk,
                                      zk=zk)  # guess a reasonable value for k
-        self.estimator = NSB()
+        self.estimator = Nsb()
 
     @check_input
     def fit(self, nk, k=None, zk=None):
@@ -692,6 +697,3 @@ class AutoEstimator(EntropyEstimator):
         self.estimate_ = self.estimator.estimate_
         self.err_ = self.estimator.err_
         return self
-
-
-estimators = subclasses(EntropyEstimator)

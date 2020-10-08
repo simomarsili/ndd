@@ -6,7 +6,7 @@ import numpy
 import pytest
 from pytest import approx
 
-from ndd.estimators import NSB, AsymptoticNSB, Plugin
+from ndd.estimators import AsymptoticNsb, Nsb, Plugin
 from ndd.exceptions import NddError
 
 N = (10, 10)
@@ -19,16 +19,16 @@ def data(request):
     return {'nk': numpy.array([1] * n), 'k': k}
 
 
-def test_NSB(data):
-    """The NSB estimate should be somewhat close to log(k)"""
-    estimator = NSB()
+def test_Nsb(data):
+    """The Nsb estimate should be somewhat close to log(k)"""
+    estimator = Nsb()
     relative_error = 1 - estimator(**data) / numpy.log(data['k'])
     assert 0 < relative_error < 0.2
 
 
 def test_Asymptotic(data):
     """Should raise an exception"""
-    estimator = AsymptoticNSB()
+    estimator = AsymptoticNsb()
     with pytest.raises(NddError):
         estimator(**data)
 

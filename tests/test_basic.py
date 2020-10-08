@@ -110,7 +110,7 @@ def test_JSD():
     random.seed(SEED)
     pk = random.dirichlet([ALPHA] * P)
     counts = random.multinomial(N, pk, size=4)
-    estimator = ndd.divergence.JSDivergence()
+    estimator = ndd.divergence.JsDivergence()
     ref_result = -0.0179963577515192
     assert estimator(counts) == approx(ref_result)
 

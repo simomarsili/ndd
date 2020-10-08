@@ -9,7 +9,7 @@ import pytest
 from make_test_ref import SEED, approx
 from ndd import fnsb
 from ndd.counters import MultiCounter
-from ndd.estimators import NSB, Grassberger, MillerMadow, Plugin
+from ndd.estimators import Grassberger, MillerMadow, Nsb, Plugin
 
 K = 4
 N = 10000
@@ -103,9 +103,9 @@ def test_nsb(counts_1d, multi_1d):
 
 
 def test_nsb_estimator(counts_1d, multi_1d):
-    estimate_from_counts = NSB()(counts_1d, k=K)
+    estimate_from_counts = Nsb()(counts_1d, k=K)
     nk, zk = multi_1d
-    estimate_from_multiplicities = NSB()(nk, zk=zk, k=K)
+    estimate_from_multiplicities = Nsb()(nk, zk=zk, k=K)
     assert estimate_from_multiplicities == approx(estimate_from_counts)
 
 
@@ -119,9 +119,9 @@ def test_ww(counts_1d, multi_1d):
 
 def test_ww_estimator(counts_1d, multi_1d):
     alpha = 0.1
-    estimate_from_counts = NSB(alpha=alpha)(counts_1d, k=K)
+    estimate_from_counts = Nsb(alpha=alpha)(counts_1d, k=K)
     nk, zk = multi_1d
-    estimate_from_multiplicities = NSB(alpha=alpha)(nk, zk=zk, k=K)
+    estimate_from_multiplicities = Nsb(alpha=alpha)(nk, zk=zk, k=K)
     assert estimate_from_multiplicities == approx(estimate_from_counts)
 
 

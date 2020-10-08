@@ -9,10 +9,10 @@ from itertools import combinations
 
 import numpy
 
-from ndd.counts import CountsDistribution
+from ndd.counts import CountsDistribution, to_array
 from ndd.data import DataArray
-from ndd.divergence import JSDivergence
-from ndd.estimators import NSB, AutoEstimator, Plugin, check_estimator
+from ndd.divergence import JsDivergence
+from ndd.estimators import AutoEstimator, Nsb, Plugin, check_estimator
 from ndd.exceptions import EstimatorInputError, PmfError
 
 # from ndd.failing import dump_on_fail
@@ -34,11 +34,11 @@ logger = logging.getLogger(__name__)
 
 # @dump_on_fail()
 # pylint: disable=line-too-long
-def entropy(counts, k=None, estimator=None, return_std=False):
+def entropy(nk, *, k=None, estimator=None, return_std=False):
     """
     Bayesian Entropy estimate from an array of counts.
 
-    The `entropy` function takes as input a vector of frequency counts
+    The `entropy` function takes as input a vector of frequency counts `nk`
     (the observed frequencies for a set of classes or states) and an alphabet
     size `k` (the number of classes with non-zero probability, including
     unobserved classes) and returns an entropy estimate (in nats) computed
@@ -78,10 +78,11 @@ def entropy(counts, k=None, estimator=None, return_std=False):
 
     Parameters
     ----------
-    counts : array-like or mapping or tuple
-        The number of occurrences of a set of bins. For mappings
+    nk : array-like or dict or tuple
+        The number of occurrences of a set of bins. If a dictionary
         use the dictionary values `counts.values()` as counts.
-        If `counts` is a tuple of two arrays, these correspond respectively to
+        If normalized, take `nk` as a PMF and return the corresponding entropy.
+        If `nk` is a tuple of two arrays, these correspond respectively to
         the set of unique counts values and the number of times each unique
         value comes up in a counts array (multiplicities representation).
     k : int or array-like, optional
@@ -124,26 +125,32 @@ def entropy(counts, k=None, estimator=None, return_std=False):
 
     """
 
-    if isinstance(counts, tuple) and len(counts) == 2:
-        nk, zk = counts
+    if isinstance(nk, tuple) and len(nk) == 2:
+        nk, zk = nk
     else:
-        nk, zk = CountsDistribution().fit(counts).multiplicities
+        nk = to_array(nk)
+        pk = nk
+        nk, zk = CountsDistribution().fit(nk).multiplicities
 
     if estimator is None:
-        estimator = 'AutoEstimator'
+        estimator = 'auto_estimator'
 
     estimator, _ = check_estimator(estimator)
-
     estimator = estimator.fit(nk=nk, zk=zk, k=k)
-
     S, err = estimator.estimate_, estimator.err_
 
     if S is not None and numpy.isnan(S):
-        logger.warning('nan value for entropy estimate')
-        S = numpy.nan
-
-    if err is not None and numpy.isnan(err):
-        err = numpy.nan
+        # happens if 0 <= pk <= 1
+        # (possibly unnormalized) pmf
+        pk_sum = pk.sum()
+        if pk_sum > 0 and isinstance(estimator, AutoEstimator):
+            nk = pk / pk_sum
+            estimator = 'pmf_plugin'
+            estimator, _ = check_estimator(estimator)
+            estimator = estimator.fit(nk=nk)
+            S, err = estimator.estimate_, estimator.err_
+        else:
+            logger.warning('nan value for entropy estimate')
 
     # annotate the entropy function
     entropy.info = {}
@@ -165,7 +172,7 @@ def entropy(counts, k=None, estimator=None, return_std=False):
     return S
 
 
-def from_data(ar, ks=None, estimator='NSB', axis=0, r=None):
+def from_data(ar, ks=None, estimator='nsb', axis=0, r=None):
     """
     Entropy estimate from data matrix.
 
@@ -241,7 +248,7 @@ def jensen_shannon_divergence(nk, k=None, estimator='NSB'):
 
     estimator, _ = check_estimator(estimator)
 
-    estimator = JSDivergence(estimator).fit(nk, k=k)
+    estimator = JsDivergence(estimator).fit(nk, k=k)
     js = estimator.estimate_
 
     if numpy.isnan(js):
@@ -627,9 +634,9 @@ def select_estimator(alpha, plugin):
         estimator = Plugin(alpha)
     else:
         if alpha is None:
-            estimator = NSB()
+            estimator = Nsb()
         else:
-            estimator = NSB(alpha)
+            estimator = Nsb(alpha)
     return estimator
 
 
