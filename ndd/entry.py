@@ -88,9 +88,9 @@ def compute_estimate(data, k=None, estimator=None, alpha=None):
         estimator = None
 
     if zk:
-        _ = ndd.entropy((nk, zk), estimator=estimator)
+        _ = ndd.entropy((nk, zk), k=k, estimator=estimator)
     else:
-        _ = ndd.entropy(nk, estimator=estimator)
+        _ = ndd.entropy(nk, k=k, estimator=estimator)
 
     return ndd.entropy.info
 
