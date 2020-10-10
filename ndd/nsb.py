@@ -12,8 +12,7 @@ import numpy
 from ndd.counts import CountsDistribution, as_counts_array
 from ndd.data import DataArray
 from ndd.divergence import JsDivergence
-from ndd.estimators import (AutoEstimator, Nsb, Plugin, PmfPlugin,
-                            check_estimator)
+from ndd.estimators import AutoEstimator, Nsb, Plugin, PmfPlugin, as_estimator
 from ndd.exceptions import EstimatorInputError, PmfError
 
 # from ndd.failing import dump_on_fail
@@ -136,7 +135,7 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     if estimator is None:
         estimator = AutoEstimator()
     else:
-        estimator, _ = check_estimator(estimator)
+        estimator = as_estimator(estimator)
     estimator = estimator.fit(nk=nk, zk=zk, k=k)
     S, err = estimator.estimate_, estimator.err_
 
@@ -199,7 +198,7 @@ def from_data(ar, ks=None, estimator='nsb', axis=0, r=None):
 
     """
 
-    estimator, _ = check_estimator(estimator)
+    estimator = as_estimator(estimator)
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
@@ -245,7 +244,7 @@ def jensen_shannon_divergence(nk, k=None, estimator='NSB'):
 
     """
 
-    estimator, _ = check_estimator(estimator)
+    estimator = as_estimator(estimator)
 
     estimator = JsDivergence(estimator).fit(nk, k=k)
     js = estimator.estimate_
@@ -319,7 +318,7 @@ def kullback_leibler_divergence(nk, qk, estimator='NSB'):
 
     """
 
-    estimator, _ = check_estimator(estimator)
+    estimator = as_estimator(estimator)
     nk = numpy.asarray(nk)
     k = len(qk)
     if k == 1:  # single bin
@@ -378,7 +377,7 @@ def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
             info += sgn * sum(from_data(X, ks=ks, estimator=estimator, r=T))
         return -info
 
-    estimator, _ = check_estimator(estimator)
+    estimator = as_estimator(estimator)
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
@@ -477,7 +476,7 @@ def mutual_information(ar, ks=None, estimator='NSB', axis=0):
         If len(ks) != p.
 
     """
-    estimator, _ = check_estimator(estimator)
+    estimator = as_estimator(estimator)
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar, ks=ks, axis=axis)
@@ -548,7 +547,7 @@ def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pyl
                                    ' are not valid')
 
     # EntropyEstimator objects are callable and return the fitted estimate
-    estimator, _ = check_estimator(estimator)
+    estimator = as_estimator(estimator)
 
     # Entropy of features on which we are conditioning
     counts, kc = ar[c].iter_counts()
@@ -668,7 +667,7 @@ def estimates_from_combinations(ar,
     estimate : float
 
     """
-    estimator, _ = check_estimator(estimator)
+    estimator = as_estimator(estimator)
 
     if not isinstance(ar, DataArray):
         ar = DataArray(ar)

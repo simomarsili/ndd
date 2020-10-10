@@ -31,15 +31,26 @@ __all__ = [
 estimators = {}
 
 
-def check_estimator(estimator):
-    """Check that estimator is a valid entropy estimator."""
-    if isinstance(estimator, str):
+def as_estimator(estimator):
+    """Return an entropy estimator object.
+
+    Parameters
+    ----------
+    estimator : str or estimator class or estimator object
+
+    Returns
+    -------
+    estimator object
+
+    """
+    if isinstance(estimator, str):  # estimator name or label
         name = as_class_name(estimator)
         if name not in ndd.entropy_estimators:
             raise NddError('%s is not a valid entropy estimator' % name)
-        return ndd.entropy_estimators[name](), name
-
-    return estimator, estimator.__class__.__name__
+        return ndd.entropy_estimators[name]()
+    if issubclass(estimator, EntropyEstimator):  # estimator class
+        return estimator()
+    return estimator
 
 
 def check_input(fit_function):  # pylint: disable=no-self-argument
