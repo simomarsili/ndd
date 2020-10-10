@@ -9,8 +9,9 @@ from abc import ABC, abstractmethod
 import numpy
 from numpy import PZERO  # pylint: disable=no-name-in-module
 
-from ndd.estimators import EntropyEstimator, Nsb, check_input
+from ndd.estimators import EntropyEstimator, Nsb
 from ndd.estimators import estimators as entropy_estimators
+from ndd.estimators import fit_function
 from ndd.exceptions import NddError
 from ndd.utils import register_class
 
@@ -87,31 +88,8 @@ class JsDivergence(DivergenceEstimator):
 
     """
 
-    @check_input
+    @fit_function
     def fit(self, nk, k=None, zk=None):
-        """
-        Parameters
-        ----------
-        nk : array_like
-            n-by-p array. Different rows correspond to counts from different
-            distributions with the same discrete sample space.
-        k : int, optional
-            Number of bins. k >= p if nk is n-by-p.
-            Float values are valid input for whole numbers (e.g. k=1.e3).
-            Defaults to nk.shape[1].
-
-        Returns
-        -------
-        self : object
-            Returns the instance itself.
-
-        Raises
-        ------
-        CountsError
-            If nk is not a 2D array.
-
-        """
-
         ws = numpy.float64(nk.sum(axis=1))
         ws /= ws.sum()
         if k is None:
