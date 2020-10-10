@@ -12,7 +12,8 @@ import numpy
 from ndd.counts import CountsDistribution, to_array
 from ndd.data import DataArray
 from ndd.divergence import JsDivergence
-from ndd.estimators import AutoEstimator, Nsb, Plugin, check_estimator
+from ndd.estimators import (AutoEstimator, Nsb, Plugin, PmfPlugin,
+                            check_estimator)
 from ndd.exceptions import EstimatorInputError, PmfError
 
 # from ndd.failing import dump_on_fail
@@ -80,11 +81,11 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     ----------
     nk : array-like or dict or tuple
         The number of occurrences of a set of bins. If a dictionary
-        use the dictionary values `counts.values()` as counts.
+        use the dictionary values `nk.values()` as counts.
         If normalized, take `nk` as a PMF and return the corresponding entropy.
         If `nk` is a tuple of two arrays, these correspond respectively to
         the set of unique counts values and the number of times each unique
-        value comes up in a counts array (multiplicities representation).
+        value comes up in the counts array (multiplicities representation).
     k : int or array-like, optional
         Alphabet size (the number of bins with non-zero probability).
         If an array, set k = numpy.prod(k).
@@ -133,9 +134,9 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
         nk, zk = CountsDistribution().fit(nk).multiplicities
 
     if estimator is None:
-        estimator = 'auto_estimator'
-
-    estimator, _ = check_estimator(estimator)
+        estimator = AutoEstimator()
+    else:
+        estimator, _ = check_estimator(estimator)
     estimator = estimator.fit(nk=nk, zk=zk, k=k)
     S, err = estimator.estimate_, estimator.err_
 
@@ -145,9 +146,7 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
         pk_sum = pk.sum()
         if pk_sum > 0 and isinstance(estimator, AutoEstimator):
             nk = pk / pk_sum
-            estimator = 'pmf_plugin'
-            estimator, _ = check_estimator(estimator)
-            estimator = estimator.fit(nk=nk)
+            estimator = PmfPlugin().fit(nk=nk)
             S, err = estimator.estimate_, estimator.err_
         else:
             logger.warning('nan value for entropy estimate')
