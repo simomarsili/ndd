@@ -5,6 +5,7 @@
 import logging
 from abc import ABC, abstractmethod  # python >= 3.4
 from functools import wraps
+from inspect import isclass
 
 import numpy
 from numpy import PZERO, euler_gamma  # pylint: disable=no-name-in-module
@@ -48,7 +49,7 @@ def as_estimator(estimator):
         if name not in ndd.entropy_estimators:
             raise NddError('%s is not a valid entropy estimator' % name)
         return ndd.entropy_estimators[name]()
-    if issubclass(estimator, EntropyEstimator):  # estimator class
+    if isclass(estimator):
         return estimator()
     return estimator
 
