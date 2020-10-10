@@ -9,7 +9,7 @@ from itertools import combinations
 
 import numpy
 
-from ndd.counts import CountsDistribution, to_array
+from ndd.counts import CountsDistribution, as_counts_array
 from ndd.data import DataArray
 from ndd.divergence import JsDivergence
 from ndd.estimators import (AutoEstimator, Nsb, Plugin, PmfPlugin,
@@ -129,7 +129,7 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     if isinstance(nk, tuple) and len(nk) == 2:
         nk, zk = nk
     else:
-        nk = to_array(nk)
+        nk = as_counts_array(nk)
         pk = nk
         nk, zk = CountsDistribution().fit(nk).multiplicities
 

@@ -31,7 +31,7 @@ def unique(nk, sort=True):
     return nk, zk
 
 
-def to_array(counts):
+def as_counts_array(counts):
     """Convert input to counts array."""
     if isinstance(counts, (Mapping, MappingView)):
         return numpy.fromiter(counts.values(), dtype=int)
@@ -112,8 +112,8 @@ class CountsDistribution:
         if (nk is None) != (zk is None):
             raise NddError('nk and zk should be passed together.')
         if nk is not None:
-            self.nk = to_array(nk)
-            self.zk = to_array(zk)
+            self.nk = as_counts_array(nk)
+            self.zk = as_counts_array(zk)
             self._n = numpy.sum(self.zk * self.nk)
             self._k1 = numpy.sum(self.zk[self.nk > 0])
         if k is not None:
@@ -134,7 +134,7 @@ class CountsDistribution:
 
     def fit(self, counts):
         """Fit nk, zk (multiplicities) from counts array."""
-        counts = to_array(counts)
+        counts = as_counts_array(counts)
         self.nk, self.zk = unique(counts)
         self._n = numpy.sum(self.zk * self.nk)
         self._k1 = numpy.sum(self.zk[self.nk > 0])
