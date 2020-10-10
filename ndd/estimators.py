@@ -33,7 +33,7 @@ estimators = {}
 
 
 def as_estimator(estimator):
-    """Return an entropy estimator object.
+    """Return an entropy estimator object from class/class name.
 
     Parameters
     ----------
