@@ -76,11 +76,14 @@ with pre-compiled extensions. numpy >= 1.16 is needed.
 Changes
 =======
 
-**v.1.9**
+**v1.10**
    Changed:
+   the signature of the `entropy` function is:::
 
-   the ``entropy`` function takes frequency counts (multiplicities) as input
-   via the ``zk`` optional argument.
+     entropy(nk, k=None, estimator=None, return_std=False)
+
+**v1.9**
+   Changed:
 
    if argument ``k`` is omitted, the ``entropy`` function will guess a
    reasonable alphabet size and select the best estimator for the sampling
