@@ -117,7 +117,7 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     >>> ndd.entropy(counts)
     2.8130746489179046
     >>> ndd.entropy.info
-    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': 1, 'estimator': NSB(alpha=None), 'k': 6008}
+    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': 1, 'estimator': Nsb(alpha=None), 'k': 6008}
 
     `entropy.info['bounded']` is equal to 1 if the entropy estimate has error
     bounds, 0 when the estimate is unbounded (when no coincidences have
@@ -210,7 +210,7 @@ def from_data(ar, ks=None, estimator='nsb', axis=0, r=None):
     return estimator(counts, k=k)
 
 
-def jensen_shannon_divergence(nk, k=None, estimator='NSB'):
+def jensen_shannon_divergence(nk, k=None, estimator='Nsb'):
     """
     Jensen-Shannon divergence from a m-by-p matrix of counts.
 
@@ -290,7 +290,7 @@ def cross_entropy(nk, qk):
     return -numpy.sum(nk * qk)
 
 
-def kullback_leibler_divergence(nk, qk, estimator='NSB'):
+def kullback_leibler_divergence(nk, qk, estimator='nsb'):
     """
     Kullback-Leibler divergence given counts nk and a reference PMF qk.
 
@@ -327,7 +327,7 @@ def kullback_leibler_divergence(nk, qk, estimator='NSB'):
     return cross_entropy(nk, qk) - estimator.fit(nk, k=k).estimate_
 
 
-def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
+def interaction_information(ar, ks=None, estimator='nsb', axis=0, r=None):
     """Interaction information from data matrix.
 
     See Eq.10 in:
@@ -389,7 +389,7 @@ def interaction_information(ar, ks=None, estimator='NSB', axis=0, r=None):
     return iinfo(data, k, estimator)
 
 
-def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
+def coinformation(ar, ks=None, estimator='nsb', axis=0, r=None):
     """Coinformation from data matrix.
 
     See Eq.11 in:
@@ -446,7 +446,7 @@ def coinformation(ar, ks=None, estimator='NSB', axis=0, r=None):
     return result
 
 
-def mutual_information(ar, ks=None, estimator='NSB', axis=0):
+def mutual_information(ar, ks=None, estimator='nsb', axis=0):
     """Mutual information from p-by-n data matrix.
 
     If p > 2, return an estimate of the mutual information for each possible
@@ -499,7 +499,7 @@ def mutual_information(ar, ks=None, estimator='NSB', axis=0):
     return h1[0] + h1[1] - from_data(ar, estimator=estimator)
 
 
-def conditional_entropy(ar, c, ks=None, estimator='NSB', axis=0, r=None):  # pylint: disable=too-many-arguments
+def conditional_entropy(ar, c, ks=None, estimator='nsb', axis=0, r=None):  # pylint: disable=too-many-arguments
     """
     Coditional entropy estimate from data matrix.
 
@@ -642,7 +642,7 @@ def estimates_from_combinations(ar,
                                 r,
                                 *,
                                 q=from_data,
-                                estimator='NSB',
+                                estimator='nsb',
                                 subset=None):
     """Apply the estimator function `func` to combinations of data features.
 

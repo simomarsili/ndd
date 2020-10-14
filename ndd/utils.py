@@ -39,7 +39,6 @@ def dump_on_fail(fp=sys.stdout):
 def delimited_to_camelcase(string, d='_', remove=None):
     """Convert string from delimiter_separated to CamelCase."""
     if d not in string:  # no delimiter
-        print(string, string[0].isupper())
         if string[0].isupper():
             return string
         return string.title()
