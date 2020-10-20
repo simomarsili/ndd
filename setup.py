@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).parent
 
 
 def is_project_package(path):
-    """Directory look like the base package for the project"""
+    """Directory looks like the base package for the project"""
     path = Path(path)
     has_init = (path / '__init__.py').is_file()
     has_package = (path / 'package.py').is_file()
@@ -32,7 +32,6 @@ def is_project_package(path):
 def get_package_path(path=BASE_DIR):
     """Return the project package name."""
     path = Path(path)
-    print(path)
     for x in path.iterdir():
         if x.is_dir() and is_project_package(x):
             return x
@@ -146,5 +145,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 )
