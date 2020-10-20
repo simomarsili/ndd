@@ -3,11 +3,14 @@
 # pylint: disable=wrong-import-position
 from __future__ import print_function
 
+import codecs
 import platform
+from os import path
 
 # import setuptools before imporing setup from numpy.distutils.core
 # https://stackoverflow.com/a/55358607
 from pkg_resources import parse_version
+from setuptools import find_packages
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.13'
@@ -38,23 +41,19 @@ def get_numpy_status():
     return status
 
 
-def get_version(source):
-    """ Retrieve version number."""
-    import json
-    with open(source, 'r') as _vf:
-        version_data = json.load(_vf)
-    try:
-        return version_data['version']
-    except KeyError:
-        raise KeyError('check version file: no version number')
+def get_package_name():
+    'The top-level package name.'
+    top_level_packages = [
+        p for p in find_packages(exclude=['tests']) if '.' not in p
+    ]
+    if len(top_level_packages) != 1:
+        raise ValueError('Project must contain a single top-level package.')
+    return top_level_packages[0]
 
 
-def get_long_description():
+def get_long_description(readme):
     """Get the long description from the README file."""
-    from os import path
-    import codecs
-    here = path.abspath(path.dirname(__file__))
-    with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as _rf:
+    with codecs.open(readme, encoding='utf-8') as _rf:
         return _rf.read()
 
 
@@ -70,8 +69,21 @@ if NUMPY_STATUS['up_to_date'] is False:
 from numpy.distutils.core import Extension  # isort:skip
 from numpy.distutils.core import setup  # isort:skip
 
-VERSION = get_version(PACKAGE_FILE)
-LONG_DESCRIPTION = get_long_description()
+base_dir = path.abspath(path.dirname(__file__))
+readme_file = path.join(base_dir, 'README.rst')
+
+# single top-level package
+package_name = get_package_name()
+
+# get project info from the package.py module of the top-level package
+project_info = {}
+with open(path.join(package_name, 'package.py')) as fp:
+    exec(fp.read(), project_info)  # pylint: disable=exec-used
+
+project_name = project_info['__title__']
+project_version = project_info['__version__']
+
+long_description = get_long_description(readme_file)
 
 FSOURCES = [
     'ndd/nsb.pyf', 'ndd/exts/gamma.f90', 'ndd/exts/quad.f90',
@@ -95,17 +107,15 @@ def extension_args():
 FNSB = Extension(**extension_args())
 
 setup(
-    name=NAME,
-    version=VERSION,
+    name=project_name,
+    version=project_version,
     description='Bayesian entropy estimation from discrete data',
-    long_description=LONG_DESCRIPTION,
+    long_description=long_description,
     # long_description_content_type="text/markdown",
-    author='Simone Marsili',
-    author_email='simo.marsili@gmail.com',
-    url='https://github.com/simomarsili/ndd',
-    keywords='entropy estimation Bayes discrete_data',
-    data_files=[(NAME, ['package.json'])],
-    packages=['ndd'],
+    author=project_info.get('__author__'),
+    author_email=project_info.get('__email__'),
+    url=project_info.get('__url__'),
+    packages=[package_name],
     package_data={'': ['LICENSE.txt', 'README.rst', 'requirements.txt']},
     ext_modules=[FNSB],
     entry_points={'console_scripts': ['ndd=ndd.entry:main']},
