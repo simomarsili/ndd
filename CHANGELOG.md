@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [1.10.3] - 2020-10-10
+### Fixed
+- fixed `setuptools` imports in `setup.py`
+
 ## [1.10] - 2020-10-05
 ### Changed
 - `entropy` function: removed the `zk` argument
