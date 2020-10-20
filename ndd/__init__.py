@@ -124,7 +124,7 @@ from ndd.nsb import (coinformation, conditional_entropy, from_data, histogram,
 
 package_name = package_setup.package_name
 package_path = package_setup.package_path
-__version__ = pkg_resources.require(package_name)[0].version
+__version__ = '1.10.1'
 __all__ = [
     'coinformation', 'conditional_entropy', 'entropy', 'from_data',
     'histogram', 'interaction_information', 'jensen_shannon_divergence',
