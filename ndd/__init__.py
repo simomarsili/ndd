@@ -109,8 +109,6 @@ and interesting links:
 - [Il Memming Park on discrete entropy estimators](https://memming.wordpress.com/2014/02/09/a-guide-to-discrete-entropy-estimators/)
 
 """
-import pkg_resources
-
 from ndd import package_setup
 from ndd.counts import CountsDistribution
 from ndd.divergence import DivergenceEstimator
