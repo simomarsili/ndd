@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Template package file"""
 __title__ = 'ndd'
-__version__ = '1.10.3'
+__version__ = '1.10.2'
 __author__ = 'Simone Marsili'
 __summary__ = ''
 __url__ = 'https://github.com/simomarsili/ndd'
