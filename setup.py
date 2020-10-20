@@ -5,12 +5,11 @@ from __future__ import print_function
 
 import codecs
 import platform
-from os import path
+from pathlib import Path
 
 # import setuptools before imporing setup from numpy.distutils.core
 # https://stackoverflow.com/a/55358607
 from pkg_resources import parse_version
-from setuptools import find_packages
 
 NAME = 'ndd'
 NUMPY_MIN_VERSION = '1.13'
@@ -19,6 +18,25 @@ SETUP_REQUIRES = ['numpy>=' + NUMPY_MIN_VERSION]
 INSTALL_REQUIRES = []
 EXTRAS_REQUIRES = {'test': ['pytest']}
 PLATFORM = platform.system()
+BASE_DIR = Path(__file__).parent
+
+
+def is_project_package(path):
+    """Directory look like the base package for the project"""
+    path = Path(path)
+    has_init = (path / '__init__.py').is_file()
+    has_package = (path / 'package.py').is_file()
+    return has_init and has_package
+
+
+def get_package_path(path=BASE_DIR):
+    """Return the project package name."""
+    path = Path(path)
+    print(path)
+    for x in path.iterdir():
+        if x.is_dir() and is_project_package(x):
+            return x
+    raise ImportError('Cant find the top package dir for the project.')
 
 
 def get_numpy_status():
@@ -41,16 +59,6 @@ def get_numpy_status():
     return status
 
 
-def get_package_name():
-    'The top-level package name.'
-    top_level_packages = [
-        p for p in find_packages(exclude=['tests']) if '.' not in p
-    ]
-    if len(top_level_packages) != 1:
-        raise ValueError('Project must contain a single top-level package.')
-    return top_level_packages[0]
-
-
 def get_long_description(readme):
     """Get the long description from the README file."""
     with codecs.open(readme, encoding='utf-8') as _rf:
@@ -69,15 +77,15 @@ if NUMPY_STATUS['up_to_date'] is False:
 from numpy.distutils.core import Extension  # isort:skip
 from numpy.distutils.core import setup  # isort:skip
 
-base_dir = path.abspath(path.dirname(__file__))
-readme_file = path.join(base_dir, 'README.rst')
+readme_file = BASE_DIR / 'README.rst'
 
 # single top-level package
-package_name = get_package_name()
+package_path = get_package_path()
+package_name = package_path.name
 
 # get project info from the package.py module of the top-level package
 project_info = {}
-with open(path.join(package_name, 'package.py')) as fp:
+with open(package_path / 'package.py') as fp:
     exec(fp.read(), project_info)  # pylint: disable=exec-used
 
 project_name = project_info['__title__']
