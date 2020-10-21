@@ -117,7 +117,7 @@ def entropy(nk, *, k=None, estimator=None, return_std=False):
     >>> ndd.entropy(counts)
     2.8130746489179046
     >>> ndd.entropy.info
-    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': 1, 'estimator': Nsb(alpha=None), 'k': 6008}
+    {'entropy': 2.8130746489179046, 'err': 0.1244390183672502, 'bounded': 1, 'estimator': 'Nsb(alpha=None)', 'k': 6008}
 
     `entropy.info['bounded']` is equal to 1 if the entropy estimate has error
     bounds, 0 when the estimate is unbounded (when no coincidences have
