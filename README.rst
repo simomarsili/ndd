@@ -49,6 +49,22 @@ distributions (Equations 29, 30 in
 
 Where to get it
 ===============
+
+**``conda``**
+-------------
+
+The easiest way to install ``ndd`` is via the ``conda`` package manager.
+Packages are provided on the ``conda-forge`` Anaconda Cloud channel for Linux,
+OS X, and Win platforms.
+
+Install the latest stable release using ``conda`` with::
+
+  conda install --channel conda-forge ndd
+
+
+**``pip``**
+-------------
+
 Install using pip::
 
   pip3 install -U ndd
