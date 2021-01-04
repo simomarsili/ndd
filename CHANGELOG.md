@@ -1,6 +1,8 @@
 # Change log
 
 ## Unreleased
+### Added
+- added `ndd` to anaconda `conda-forge` channel
 
 ## [1.10.3] - 2020-10-10
 ### Fixed
