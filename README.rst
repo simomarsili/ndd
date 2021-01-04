@@ -73,7 +73,7 @@ or directly from sources in github for the latest version of the code::
 
   pip3 install git+https://github.com/simomarsili/ndd.git
 
-In order to build ``ndd`` with ``pip``, you will need ``numpy`` (>= 1.9) and a
+In order to build ``ndd`` with ``pip``, you will need ``numpy`` (>= 1.13) and a
 **Fortran compiler**  installed on your machine.
 If you are using Debian or a Debian derivative such as Ubuntu,
 you can install the gfortran compiler using the following command::
