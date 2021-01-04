@@ -6,8 +6,8 @@ ndd - Bayesian entropy estimation from discrete data
 .. image:: https://travis-ci.com/simomarsili/ndd.svg?branch=master
     :target: https://travis-ci.com/simomarsili/ndd
 
-**ndd** is a Python package for Bayesian entropy estimation from discrete
-data. **ndd** provides the ``ndd.entropy`` function, a Bayesian replacement
+``ndd`` is a Python package for Bayesian entropy estimation from discrete
+data. ``ndd`` provides the ``ndd.entropy`` function, a Bayesian replacement
 for the ``scipy.stats.entropy`` function from the SciPy library,
 based on an efficient implementation of the
 `Nemenman-Schafee-Bialek (NSB) algorithm
@@ -73,7 +73,7 @@ or directly from sources in github for the latest version of the code::
 
   pip3 install git+https://github.com/simomarsili/ndd.git
 
-In order to compile **ndd**, you will need **numpy** (>= 1.9) and a
+In order to compile ``ndd``, you will need ``numpy`` (>= 1.9) and a
 **Fortran compiler**  installed on your machine.
 If you are using Debian or a Debian derivative such as Ubuntu,
 you can install the gfortran compiler using the following command::
