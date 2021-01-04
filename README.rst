@@ -65,7 +65,7 @@ Install the latest stable release using ``conda`` with::
 **pip**
 -------
 
-Install using pip::
+Install using pip with::
 
   pip3 install -U ndd
 
@@ -73,7 +73,7 @@ or directly from sources in github for the latest version of the code::
 
   pip3 install git+https://github.com/simomarsili/ndd.git
 
-In order to compile ``ndd``, you will need ``numpy`` (>= 1.9) and a
+In order to build ``ndd`` with ``pip``, you will need ``numpy`` (>= 1.9) and a
 **Fortran compiler**  installed on your machine.
 If you are using Debian or a Debian derivative such as Ubuntu,
 you can install the gfortran compiler using the following command::
@@ -84,10 +84,6 @@ On Windows, you can use the gfortran compiler from the
 `MinGW-w64 <https://sourceforge.net/projects/mingw-w64/files>`_ project
 (`direct link <https://sourceforge.net/projects/mingw-w64/files/latest/download>`_
 to the installer).
-
-If you don't have a Fortran compiler, install using the
-`ndd python wheels <https://github.com/simomarsili/ndd-wheels>`_
-with pre-compiled extensions. numpy >= 1.16 is needed.
 
 Changes
 =======
