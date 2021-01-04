@@ -88,6 +88,9 @@ to the installer).
 Changes
 =======
 
+**v1.10.5**
+   Added `ndd` to the anaconda `conda-forge` channel.
+
 **v1.10**
    Changed:
    the signature of the `entropy` function is:::
